@@ -13,12 +13,17 @@ public class Yaml {
     public static Document parseSingle(String yaml) {
         List<Document> documents = parseAll(yaml).documents();
         if (documents.size() != 1)
-            throw new YamlParseException("expected only one document, but found " + documents.size());
+            throw new YamlParseException("expected exactly one document, but found " + documents.size());
         return documents.get(0);
     }
 
     // TODO only parse first
-    public static Document parseFirst(String yaml) { return parseAll(yaml).documents().get(0); }
+    public static Document parseFirst(String yaml) {
+        List<Document> documents = parseAll(yaml).documents();
+        if (documents.size() < 1)
+            throw new YamlParseException("expected at least one document, but found none");
+        return documents.get(0);
+    }
 
     public static Stream parseAll(String yaml) { return new YamlParser(new StringReader(yaml)).parse(); }
 }

@@ -35,6 +35,8 @@ public abstract class Parser {
             return false;
     }
 
+    protected boolean end() { return peek() < 0; }
+
     @SneakyThrows(IOException.class)
     protected int read() {
         position++;
@@ -51,4 +53,9 @@ public abstract class Parser {
 
     // TODO allow unicode
     protected String readString() { return Character.toString((char) read()); }
+
+    protected void skip(Token token) {
+        while (is(token))
+            expect(token);
+    }
 }
