@@ -2,29 +2,25 @@ import com.github.t1.yaml.Yaml;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.Stream;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class YamlTest {
-    @Test
-    public void shouldParseEmptyStream() {
+class YamlTest {
+    @Test void shouldParseEmptyStream() {
         Stream stream = Yaml.parseAll("");
 
         assertThat(stream.documents()).isEmpty();
     }
 
-    @Test
-    public void shouldParseSimpleComment() {
+    @Test void shouldParseSimpleComment() {
         Document document = Yaml.parseSingle("# test comment\n");
 
         assertThat(document).isEqualTo(new Document().comment(new Comment().text("# test comment")));
     }
 
-    @Test
-    @Ignore
-    public void spec_6_1_Indentation_Spaces() {
+    @Disabled @Test void spec_6_1_Indentation_Spaces() {
         Document document = Yaml.parseFirst("" +
                 "··# Leading comment line spaces are\n" +
                 "···# neither content nor indentation.\n" +
