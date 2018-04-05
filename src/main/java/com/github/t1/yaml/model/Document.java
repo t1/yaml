@@ -8,7 +8,7 @@ import java.util.List;
 public class Document {
     private List<Directive> directives;
     private Comment comment;
-    private Node content;
+    private Node node;
 
     @Override public String toString() {
         StringBuilder out = new StringBuilder();
@@ -17,8 +17,8 @@ public class Document {
                 out.append(directive.toString());
         if (comment != null)
             out.append(comment.toString());
-        if (content != null)
-            out.append(content);
+        if (node != null)
+            out.append(node);
         return out.toString();
     }
 }

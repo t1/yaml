@@ -6,5 +6,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ScalarNode extends Node {
-    private String content;
+    private String text;
+
+    @Override public String toString() { return text; }
 }

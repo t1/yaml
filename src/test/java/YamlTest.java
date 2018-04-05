@@ -1,6 +1,7 @@
 import com.github.t1.yaml.Yaml;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
+import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.Stream;
 import com.github.t1.yaml.parser.YamlParseException;
 import org.junit.jupiter.api.AfterEach;
@@ -111,7 +112,7 @@ class YamlTest {
     @Nested class givenSpaceOnlyDocument extends WhenDocument {
         @BeforeEach void setup() {
             input = " ";
-            expected = new Document();
+            expected = new Document().node(new ScalarNode().text(" "));
         }
     }
 

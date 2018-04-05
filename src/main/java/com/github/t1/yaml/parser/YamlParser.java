@@ -2,6 +2,8 @@ package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
+import com.github.t1.yaml.model.Node;
+import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.Stream;
 
 import java.io.Reader;
@@ -27,9 +29,8 @@ public class YamlParser {
         if (scanner.is(HASH))
             document.comment(comment());
 
-        while (!scanner.end())
-
-            scanner.read();
+        if (!scanner.end())
+            document.node(node());
 
         return document;
     }
@@ -38,5 +39,9 @@ public class YamlParser {
         scanner.expect(HASH);
         scanner.skip(WS);
         return new Comment().text(scanner.readUntil(NL));
+    }
+
+    private Node node() {
+        return new ScalarNode().text(scanner.readUntil(NL));
     }
 }
