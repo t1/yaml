@@ -3,6 +3,7 @@ import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.Stream;
 import com.github.t1.yaml.parser.YamlParseException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ class YamlTest {
     private static Document document;
     private static YamlParseException thrown;
 
-    @BeforeEach void setup() {
+    @AfterEach void cleanup() {
         input = null;
         expected = null;
 
@@ -89,6 +90,14 @@ class YamlTest {
 
     ///////////////////////////////////////////////////////////////////////// GIVEN
 
+    private class WhenDocument {
+        @Nested class whenParseAll extends ParseAll implements ThenIsExpectedStream, ThenStreamToStringIsSameAsInput {}
+
+        @Nested class whenParseFirst extends ParseFirst implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput {}
+
+        @Nested class whenParseSingle extends ParseSingle implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput {}
+    }
+
     @Nested class givenEmptyDocument {
         @BeforeEach void setup() { input = ""; }
 
@@ -99,31 +108,17 @@ class YamlTest {
         @Nested class whenParseSingle extends ParseSingle implements ThenThrowsExpectedExactlyOne {}
     }
 
-
-    @Nested class givenSpaceOnlyDocument {
+    @Nested class givenSpaceOnlyDocument extends WhenDocument {
         @BeforeEach void setup() {
             input = " ";
             expected = new Document();
         }
-
-        @Nested class whenParseAll extends ParseAll implements ThenIsExpectedStream {}
-
-        @Nested class whenParseFirst extends ParseFirst implements ThenIsExpectedDocument {}
-
-        @Nested class whenParseSingle extends ParseSingle implements ThenIsExpectedDocument {}
     }
 
-
-    @Nested class givenCommentOnlyDocument {
+    @Nested class givenCommentOnlyDocument extends WhenDocument {
         @BeforeEach void setup() {
             input = "# test comment";
             expected = new Document().comment(new Comment().text("test comment"));
         }
-
-        @Nested class whenParseAll extends ParseAll implements ThenIsExpectedStream, ThenStreamToStringIsSameAsInput {}
-
-        @Nested class whenParseFirst extends ParseFirst implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput {}
-
-        @Nested class whenParseSingle extends ParseSingle implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput {}
     }
 }
