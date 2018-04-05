@@ -9,8 +9,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @RequiredArgsConstructor
-public class Scanner {
-
+class Scanner {
     private final Reader reader;
     private int position = -1;
 
@@ -44,7 +43,7 @@ public class Scanner {
     }
 
     @SneakyThrows(IOException.class)
-    private int peek() {
+    int peek() {
         reader.mark(1);
         int read = reader.read();
         reader.reset();
@@ -53,6 +52,14 @@ public class Scanner {
 
     // TODO allow unicode
     String readString() { return Character.toString((char) read()); }
+
+
+    String readUntil(Token token) {
+        StringBuilder builder = new StringBuilder();
+        while (!end() && !is(token))
+            builder.append(readString());
+        return builder.toString();
+    }
 
     void skip(Token token) {
         while (is(token))

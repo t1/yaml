@@ -28,6 +28,7 @@ public class YamlParser {
             document.comment(comment());
 
         while (!scanner.end())
+
             scanner.read();
 
         return document;
@@ -36,9 +37,6 @@ public class YamlParser {
     private Comment comment() {
         scanner.expect(HASH);
         scanner.skip(WS);
-        StringBuilder builder = new StringBuilder();
-        while (!scanner.end() && !scanner.is(NL))
-            builder.append(scanner.readString());
-        return new Comment().text(builder.toString());
+        return new Comment().text(scanner.readUntil(NL));
     }
 }
