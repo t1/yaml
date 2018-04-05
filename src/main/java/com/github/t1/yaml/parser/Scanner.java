@@ -9,25 +9,25 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @RequiredArgsConstructor
-public abstract class Parser {
+public class Scanner {
 
     private final Reader reader;
     private int position = -1;
 
-    protected Supplier<? extends RuntimeException> error(String message) { return () -> new IllegalStateException(message + " but got [" + readString() + "] at " + position); }
+    private Supplier<? extends RuntimeException> error(String message) { return () -> new IllegalStateException(message + " but got [" + readString() + "] at " + position); }
 
-    protected char expect(Token token) { return expect(token::matches, token.name()); }
+    void expect(Token token) { expect(token::matches, token.name()); }
 
-    protected char expect(Predicate<Character> predicate, String description) {
+    char expect(Predicate<Character> predicate, String description) {
         char next = (char) read();
         if (!predicate.test(next))
             throw error("expected " + description).get();
         return next;
     }
 
-    protected boolean is(Token token) { return token.matches(peek()); }
+    boolean is(Token token) { return token.matches(peek()); }
 
-    protected boolean accept(Token token) {
+    boolean accept(Token token) {
         if (is(token)) {
             expect(token);
             return true;
@@ -35,16 +35,16 @@ public abstract class Parser {
             return false;
     }
 
-    protected boolean end() { return peek() < 0; }
+    boolean end() { return peek() < 0; }
 
     @SneakyThrows(IOException.class)
-    protected int read() {
+    int read() {
         position++;
         return reader.read();
     }
 
     @SneakyThrows(IOException.class)
-    protected int peek() {
+    private int peek() {
         reader.mark(1);
         int read = reader.read();
         reader.reset();
@@ -52,9 +52,9 @@ public abstract class Parser {
     }
 
     // TODO allow unicode
-    protected String readString() { return Character.toString((char) read()); }
+    String readString() { return Character.toString((char) read()); }
 
-    protected void skip(Token token) {
+    void skip(Token token) {
         while (is(token))
             expect(token);
     }

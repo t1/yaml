@@ -10,32 +10,35 @@ import static com.github.t1.yaml.parser.Token.HASH;
 import static com.github.t1.yaml.parser.Token.NL;
 import static com.github.t1.yaml.parser.Token.WS;
 
-public class YamlParser extends Parser {
-    public YamlParser(Reader reader) { super(reader); }
+public class YamlParser {
+    private final Scanner scanner;
+
+    public YamlParser(Reader reader) { this.scanner = new Scanner(reader); }
 
     public Stream parse() {
         Stream stream = new Stream();
-        while (!end())
+        while (!scanner.end())
             stream.document(document());
         return stream;
     }
 
     private Document document() {
         Document document = new Document();
-        if (is(HASH))
+        if (scanner.is(HASH))
             document.comment(comment());
 
-        while (!end())
-            read();
+        while (!scanner.end())
+            scanner.read();
+
         return document;
     }
 
     private Comment comment() {
-        expect(HASH);
-        skip(WS);
+        scanner.expect(HASH);
+        scanner.skip(WS);
         StringBuilder builder = new StringBuilder();
-        while (!end() && !is(NL))
-            builder.append(readString());
+        while (!scanner.end() && !scanner.is(NL))
+            builder.append(scanner.readString());
         return new Comment().text(builder.toString());
     }
 }
