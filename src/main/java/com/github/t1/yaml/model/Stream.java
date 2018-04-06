@@ -23,9 +23,7 @@ public class Stream {
 
     public Document lastDocument() { return documents.get(documents.size() - 1); }
 
-    @Override public String toString() {
-        return documents.stream().map(Document::toString).collect(joining());
-    }
+    @Override public String toString() { return documents.stream().map(Document::toString).collect(joining()); }
 
     public Stream canonicalize() {
         documents.removeIf(Document::isEmpty);

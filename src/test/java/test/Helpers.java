@@ -18,8 +18,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
     static void parseAndCheck(String input, String expectedCanonical) {
         Stream stream = parse(input);
-        assertThat(toStringWithoutTrailingNl(stream)).isEqualTo(input.replace(BOM, ""));
-        assertThat(stream.canonicalize().toString()).isEqualTo(expectedCanonical);
+        assertThat(toStringWithoutTrailingNl(stream)).describedAs("stream toString")
+                .isEqualTo(input.replace(BOM, ""));
+        assertThat(stream.canonicalize().toString()).describedAs("canonicalized stream")
+                .isEqualTo(expectedCanonical);
     }
 
     static Stream parse(String yaml) {

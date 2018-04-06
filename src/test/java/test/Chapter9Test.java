@@ -71,4 +71,24 @@ import static test.Helpers.parseAndCheck;
                         "---\n" +
                         "!!null \"\"\n");
     }
+
+    @Test void spec_9_5_Directives_Documents() {
+        parseAndCheck("" +
+                        "%YAML 1.2\n" +
+                        "---\n" + // TODO '|'
+                        "%!PS-Adobe-2.0\n" +
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "# Empty\n" +
+                        "..."
+                , "" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "!!str \"%!PS-Adobe-2.0\"\n" + // TODO where does the newline in the spec come from?
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "!!null \"\"\n");
+    }
 }
