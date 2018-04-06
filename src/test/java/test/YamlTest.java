@@ -1,3 +1,5 @@
+package test;
+
 import com.github.t1.yaml.Yaml;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
@@ -14,8 +16,9 @@ import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static test.Helpers.toStringWithoutTrailingNl;
 
-class YamlTest extends AbstractTest {
+class YamlTest {
     ///////////////////////////////////// inputs
     private static String input;
     private static Document expected;
@@ -145,14 +148,14 @@ class YamlTest extends AbstractTest {
     @Nested class givenSpaceOnlyDocument extends SingleDocument {
         @BeforeEach void setup() {
             input = " ";
-            expected = new Document().node(new ScalarNode().text(" "));
+            expected = new Document().node(new ScalarNode().line(" "));
         }
     }
 
     @Nested class givenScalarDocument extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string";
-            expected = new Document().node(new ScalarNode().text("dummy-string"));
+            expected = new Document().node(new ScalarNode().line("dummy-string"));
         }
     }
 }

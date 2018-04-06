@@ -1,8 +1,12 @@
+package test;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-@Tag("spec") class Chapter6Test extends AbstractTest {
+import static test.Helpers.parseAndCheck;
+
+@Tag("spec") class Chapter6Test {
     @Disabled @Test void spec_6_1_Indentation_Spaces() {
         parseAndCheck("" +
                         "··# Leading comment line spaces are\n" +

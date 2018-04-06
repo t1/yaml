@@ -18,7 +18,7 @@ import static com.github.t1.yaml.model.Symbol.WS;
     private static String characterName(int codePoint) { return (codePoint < 0) ? "EOF" : Character.getName(codePoint); }
 
     private final Reader reader;
-    private int position = 0;
+    private int position = 1;
     private int lineNumber = 1;
 
     private Supplier<? extends RuntimeException> error(String message) { return () -> new IllegalStateException(message + " but got " + this); }
@@ -48,11 +48,12 @@ import static com.github.t1.yaml.model.Symbol.WS;
 
     @SneakyThrows(IOException.class)
     int read() {
-        position++;
         int codePoint = reader.read();
         if (NL.matches(codePoint)) {
             lineNumber++;
             position = 1;
+        } else {
+            position++;
         }
         return codePoint;
     }

@@ -42,7 +42,7 @@ public class Document {
         if (!prefixComments.isEmpty())
             out.append(prefixComments.stream().map(Comment::toString).collect(joining("\n", "", "\n")));
         if (node != null)
-            out.append(node);
+            out.append(node).append("\n");
         if (hasDocumentEndMarker)
             appendDocumentEnd(out);
         return out.toString();
@@ -57,7 +57,7 @@ public class Document {
     }
 
     private void appendDocumentEnd(StringBuilder out) {
-        out.append("\n...");
+        out.append("...");
         if (suffixComment != null)
             out.append(" ").append(suffixComment);
         out.append("\n");
@@ -69,7 +69,6 @@ public class Document {
         prefixComments.clear();
         if (node != null)
             node.canonicalize();
-        hasDocumentEndMarker(false);
         suffixComment = null;
         return this;
     }

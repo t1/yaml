@@ -1,9 +1,12 @@
+package test;
+
 import com.github.t1.yaml.Yaml;
 import com.github.t1.yaml.model.Stream;
+import lombok.experimental.UtilityClass;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-abstract class AbstractTest {
+@UtilityClass final class Helpers {
     private static final String BOM = "⇔";
 
     static String toStringWithoutTrailingNl(Object object) {
@@ -13,7 +16,7 @@ abstract class AbstractTest {
         return string;
     }
 
-    void parseAndCheck(String input, String expectedCanonical) {
+    static void parseAndCheck(String input, String expectedCanonical) {
         Stream stream = parse(input);
         assertThat(toStringWithoutTrailingNl(stream)).isEqualTo(input.replace(BOM, ""));
         assertThat(stream.canonicalize().toString()).isEqualTo(expectedCanonical);

@@ -19,12 +19,19 @@ public class Stream {
         return this;
     }
 
+    private boolean hasDocuments() { return !documents.isEmpty(); }
+
+    public Document lastDocument() { return documents.get(documents.size() - 1); }
+
     @Override public String toString() {
-        return documents.stream().map(Document::toString).collect(joining("\n"));
+        return documents.stream().map(Document::toString).collect(joining());
     }
 
     public Stream canonicalize() {
+        documents.removeIf(document -> document.node() == null);
         documents.forEach(Document::canonicalize);
+        if (hasDocuments())
+            lastDocument().hasDocumentEndMarker(false);
         return this;
     }
 }
