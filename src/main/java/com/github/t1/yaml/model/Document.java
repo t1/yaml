@@ -42,8 +42,7 @@ public class Document {
         appendDirectives(out);
         if (!prefixComments.isEmpty())
             out.append(prefixComments.stream().map(Comment::toString).collect(joining("\n", "", "\n")));
-        if (node != null)
-            out.append(node).append("\n");
+        appendNode(out);
         if (hasDocumentEndMarker)
             appendDocumentEnd(out);
         return out.toString();
@@ -54,6 +53,12 @@ public class Document {
             for (Directive directive : directives)
                 out.append(directive).append('\n');
             out.append("---\n");
+        }
+    }
+
+    private void appendNode(StringBuilder out) {
+        if (node != null) {
+            out.append(node).append("\n");
         }
     }
 
@@ -68,11 +73,12 @@ public class Document {
         if (directives.stream().noneMatch(Directive.YAML_VERSION::matchName))
             directives.add(Directive.YAML_VERSION);
         prefixComments.clear();
-        if (node != null)
-            node.canonicalize();
+        if (node == null)
+            node = new ScalarNode();
+        node.canonicalize();
         suffixComment = null;
         return this;
     }
 
-    public boolean isEmpty() { return node == null; }
+    public boolean isEmpty() { return node == null && !hasDirectivesEndMarker; }
 }

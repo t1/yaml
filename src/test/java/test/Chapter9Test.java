@@ -48,4 +48,27 @@ import static test.Helpers.parseAndCheck;
                         "!!str \" %!PS-Adobe-2.0\"\n" // TODO space from pipe; where does the newline in the spec come from?
         );
     }
+
+    @Test void spec_9_4_Explicit_Documents() {
+        parseAndCheck("" +
+                        "---\n" +
+                        // "{ matches\n" +
+                        // "% : 20 }\n" + // TODO map!!
+                        "dummy-document\n" +
+                        "...\n" +
+                        "---\n" +
+                        "# Empty\n" +
+                        "..."
+                , "" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        // "!!map {\n" +
+                        // "  !!str \"matches %\": !!int \"20\"\n" +
+                        // "}\n" +
+                        "!!str \"dummy-document\"\n" +
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "!!null \"\"\n");
+    }
 }

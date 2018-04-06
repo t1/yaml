@@ -19,7 +19,7 @@ public class ScalarNode extends Node {
     @Override public String toString() { return String.join("\n", lines); }
 
     @Override public void canonicalize() {
-        String singleLine = "!!str \"" + String.join(" ", lines) + "\"";
+        String singleLine = (lines.isEmpty()) ? "!!null \"\"" : "!!str \"" + String.join(" ", lines) + "\"";
         lines.clear();
         lines.add(singleLine);
     }
