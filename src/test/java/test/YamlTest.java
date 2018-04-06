@@ -2,6 +2,7 @@ package test;
 
 import com.github.t1.yaml.Yaml;
 import com.github.t1.yaml.model.Comment;
+import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.Stream;
@@ -97,12 +98,20 @@ class YamlTest {
     }
 
 
-    interface ThenThrowsExpectedAtLeastOne {
+    interface ThenThrowsInvalid {
+        @Test default void thenThrowsInvalid() { assertThat(thrown).hasMessageStartingWith("unexpected [{][LEFT CURLY BRACKET][0x7b]"); }
+    }
+
+    interface ThenThrowsExpectedAtLeastOneDocumentButFoundNone {
         @Test default void thenThrowsExpectedAtLeastOne() { assertThat(thrown).hasMessage("expected at least one document, but found none"); }
     }
 
-    interface ThenThrowsExpectedExactlyOne {
-        @Test default void thenThrowsExpectedExactlyOne() { assertThat(thrown).hasMessage("expected exactly one document, but found 0"); }
+    interface ThenThrowsExpectedExactlyOneDocumentButFoundNone {
+        @Test default void thenThrowsExpectedExactlyOne() { assertThat(thrown).hasMessage("expected exactly one document, but found none"); }
+    }
+
+    interface ThenThrowsExpectedExactlyOneDocumentButFoundMore {
+        @Test default void thenThrowsExpectedExactlyOneDocumentButFoundMore() { assertThat(thrown).hasMessageStartingWith("expected exactly one document, but found more: "); }
     }
 
 
@@ -112,15 +121,27 @@ class YamlTest {
     class EmptyStream {
         @Nested class whenParseAll extends ParseAll implements ThenIsEmptyStream, ThenStreamToStringIsSameAsInput {}
 
-        @Nested class whenParseFirst extends ParseFirst implements ThenThrowsExpectedAtLeastOne {}
+        @Nested class whenParseFirst extends ParseFirst implements ThenThrowsExpectedAtLeastOneDocumentButFoundNone {}
 
-        @Nested class whenParseSingle extends ParseSingle implements ThenThrowsExpectedExactlyOne {}
+        @Nested class whenParseSingle extends ParseSingle implements ThenThrowsExpectedExactlyOneDocumentButFoundNone {}
     }
 
     @Nested class givenEmptyDocument extends EmptyStream {
         @BeforeEach void setup() { input = ""; }
     }
 
+    @Nested class givenInvalidSecondDocument {
+        @BeforeEach void setup() {
+            input = "%YAML 1.2\n---\nvalid document\n...{";
+            expected = new Document().directive(Directive.YAML_VERSION).node(new ScalarNode().line("valid document")).hasDocumentEndMarker(true);
+        }
+
+        @Nested class whenParseAll extends ParseAll implements ThenThrowsInvalid {}
+
+        @Nested class whenParseFirst extends ParseFirst implements ThenIsExpectedDocument {}
+
+        @Nested class whenParseSingle extends ParseSingle implements ThenThrowsExpectedExactlyOneDocumentButFoundMore {}
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////
     class SingleDocument {

@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 import static com.github.t1.yaml.model.Symbol.NL;
 import static com.github.t1.yaml.model.Symbol.WS;
 
-@RequiredArgsConstructor class Scanner {
+@RequiredArgsConstructor public class Scanner {
     private static String toString(int codePoint) { return (codePoint < 0) ? "" : new String(Character.toChars(codePoint)); }
 
     private static String characterName(int codePoint) { return (codePoint < 0) ? "EOF" : Character.getName(codePoint); }
@@ -44,7 +44,7 @@ import static com.github.t1.yaml.model.Symbol.WS;
 
     boolean end() { return !more(); }
 
-    boolean more() { return peek() >= 0; }
+    public boolean more() { return peek() >= 0; }
 
     @SneakyThrows(IOException.class)
     int read() {

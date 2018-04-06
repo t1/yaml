@@ -6,6 +6,9 @@ import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.ScalarNode;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Optional;
+
+import static com.github.t1.yaml.model.Symbol.CURLY_OPEN;
 import static com.github.t1.yaml.model.Symbol.HASH;
 import static com.github.t1.yaml.model.Symbol.MINUS;
 import static com.github.t1.yaml.model.Symbol.NL;
@@ -14,16 +17,20 @@ import static com.github.t1.yaml.model.Symbol.PERIOD;
 import static com.github.t1.yaml.model.Symbol.SPACE;
 import static com.github.t1.yaml.model.Symbol.WS;
 
-@RequiredArgsConstructor class DocumentParser {
+@RequiredArgsConstructor public class DocumentParser {
     private final Scanner next;
     private final Document document = new Document();
 
-    Document parse() {
+    public Optional<Document> document() {
+        if (next.end())
+            return Optional.empty();
+
         directives();
         prefixComments();
         node();
         documentEnd();
-        return document;
+
+        return Optional.of(document);
     }
 
     private void directives() {
@@ -54,6 +61,8 @@ import static com.github.t1.yaml.model.Symbol.WS;
 
     private void node() {
         if (next.more() && !next.is(PERIOD)) {
+            if (next.is(CURLY_OPEN))
+                throw new YamlParseException("unexpected " + next);
             ScalarNode node = new ScalarNode();
             while (next.more() && !next.is(PERIOD))
                 node.line(next.readLine());

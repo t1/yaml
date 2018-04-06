@@ -2,28 +2,37 @@ package com.github.t1.yaml;
 
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.Stream;
+import com.github.t1.yaml.parser.DocumentParser;
+import com.github.t1.yaml.parser.Scanner;
+import com.github.t1.yaml.parser.StreamParser;
 import com.github.t1.yaml.parser.YamlParseException;
-import com.github.t1.yaml.parser.YamlParser;
 
 import java.io.StringReader;
-import java.util.List;
 
 public class Yaml {
-    // TODO only parse first
-    public static Document parseSingle(String yaml) {
-        List<Document> documents = parseAll(yaml).documents();
-        if (documents.size() != 1)
-            throw new YamlParseException("expected exactly one document, but found " + documents.size());
-        return documents.get(0);
+    private static Scanner scanner(String yaml) { return new Scanner(new StringReader(yaml)); }
+
+    public static Document parseSingle(String yaml) { return parseSingle(scanner(yaml)); }
+
+    public static Document parseSingle(Scanner scanner) {
+        Document document = parseFirst(scanner, "expected exactly one document, but found none");
+        if (scanner.more())
+            throw new YamlParseException("expected exactly one document, but found more: " + scanner);
+        return document;
     }
 
-    // TODO only parse first
-    public static Document parseFirst(String yaml) {
-        List<Document> documents = parseAll(yaml).documents();
-        if (documents.size() < 1)
-            throw new YamlParseException("expected at least one document, but found none");
-        return documents.get(0);
+    public static Document parseFirst(String yaml) { return parseFirst(scanner(yaml)); }
+
+    public static Document parseFirst(Scanner scanner) {
+        return parseFirst(scanner, "expected at least one document, but found none");
     }
 
-    public static Stream parseAll(String yaml) { return new YamlParser(new StringReader(yaml)).stream(); }
+    private static Document parseFirst(Scanner scanner, String noneFoundMessage) {
+        return new DocumentParser(scanner).document()
+                .orElseThrow(() -> new YamlParseException(noneFoundMessage));
+    }
+
+    public static Stream parseAll(String yaml) { return parseAll(scanner(yaml)); }
+
+    public static Stream parseAll(Scanner scanner) { return new StreamParser(scanner).stream(); }
 }

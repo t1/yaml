@@ -22,6 +22,7 @@ public class Document {
 
     public Document directive(Directive directive) {
         directives.add(Objects.requireNonNull(directive));
+        hasDirectivesEndMarker = true;
         return this;
     }
 
@@ -72,4 +73,6 @@ public class Document {
         suffixComment = null;
         return this;
     }
+
+    public boolean isEmpty() { return node == null; }
 }

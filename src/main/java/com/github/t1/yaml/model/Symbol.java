@@ -16,6 +16,8 @@ public enum Symbol {
     MINUS('-'),
     MULT('*'),
     PERIOD('.'),
+    CURLY_OPEN('{'),
+    CURLY_CLOSE('}'),
     NL(c -> c == '\n' || c == '\r'),
     ALPHA(Character::isAlphabetic),
     NUMBER(Character::isDigit);

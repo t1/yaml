@@ -28,7 +28,7 @@ public class Stream {
     }
 
     public Stream canonicalize() {
-        documents.removeIf(document -> document.node() == null);
+        documents.removeIf(Document::isEmpty);
         documents.forEach(Document::canonicalize);
         if (hasDocuments())
             lastDocument().hasDocumentEndMarker(false);
