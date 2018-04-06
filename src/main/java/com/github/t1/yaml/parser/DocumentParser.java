@@ -22,6 +22,8 @@ import static com.github.t1.yaml.model.Symbol.WS;
     private final Document document = new Document();
 
     public Optional<Document> document() {
+        next.acceptBom();
+
         if (next.end())
             return Optional.empty();
 

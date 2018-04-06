@@ -21,7 +21,7 @@ import static com.github.t1.yaml.model.Symbol.WS;
     private int position = 1;
     private int lineNumber = 1;
 
-    private Supplier<? extends RuntimeException> error(String message) { return () -> new IllegalStateException(message + " but got " + this); }
+    private Supplier<? extends RuntimeException> error(String message) { return () -> new YamlParseException(message + " but got " + this); }
 
     Scanner expect(Symbol symbol) { return expect(symbol::matches, symbol.name()); }
 
@@ -47,8 +47,20 @@ import static com.github.t1.yaml.model.Symbol.WS;
     public boolean more() { return peek() >= 0; }
 
     @SneakyThrows(IOException.class)
+    boolean acceptBom() {
+        if (isBOM(peek())) {
+            //noinspection ResultOfMethodCallIgnored
+            reader.skip(1);
+            return true;
+        }
+        return false;
+    }
+
+    @SneakyThrows(IOException.class)
     int read() {
         int codePoint = reader.read();
+        if (isBOM(codePoint))
+            throw new YamlParseException("A BOM must not appear inside a document");
         if (NL.matches(codePoint)) {
             lineNumber++;
             position = 1;
@@ -57,6 +69,8 @@ import static com.github.t1.yaml.model.Symbol.WS;
         }
         return codePoint;
     }
+
+    private boolean isBOM(int codePoint) { return codePoint == 0xFEFF; }
 
     @SneakyThrows(IOException.class)
     int peek() {

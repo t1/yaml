@@ -6,7 +6,6 @@ import java.util.function.Predicate;
 
 @RequiredArgsConstructor
 public enum Symbol {
-    BOM(0xFEFF),
     SPACE(' '),
     WS(Character::isWhitespace),
     HASH('#'),
@@ -24,7 +23,7 @@ public enum Symbol {
 
     private final Predicate<Integer> predicate;
 
-    private Symbol(int codePoint) { this(c -> c == codePoint); }
+    Symbol(int codePoint) { this(c -> c == codePoint); }
 
     public boolean matches(int codePoint) { return predicate.test(codePoint); }
 }
