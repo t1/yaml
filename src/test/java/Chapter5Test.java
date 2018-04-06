@@ -4,15 +4,15 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Tag("spec") class Chapter5Test extends AbstractTest {
     @Test
     void spec_5_1_Byte_Order_Mark() {
-        assertThat(canonical("" +
-                "⇔# Comment only."
-        )).isEqualTo("");
+        parseAndCheck("" +
+                        "⇔# Comment only."
+                , "" +
+                        "%YAML 1.2\n---\n");
     }
 
     @Disabled @Test void spec_5_2_Invalid_Byte_Order_Mark() {

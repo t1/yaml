@@ -10,14 +10,9 @@ import static java.util.stream.Collectors.joining;
 
 @Data
 public class Stream {
-    private DocumentPrefix prefix;
+    // TODO byte-order-marks; also test that all documents in a stream have the same encoding
+    // see http://www.yaml.org/spec/1.2/spec.html#id2800168
     private List<Document> documents = new ArrayList<>();
-
-    public DocumentPrefix prefix() {
-        if (prefix == null)
-            prefix = new DocumentPrefix();
-        return prefix;
-    }
 
     public Stream document(Document document) {
         this.documents.add(Objects.requireNonNull(document));
@@ -25,15 +20,10 @@ public class Stream {
     }
 
     @Override public String toString() {
-        StringBuilder out = new StringBuilder();
-        if (prefix != null)
-            out.append(prefix.toString());
-        out.append(documents.stream().map(Document::toString).collect(joining("\n---\n")));
-        return out.toString();
+        return documents.stream().map(Document::toString).collect(joining("\n"));
     }
 
     public Stream canonicalize() {
-        prefix = null; // The recommended encoding is UTF-8 which doesn't need a BOM, and prefix comments are not shown in the examples
         documents.forEach(Document::canonicalize);
         return this;
     }

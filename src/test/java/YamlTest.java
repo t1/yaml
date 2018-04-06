@@ -1,4 +1,5 @@
 import com.github.t1.yaml.Yaml;
+import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.Stream;
@@ -84,11 +85,12 @@ class YamlTest extends AbstractTest {
     }
 
     interface ThenDocumentToStringIsSameAsInput {
-        @Test default void thenDocumentToStringIsSameAsInput() { assertThat(document.toString()).isEqualTo(input); }
+        @Test default void thenDocumentToStringIsSameAsInput() { assertThat(toStringWithoutTrailingNl(document)).isEqualTo(input); }
+
     }
 
     interface ThenStreamToStringIsSameAsInput {
-        @Test default void thenStreamToStringIsSameAsInput() { assertThat(stream.toString()).isEqualTo(input); }
+        @Test default void thenStreamToStringIsSameAsInput() { assertThat(toStringWithoutTrailingNl(stream)).isEqualTo(input); }
     }
 
 
@@ -116,18 +118,6 @@ class YamlTest extends AbstractTest {
         @BeforeEach void setup() { input = ""; }
     }
 
-    @Nested class givenOneLineCommentOnlyStream extends EmptyStream {
-        @BeforeEach void setup() {
-            input = "# test comment";
-        }
-    }
-
-    @Nested class givenTwoLineCommentOnlyStream extends EmptyStream {
-        @BeforeEach void setup() {
-            input = "# test comment\n# line two";
-        }
-    }
-
 
     ////////////////////////////////////////////////////////////////////////////////////////
     class SingleDocument {
@@ -136,6 +126,20 @@ class YamlTest extends AbstractTest {
         @Nested class whenParseFirst extends ParseFirst implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput, ThenIsExpectedCanonicalDocument {}
 
         @Nested class whenParseSingle extends ParseSingle implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput, ThenIsExpectedCanonicalDocument {}
+    }
+
+    @Nested class givenOneLineCommentOnlyStream extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "# test comment";
+            expected = new Document().prefixComment(new Comment().text("test comment"));
+        }
+    }
+
+    @Nested class givenTwoLineCommentOnlyStream extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "# test comment\n# line two";
+            expected = new Document().prefixComment(new Comment().text("test comment")).prefixComment(new Comment().text("line two"));
+        }
     }
 
     @Nested class givenSpaceOnlyDocument extends SingleDocument {

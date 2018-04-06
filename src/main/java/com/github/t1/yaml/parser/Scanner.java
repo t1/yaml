@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static com.github.t1.yaml.model.Symbol.NL;
+import static com.github.t1.yaml.model.Symbol.WS;
 
 @RequiredArgsConstructor class Scanner {
     private static String toString(int codePoint) { return (codePoint < 0) ? "" : new String(Character.toChars(codePoint)); }
@@ -17,17 +18,18 @@ import static com.github.t1.yaml.model.Symbol.NL;
     private static String characterName(int codePoint) { return (codePoint < 0) ? "EOF" : Character.getName(codePoint); }
 
     private final Reader reader;
-    private int position = -1;
+    private int position = 0;
+    private int lineNumber = 1;
 
     private Supplier<? extends RuntimeException> error(String message) { return () -> new IllegalStateException(message + " but got " + this); }
 
-    void expect(Symbol symbol) { expect(symbol::matches, symbol.name()); }
+    Scanner expect(Symbol symbol) { return expect(symbol::matches, symbol.name()); }
 
-    char expect(Predicate<Character> predicate, String description) {
+    Scanner expect(Predicate<Character> predicate, String description) {
         char next = (char) read();
         if (!predicate.test(next))
             throw error("expected " + description).get();
-        return next;
+        return this;
     }
 
     boolean is(Symbol symbol) { return symbol.matches(peek()); }
@@ -47,7 +49,12 @@ import static com.github.t1.yaml.model.Symbol.NL;
     @SneakyThrows(IOException.class)
     int read() {
         position++;
-        return reader.read();
+        int codePoint = reader.read();
+        if (NL.matches(codePoint)) {
+            lineNumber++;
+            position = 1;
+        }
+        return codePoint;
     }
 
     @SneakyThrows(IOException.class)
@@ -60,17 +67,16 @@ import static com.github.t1.yaml.model.Symbol.NL;
 
     String readString() { return toString(read()); }
 
-    String readLine() {
-        String line = readUntil(NL);
-        if (more())
-            expect(NL);
-        return line;
-    }
+    String readWord() { return readUntil(WS); }
+
+    String readLine() { return readUntil(NL); }
 
     String readUntil(Symbol symbol) {
         StringBuilder builder = new StringBuilder();
         while (more() && !is(symbol))
             builder.append(readString());
+        if (more())
+            expect(symbol);
         return builder.toString();
     }
 
@@ -81,6 +87,6 @@ import static com.github.t1.yaml.model.Symbol.NL;
 
     @Override public String toString() {
         int c = peek();
-        return "[" + toString(c) + "][" + characterName(c) + "][0x" + Integer.toHexString(c) + "] at " + position;
+        return "[" + toString(c) + "][" + characterName(c) + "][0x" + Integer.toHexString(c) + "] at line " + lineNumber + " char " + position;
     }
 }

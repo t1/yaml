@@ -6,18 +6,23 @@ import java.util.function.Predicate;
 
 @RequiredArgsConstructor
 public enum Symbol {
-    BOM(c -> c == 0xFEFF),
+    BOM(0xFEFF),
+    SPACE(' '),
     WS(Character::isWhitespace),
-    HASH(c -> c == '#'),
-    EQ(c -> c == '='),
-    PLUS(c -> c == '+'),
-    MINUS(c -> c == '-'),
-    MULT(c -> c == '*'),
+    HASH('#'),
+    PERCENT('%'),
+    EQ('='),
+    PLUS('+'),
+    MINUS('-'),
+    MULT('*'),
+    PERIOD('.'),
     NL(c -> c == '\n' || c == '\r'),
     ALPHA(Character::isAlphabetic),
     NUMBER(Character::isDigit);
 
     private final Predicate<Integer> predicate;
+
+    private Symbol(int codePoint) { this(c -> c == codePoint); }
 
     public boolean matches(int codePoint) { return predicate.test(codePoint); }
 }
