@@ -38,22 +38,29 @@ public class Document {
 
     @Override public String toString() {
         StringBuilder out = new StringBuilder();
+        appendDirectives(out);
+        if (!prefixComments.isEmpty())
+            out.append(prefixComments.stream().map(Comment::toString).collect(joining("\n", "", "\n")));
+        if (node != null)
+            out.append(node);
+        if (hasDocumentEndMarker)
+            appendDocumentEnd(out);
+        return out.toString();
+    }
+
+    private void appendDirectives(StringBuilder out) {
         if (!directives.isEmpty() || hasDirectivesEndMarker) {
             for (Directive directive : directives)
                 out.append(directive).append('\n');
             out.append("---\n");
         }
-        if (!prefixComments.isEmpty())
-            out.append(prefixComments.stream().map(Comment::toString).collect(joining("\n", "", "\n")));
-        if (node != null)
-            out.append(node);
-        if (hasDocumentEndMarker) {
-            out.append("\n...");
-            if (suffixComment != null)
-                out.append(" ").append(suffixComment);
-            out.append("\n");
-        }
-        return out.toString();
+    }
+
+    private void appendDocumentEnd(StringBuilder out) {
+        out.append("\n...");
+        if (suffixComment != null)
+            out.append(" ").append(suffixComment);
+        out.append("\n");
     }
 
     public Document canonicalize() {

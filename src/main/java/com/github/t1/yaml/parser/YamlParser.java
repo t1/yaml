@@ -3,7 +3,6 @@ package com.github.t1.yaml.parser;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
-import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.Stream;
 
@@ -51,37 +50,53 @@ public class YamlParser {
         if (next.end())
             return Optional.empty();
 
+        return Optional.of(new DocumentParser().parse());
+    }
+
+    private class DocumentParser {
         Document document = new Document();
-        if (next.accept(PERCENT))
-            document.directive(directive());
-        if (next.accept(MINUS)) {
-            next.expect(MINUS).expect(MINUS).expect(NL);
-            document.hasDirectivesEndMarker(true);
+
+        private Document parse() {
+            directives();
+            prefixComments();
+            node();
+            documentEnd();
+            return document;
         }
 
-        while (next.accept(HASH))
-            document.prefixComment(comment());
+        private void directives() {
+            if (next.accept(PERCENT))
+                document.directive(directive());
 
-        if (next.more())
-            document.node(node());
-
-        if (next.accept(PERIOD)) {
-            next.expect(PERIOD).expect(PERIOD);
-            document.hasDocumentEndMarker(true);
-            if (next.accept(SPACE)) {
-                next.expect(HASH);
-                document.suffixComment(comment());
+            if (next.accept(MINUS)) {
+                next.expect(MINUS).expect(MINUS).expect(NL);
+                document.hasDirectivesEndMarker(true);
             }
         }
 
-        return Optional.of(document);
+        private void prefixComments() {
+            while (next.accept(HASH))
+                document.prefixComment(comment());
+        }
+
+        private void node() {
+            if (next.more())
+                document.node(new ScalarNode().text(next.readLine()));
+        }
+
+        private void documentEnd() {
+            if (next.accept(PERIOD)) {
+                next.expect(PERIOD).expect(PERIOD);
+                document.hasDocumentEndMarker(true);
+                if (next.accept(SPACE)) {
+                    next.expect(HASH);
+                    document.suffixComment(comment());
+                }
+            }
+        }
     }
 
     private Directive directive() {
         return new Directive(next.readWord(), next.readLine());
-    }
-
-    private Node node() {
-        return new ScalarNode().text(next.readLine());
     }
 }
