@@ -91,4 +91,31 @@ import static test.Helpers.parseAndCheck;
                         "---\n" +
                         "!!null \"\"\n");
     }
+
+    @Test void spec_9_6_Stream() {
+        parseAndCheck("" +
+                        "Document\n" +
+                        "---\n" +
+                        "# Empty\n" +
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "matches %: 20"
+                , "" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "!!str \"Document\"\n" +
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "!!null \"\"\n" +
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        // "!!map {\n" + // TODO !!map
+                        "!!str \"matches %: "/*"!!int \"*/ + "20\"\n" +
+                        // "}\n" +
+                        ""
+        );
+    }
 }

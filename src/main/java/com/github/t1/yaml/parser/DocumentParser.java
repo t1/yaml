@@ -60,14 +60,18 @@ import static com.github.t1.yaml.model.Symbol.WS;
 
 
     private void node() {
-        if (next.more() && !next.is(PERIOD)) {
+        if (more()) {
             if (next.is(CURLY_OPEN))
                 throw new YamlParseException("unexpected " + next);
             ScalarNode node = new ScalarNode();
-            while (next.more() && !next.is(PERIOD))
+            while (more())
                 node.line(next.readLine());
             document.node(node);
         }
+    }
+
+    private boolean more() {
+        return next.more() && !next.is(MINUS) && !next.is(PERIOD);
     }
 
 

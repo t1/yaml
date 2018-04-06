@@ -81,4 +81,6 @@ public class Document {
     }
 
     public boolean isEmpty() { return node == null && !hasDirectivesEndMarker; }
+
+    public boolean hasDirectives() { return !directives.isEmpty(); }
 }

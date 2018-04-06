@@ -16,7 +16,15 @@ public class Stream {
 
     public Stream document(Document document) {
         this.documents.add(Objects.requireNonNull(document));
+        fixDocumentEndMarkers();
         return this;
+    }
+
+    private void fixDocumentEndMarkers() {
+        for (int i = 1; i < documents.size(); i++) {
+            if (documents.get(i).hasDirectives() && !documents.get(i - 1).hasDocumentEndMarker())
+                documents.get(i - 1).hasDocumentEndMarker(true);
+        }
     }
 
     private boolean hasDocuments() { return !documents.isEmpty(); }
@@ -28,6 +36,7 @@ public class Stream {
     public Stream canonicalize() {
         documents.removeIf(Document::isEmpty);
         documents.forEach(Document::canonicalize);
+        fixDocumentEndMarkers();
         if (hasDocuments())
             lastDocument().hasDocumentEndMarker(false);
         return this;
