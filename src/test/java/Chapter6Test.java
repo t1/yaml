@@ -1,9 +1,10 @@
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class Chapter6Test extends SpecTest {
+@Tag("spec") class Chapter6Test extends AbstractTest {
     @Disabled @Test void spec_6_1_Indentation_Spaces() {
         assertThat(canonical("" +
                 "··# Leading comment line spaces are\n" +

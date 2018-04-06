@@ -11,15 +11,19 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
-class YamlTest {
+class YamlTest extends AbstractTest {
     ///////////////////////////////////// inputs
     private static String input;
     private static Document expected;
-    private static String expectedCanonical;
+
+    private static Stream expectedStream() { return new Stream().document(expected); }
+
+    private static Stream expectedCanonicalStream() { return expectedStream().canonicalize(); }
+
+    private static Document expectedCanonicalDocument() { return expected.canonicalize(); }
 
     ///////////////////////////////////// outputs
     private static Stream stream;
@@ -64,11 +68,19 @@ class YamlTest {
     }
 
     interface ThenIsExpectedStream {
-        @Test default void thenStreamIsExpected() { assertThat(stream.documents()).isEqualTo(singletonList(expected)); }
+        @Test default void thenStreamIsExpected() { assertThat(stream).isEqualTo(expectedStream()); }
+    }
+
+    interface ThenIsExpectedCanonicalStream {
+        @Test default void thenCanonicalStreamIsExpected() { assertThat(stream.canonicalize()).isEqualTo(expectedCanonicalStream()); }
     }
 
     interface ThenIsExpectedDocument {
         @Test default void thenDocumentIsExpected() { assertThat(document).isEqualTo(expected); }
+    }
+
+    interface ThenIsExpectedCanonicalDocument {
+        @Test default void thenCanonicalDocumentIsExpected() { assertThat(document.canonicalize()).isEqualTo(expectedCanonicalDocument()); }
     }
 
     interface ThenDocumentToStringIsSameAsInput {
@@ -91,15 +103,8 @@ class YamlTest {
 
     ///////////////////////////////////////////////////////////////////////// GIVEN
 
-    private class ThenDocument {
-        @Nested class whenParseAll extends ParseAll implements ThenIsExpectedStream, ThenStreamToStringIsSameAsInput {}
-
-        @Nested class whenParseFirst extends ParseFirst implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput {}
-
-        @Nested class whenParseSingle extends ParseSingle implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput {}
-    }
-
-    private class ThenEmptyStream {
+    ////////////////////////////////////////////////////////////////////////////////////////
+    class EmptyStream {
         @Nested class whenParseAll extends ParseAll implements ThenIsEmptyStream, ThenStreamToStringIsSameAsInput {}
 
         @Nested class whenParseFirst extends ParseFirst implements ThenThrowsExpectedAtLeastOne {}
@@ -107,30 +112,40 @@ class YamlTest {
         @Nested class whenParseSingle extends ParseSingle implements ThenThrowsExpectedExactlyOne {}
     }
 
-    @Nested class givenEmptyDocument extends ThenEmptyStream {
+    @Nested class givenEmptyDocument extends EmptyStream {
         @BeforeEach void setup() { input = ""; }
     }
 
-    @Nested class givenOneLineCommentOnlyStream extends ThenEmptyStream {
+    @Nested class givenOneLineCommentOnlyStream extends EmptyStream {
         @BeforeEach void setup() {
             input = "# test comment";
         }
     }
 
-    @Nested class givenTwoLineCommentOnlyStream extends ThenEmptyStream {
+    @Nested class givenTwoLineCommentOnlyStream extends EmptyStream {
         @BeforeEach void setup() {
             input = "# test comment\n# line two";
         }
     }
 
-    @Nested class givenSpaceOnlyDocument extends ThenDocument {
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    class SingleDocument {
+        @Nested class whenParseAll extends ParseAll implements ThenIsExpectedStream, ThenStreamToStringIsSameAsInput, ThenIsExpectedCanonicalStream {}
+
+        @Nested class whenParseFirst extends ParseFirst implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput, ThenIsExpectedCanonicalDocument {}
+
+        @Nested class whenParseSingle extends ParseSingle implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput, ThenIsExpectedCanonicalDocument {}
+    }
+
+    @Nested class givenSpaceOnlyDocument extends SingleDocument {
         @BeforeEach void setup() {
             input = " ";
             expected = new Document().node(new ScalarNode().text(" "));
         }
     }
 
-    @Nested class givenScalarDocument extends ThenDocument {
+    @Nested class givenScalarDocument extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string";
             expected = new Document().node(new ScalarNode().text("dummy-string"));

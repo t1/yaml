@@ -10,7 +10,8 @@ import static java.util.stream.Collectors.joining;
 
 @Data
 public class DocumentPrefix {
-    // TODO byte-order-mark
+    // TODO byte-order-marks; also test that all documents in a stream have the same encoding
+    // see http://www.yaml.org/spec/1.2/spec.html#id2800168
     private List<Comment> comments = new ArrayList<>();
 
     public DocumentPrefix comment(Comment comment) {

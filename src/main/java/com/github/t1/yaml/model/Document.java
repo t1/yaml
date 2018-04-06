@@ -22,8 +22,9 @@ public class Document {
         return out.toString();
     }
 
-    void canonicalize() {
+    public Document canonicalize() {
         directives.add(Directive.YAML_VERSION);
         node.canonicalize();
+        return this;
     }
 }

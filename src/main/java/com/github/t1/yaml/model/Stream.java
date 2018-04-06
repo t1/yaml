@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 
@@ -19,7 +20,7 @@ public class Stream {
     }
 
     public Stream document(Document document) {
-        this.documents.add(document);
+        this.documents.add(Objects.requireNonNull(document));
         return this;
     }
 

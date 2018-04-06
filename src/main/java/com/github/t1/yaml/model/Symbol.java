@@ -19,5 +19,5 @@ public enum Symbol {
 
     private final Predicate<Integer> predicate;
 
-    public boolean matches(int c) { return predicate.test(c); }
+    public boolean matches(int codePoint) { return predicate.test(codePoint); }
 }

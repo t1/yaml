@@ -1,8 +1,9 @@
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class Chapter9Test extends SpecTest {
+@Tag("spec") class Chapter9Test extends AbstractTest {
     @Test void spec_9_1_Document_Prefix() {
         assertThat(canonical("" +
                 "⇔# Comment\n" +
