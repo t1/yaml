@@ -9,4 +9,8 @@ public class ScalarNode extends Node {
     private String text;
 
     @Override public String toString() { return text; }
+
+    @Override public void canonicalize() {
+        text = "!!str \"" + text + "\"";
+    }
 }

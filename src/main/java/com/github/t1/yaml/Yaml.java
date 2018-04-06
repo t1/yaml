@@ -25,5 +25,5 @@ public class Yaml {
         return documents.get(0);
     }
 
-    public static Stream parseAll(String yaml) { return new YamlParser(new StringReader(yaml)).parse(); }
+    public static Stream parseAll(String yaml) { return new YamlParser(new StringReader(yaml)).stream(); }
 }

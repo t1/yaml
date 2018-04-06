@@ -5,5 +5,5 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class CollectionNode extends Node {
+public abstract class CollectionNode extends Node {
 }

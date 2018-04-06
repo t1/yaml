@@ -1,15 +1,25 @@
 import com.github.t1.yaml.Yaml;
-import com.github.t1.yaml.model.Document;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag("spec")
-class SpecTest {
+@Tag("spec") class SpecTest {
+    private static String canonical(String yaml) {
+        yaml = yaml.replace('⇔', '\uFEFF');
+        return Yaml.parseAll(yaml).canonicalize().toString();
+    }
+
+    @Test
+    void spec_5_1_Byte_Order_Mark() {
+        assertThat(canonical("" +
+                "⇔# Comment only."
+        )).isEqualTo("");
+    }
+
     @Disabled @Test void spec_6_1_Indentation_Spaces() {
-        Document document = Yaml.parseFirst("" +
+        assertThat(canonical("" +
                 "··# Leading comment line spaces are\n" +
                 "···# neither content nor indentation.\n" +
                 "····\n" +
@@ -21,9 +31,9 @@ class SpecTest {
                 "···By two,        # in flow style\n" +
                 "··Also by two,    # are neither\n" +
                 "··→Still by two   # content nor\n" +
-                "····]             # indentation.");
-
-        String canonical = "%YAML 1.2\n" +
+                "····]             # indentation."
+        )).isEqualTo("" +
+                "%YAML 1.2\n" +
                 "---\n" +
                 "!!map {\n" +
                 "  ? !!str \"Not indented\"\n" +
@@ -37,7 +47,17 @@ class SpecTest {
                 "          !!str \"Still by two\",\n" +
                 "        ]\n" +
                 "    }\n" +
-                "}";
-        assertThat(document.toString()).isEqualTo(canonical);
+                "}");
+    }
+
+    @Test void spec_9_1_Document_Prefix() {
+        assertThat(canonical("" +
+                "⇔# Comment\n" +
+                "# lines\n" +
+                "Document"
+        )).isEqualTo("" +
+                "%YAML 1.2\n" +
+                "---\n" +
+                "!!str \"Document\"");
     }
 }

@@ -1,5 +1,4 @@
 import com.github.t1.yaml.Yaml;
-import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.Stream;
@@ -20,6 +19,7 @@ class YamlTest {
     ///////////////////////////////////// inputs
     private static String input;
     private static Document expected;
+    private static String expectedCanonical;
 
     ///////////////////////////////////// outputs
     private static Stream stream;
@@ -91,7 +91,7 @@ class YamlTest {
 
     ///////////////////////////////////////////////////////////////////////// GIVEN
 
-    private class WhenDocument {
+    private class ThenDocument {
         @Nested class whenParseAll extends ParseAll implements ThenIsExpectedStream, ThenStreamToStringIsSameAsInput {}
 
         @Nested class whenParseFirst extends ParseFirst implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput {}
@@ -99,9 +99,7 @@ class YamlTest {
         @Nested class whenParseSingle extends ParseSingle implements ThenIsExpectedDocument, ThenDocumentToStringIsSameAsInput {}
     }
 
-    @Nested class givenEmptyDocument {
-        @BeforeEach void setup() { input = ""; }
-
+    private class ThenEmptyStream {
         @Nested class whenParseAll extends ParseAll implements ThenIsEmptyStream, ThenStreamToStringIsSameAsInput {}
 
         @Nested class whenParseFirst extends ParseFirst implements ThenThrowsExpectedAtLeastOne {}
@@ -109,17 +107,33 @@ class YamlTest {
         @Nested class whenParseSingle extends ParseSingle implements ThenThrowsExpectedExactlyOne {}
     }
 
-    @Nested class givenSpaceOnlyDocument extends WhenDocument {
+    @Nested class givenEmptyDocument extends ThenEmptyStream {
+        @BeforeEach void setup() { input = ""; }
+    }
+
+    @Nested class givenOneLineCommentOnlyStream extends ThenEmptyStream {
+        @BeforeEach void setup() {
+            input = "# test comment";
+        }
+    }
+
+    @Nested class givenTwoLineCommentOnlyStream extends ThenEmptyStream {
+        @BeforeEach void setup() {
+            input = "# test comment\n# line two";
+        }
+    }
+
+    @Nested class givenSpaceOnlyDocument extends ThenDocument {
         @BeforeEach void setup() {
             input = " ";
             expected = new Document().node(new ScalarNode().text(" "));
         }
     }
 
-    @Nested class givenCommentOnlyDocument extends WhenDocument {
+    @Nested class givenScalarDocument extends ThenDocument {
         @BeforeEach void setup() {
-            input = "# test comment";
-            expected = new Document().comment(new Comment().text("test comment"));
+            input = "dummy-string";
+            expected = new Document().node(new ScalarNode().text("dummy-string"));
         }
     }
 }

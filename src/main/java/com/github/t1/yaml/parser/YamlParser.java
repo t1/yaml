@@ -7,41 +7,51 @@ import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.Stream;
 
 import java.io.Reader;
+import java.util.List;
+import java.util.Optional;
 
-import static com.github.t1.yaml.parser.Token.HASH;
-import static com.github.t1.yaml.parser.Token.NL;
-import static com.github.t1.yaml.parser.Token.WS;
+import static com.github.t1.yaml.model.Symbol.BOM;
+import static com.github.t1.yaml.model.Symbol.HASH;
+import static com.github.t1.yaml.model.Symbol.NL;
+import static com.github.t1.yaml.model.Symbol.WS;
+import static java.util.Collections.emptyList;
 
 public class YamlParser {
-    private final Scanner scanner;
+    private final Scanner next;
 
-    public YamlParser(Reader reader) { this.scanner = new Scanner(reader); }
+    public YamlParser(Reader reader) { this.next = new Scanner(reader); }
 
-    public Stream parse() {
+    public Stream stream() {
         Stream stream = new Stream();
-        while (!scanner.end())
-            stream.document(document());
+        next.skip(BOM);
+        while (next.accept(HASH))
+            stream.prefix().comment(comment());
+        implicitDocument_Optional().ifPresent(stream::document);
+        explicitDocument_Stream().forEach(stream::document);
         return stream;
     }
 
-    private Document document() {
-        Document document = new Document();
-        if (scanner.is(HASH))
-            document.comment(comment());
+    private Optional<Document> implicitDocument_Optional() {
+        if (next.end())
+            return Optional.empty();
 
-        if (!scanner.end())
+        Document document = new Document();
+        if (next.more())
             document.node(node());
 
-        return document;
+        return Optional.of(document);
+    }
+
+    private List<Document> explicitDocument_Stream() {
+        return emptyList();
     }
 
     private Comment comment() {
-        scanner.expect(HASH);
-        scanner.skip(WS);
-        return new Comment().text(scanner.readUntil(NL));
+        next.skip(WS);
+        return new Comment().text(next.readLine());
     }
 
     private Node node() {
-        return new ScalarNode().text(scanner.readUntil(NL));
+        return new ScalarNode().text(next.readLine());
     }
 }

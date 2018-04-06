@@ -8,4 +8,6 @@ public abstract class Node {
     private NodeStyle style;
     private String spacing;
     private String lineWrapping;
+
+    public void canonicalize() {}
 }
