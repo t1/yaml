@@ -5,6 +5,7 @@ import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.ScalarNode;
+import com.github.t1.yaml.model.SequenceNode;
 import com.github.t1.yaml.model.Stream;
 import com.github.t1.yaml.parser.YamlParseException;
 import org.junit.jupiter.api.AfterEach;
@@ -69,32 +70,53 @@ class YamlTest {
     ///////////////////////////////////////////////////////////////////////// THEN
 
     interface ThenIsEmptyStream {
-        @Test default void thenStreamIsEmpty() { assertThat(stream.documents()).isEmpty(); }
+        @Test default void thenStreamIsEmpty() {
+            assertThat(thrown).isNull();
+            assertThat(stream.documents()).isEmpty();
+        }
     }
 
     interface ThenIsExpectedStream {
-        @Test default void thenStreamIsExpected() { assertThat(stream).isEqualTo(expectedStream()); }
+        @Test default void thenStreamIsExpected() {
+            assertThat(thrown).isNull();
+            assertThat(stream).isEqualTo(expectedStream());
+        }
     }
 
     interface ThenIsExpectedCanonicalStream {
-        @Test default void thenCanonicalStreamIsExpected() { assertThat(stream.canonicalize()).isEqualTo(expectedCanonicalStream()); }
+        @Test default void thenCanonicalStreamIsExpected() {
+            assertThat(thrown).isNull();
+            assertThat(stream.canonicalize()).isEqualTo(expectedCanonicalStream());
+        }
     }
 
     interface ThenIsExpectedDocument {
-        @Test default void thenDocumentIsExpected() { assertThat(document).isEqualTo(expected); }
+        @Test default void thenDocumentIsExpected() {
+            assertThat(thrown).isNull();
+            assertThat(document).isEqualTo(expected);
+        }
     }
 
     interface ThenIsExpectedCanonicalDocument {
-        @Test default void thenCanonicalDocumentIsExpected() { assertThat(document.canonicalize()).isEqualTo(expectedCanonicalDocument()); }
+        @Test default void thenCanonicalDocumentIsExpected() {
+            assertThat(thrown).isNull();
+            assertThat(document.canonicalize()).isEqualTo(expectedCanonicalDocument());
+        }
     }
 
     interface ThenDocumentToStringIsSameAsInput {
-        @Test default void thenDocumentToStringIsSameAsInput() { assertThat(toStringWithoutTrailingNl(document)).isEqualTo(input); }
+        @Test default void thenDocumentToStringIsSameAsInput() {
+            assertThat(thrown).isNull();
+            assertThat(toStringWithoutTrailingNl(document)).isEqualTo(input);
+        }
 
     }
 
     interface ThenStreamToStringIsSameAsInput {
-        @Test default void thenStreamToStringIsSameAsInput() { assertThat(toStringWithoutTrailingNl(stream)).isEqualTo(input); }
+        @Test default void thenStreamToStringIsSameAsInput() {
+            assertThat(thrown).isNull();
+            assertThat(toStringWithoutTrailingNl(stream)).isEqualTo(input);
+        }
     }
 
 
@@ -177,6 +199,16 @@ class YamlTest {
         @BeforeEach void setup() {
             input = "dummy-string";
             expected = new Document().node(new ScalarNode().line("dummy-string"));
+        }
+    }
+
+    @Nested class givenSequenceDocument extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "- one\n- two";
+            expected = new Document().node(new SequenceNode()
+                    .entry(new ScalarNode().line("one"))
+                    .entry(new ScalarNode().line("two"))
+            );
         }
     }
 }

@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
     private static final String BOM = "⇔";
 
     static String toStringWithoutTrailingNl(Object object) {
+        if (object == null)
+            return null;
         String string = object.toString();
         if (!string.isEmpty() && string.charAt(string.length() - 1) == '\n')
             string = string.substring(0, string.length() - 1);

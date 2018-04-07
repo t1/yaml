@@ -1,6 +1,7 @@
 package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.model.Symbol;
+import com.github.t1.yaml.model.Token;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -23,6 +24,11 @@ import static com.github.t1.yaml.model.Symbol.WS;
 
     private Supplier<? extends RuntimeException> error(String message) { return () -> new YamlParseException(message + " but got " + this); }
 
+    Scanner expect(Token token) {
+        token.symbols().forEach(this::expect);
+        return this;
+    }
+
     Scanner expect(Symbol symbol) { return expect(symbol::matches, symbol.name()); }
 
     Scanner expect(Predicate<Character> predicate, String description) {
@@ -34,9 +40,19 @@ import static com.github.t1.yaml.model.Symbol.WS;
 
     boolean is(Symbol symbol) { return symbol.matches(peek()); }
 
+    boolean is(Token token) { return token.matches(peek(token.length())); }
+
     boolean accept(Symbol symbol) {
         if (is(symbol)) {
             expect(symbol);
+            return true;
+        } else
+            return false;
+    }
+
+    boolean accept(Token token) {
+        if (is(token)) {
+            expect(token);
             return true;
         } else
             return false;
@@ -56,6 +72,18 @@ import static com.github.t1.yaml.model.Symbol.WS;
         return false;
     }
 
+    int peek() { return peek(1)[0]; }
+
+    @SneakyThrows(IOException.class)
+    int[] peek(int count) {
+        reader.mark(count);
+        int[] read = new int[count];
+        for (int i = 0; i < count; i++)
+            read[i] = reader.read();
+        reader.reset();
+        return read;
+    }
+
     @SneakyThrows(IOException.class)
     int read() {
         int codePoint = reader.read();
@@ -71,14 +99,6 @@ import static com.github.t1.yaml.model.Symbol.WS;
     }
 
     private boolean isBOM(int codePoint) { return codePoint == 0xFEFF; }
-
-    @SneakyThrows(IOException.class)
-    int peek() {
-        reader.mark(1);
-        int read = reader.read();
-        reader.reset();
-        return read;
-    }
 
     String readString() { return toString(read()); }
 

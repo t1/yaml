@@ -1,6 +1,7 @@
 package test;
 
 import com.github.t1.yaml.parser.YamlParseException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -23,5 +24,28 @@ import static test.Helpers.parseAndCheck;
                 "Inside a document."))
                 .isInstanceOf(YamlParseException.class)
                 .hasMessage("A BOM must not appear inside a document");
+    }
+
+    @Disabled @Test void sped_5_3_Block_Structure_Indicators() {
+        parseAndCheck("" +
+                        "sequence:\n" +
+                        "- one\n" +
+                        "- two\n" +
+                        "mapping:\n" +
+                        "  ? sky\n" +
+                        "  : blue\n" +
+                        "  sea : green"
+                , "" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "!!map {\n" +
+                        "  ? !!str \"sequence\"\n" +
+                        "  : !!seq [ !!str \"one\", !!str \"two\" ],\n" +
+                        "  ? !!str \"mapping\"\n" +
+                        "  : !!map {\n" +
+                        "    ? !!str \"sky\" : !!str \"blue\",\n" +
+                        "    ? !!str \"sea\" : !!str \"green\",\n" +
+                        "  },\n" +
+                        "}");
     }
 }
