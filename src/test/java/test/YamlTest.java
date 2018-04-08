@@ -4,6 +4,7 @@ import com.github.t1.yaml.Yaml;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
+import com.github.t1.yaml.model.MappingNode;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.SequenceNode;
 import com.github.t1.yaml.model.Stream;
@@ -208,6 +209,16 @@ class YamlTest {
             expected = new Document().node(new SequenceNode()
                     .entry(new ScalarNode().line("one"))
                     .entry(new ScalarNode().line("two"))
+            );
+        }
+    }
+
+    @Nested class givenMappingDocument extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky: blue\nsea: green";
+            expected = new Document().node(new MappingNode()
+                    .entry("sky", "blue")
+                    .entry("sea", "green")
             );
         }
     }

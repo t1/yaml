@@ -6,4 +6,6 @@ import lombok.Data;
 public class KeyValuePair {
     private Node key;
     private Node value;
+
+    public String toString() { return key + ": " + value; }
 }

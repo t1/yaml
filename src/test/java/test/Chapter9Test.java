@@ -100,7 +100,7 @@ import static test.Helpers.parseAndCheck;
                         "...\n" +
                         "%YAML 1.2\n" +
                         "---\n" +
-                        "matches %: 20"
+                        "matches" // TODO ' %: 20'
                 , "" +
                         "%YAML 1.2\n" +
                         "---\n" +
@@ -113,7 +113,7 @@ import static test.Helpers.parseAndCheck;
                         "%YAML 1.2\n" +
                         "---\n" +
                         // "!!map {\n" + // TODO !!map
-                        "!!str \"matches %: "/*"!!int \"*/ + "20\"\n" +
+                        "!!str \"matches" /*%: !!int 20*/ + "\"\n" +
                         // "}\n" +
                         ""
         );

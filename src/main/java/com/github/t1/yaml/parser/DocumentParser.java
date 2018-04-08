@@ -3,12 +3,14 @@ package com.github.t1.yaml.parser;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
+import com.github.t1.yaml.model.MappingNode;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.SequenceNode;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
+import static com.github.t1.yaml.model.Symbol.COLON;
 import static com.github.t1.yaml.model.Symbol.CURLY_OPEN;
 import static com.github.t1.yaml.model.Symbol.HASH;
 import static com.github.t1.yaml.model.Symbol.MINUS;
@@ -18,6 +20,7 @@ import static com.github.t1.yaml.model.Symbol.SPACE;
 import static com.github.t1.yaml.model.Symbol.WS;
 import static com.github.t1.yaml.model.Token.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.model.Token.DOCUMENT_END_MARKER;
+import static com.github.t1.yaml.parser.Scanner.lastChar;
 
 @RequiredArgsConstructor public class DocumentParser {
     private final Scanner next;
@@ -68,10 +71,17 @@ import static com.github.t1.yaml.model.Token.DOCUMENT_END_MARKER;
             if (next.is(MINUS))
                 sequenceNode();
             else if (next.is(CURLY_OPEN))
+                mappingBlockNode();
+            else if (isBlockMapping())
                 mappingNode();
             else
                 scalarNode();
         }
+    }
+
+    private boolean isBlockMapping() {
+        String token = next.peekUntil(WS);
+        return token.length() >= 1 && COLON.matches(lastChar(token));
     }
 
     private void sequenceNode() {
@@ -84,6 +94,17 @@ import static com.github.t1.yaml.model.Token.DOCUMENT_END_MARKER;
     }
 
     private void mappingNode() {
+        MappingNode mappingNode = new MappingNode();
+        while (next.more()) {
+            String key = next.readUntilAndSkip(COLON);
+            next.expect(SPACE);
+            String value = next.readLine();
+            mappingNode.entry(key, value);
+        }
+        document.node(mappingNode);
+    }
+
+    private void mappingBlockNode() {
         throw new YamlParseException("unexpected " + next);
     }
 

@@ -32,7 +32,7 @@ public class Document {
     }
 
     public Document node(Node node) {
-        assert this.node == null;
+        assert this.node == null : "Already has node";
         this.node = Objects.requireNonNull(node);
         return this;
     }

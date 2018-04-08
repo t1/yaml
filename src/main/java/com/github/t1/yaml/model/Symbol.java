@@ -15,6 +15,7 @@ public enum Symbol {
     MINUS('-'),
     MULT('*'),
     PERIOD('.'),
+    COLON(':'),
     CURLY_OPEN('{'),
     CURLY_CLOSE('}'),
     NL(c -> c == '\n' || c == '\r'),

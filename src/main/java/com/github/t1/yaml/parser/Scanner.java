@@ -14,15 +14,24 @@ import static com.github.t1.yaml.model.Symbol.NL;
 import static com.github.t1.yaml.model.Symbol.WS;
 
 @RequiredArgsConstructor public class Scanner {
+    private static final int MAX_PEEK = 1024;
+
     private static String toString(int codePoint) { return (codePoint < 0) ? "" : new String(Character.toChars(codePoint)); }
 
     private static String characterName(int codePoint) { return (codePoint < 0) ? "EOF" : Character.getName(codePoint); }
+
+    static int lastChar(String string) { return string.substring(string.length() - 1, string.length()).codePointAt(0); }
 
     private final Reader reader;
     private int position = 1;
     private int lineNumber = 1;
 
     private Supplier<? extends RuntimeException> error(String message) { return () -> new YamlParseException(message + " but got " + this); }
+
+    Scanner expect(String token) {
+        token.codePoints().forEach(codePoint -> this.expect(c -> c == codePoint, "codePoint " + characterName(codePoint)));
+        return this;
+    }
 
     Scanner expect(Token token) {
         token.symbols().forEach(this::expect);
@@ -85,6 +94,20 @@ import static com.github.t1.yaml.model.Symbol.WS;
     }
 
     @SneakyThrows(IOException.class)
+    String peekUntil(Symbol symbol) {
+        StringBuilder out = new StringBuilder();
+        reader.mark(MAX_PEEK);
+        while (true) {
+            int codePoint = reader.read();
+            if (codePoint < 0 || symbol.matches(codePoint))
+                break;
+            out.appendCodePoint(codePoint);
+        }
+        reader.reset();
+        return out.toString();
+    }
+
+    @SneakyThrows(IOException.class)
     int read() {
         int codePoint = reader.read();
         if (isBOM(codePoint))
@@ -102,16 +125,21 @@ import static com.github.t1.yaml.model.Symbol.WS;
 
     String readString() { return toString(read()); }
 
-    String readWord() { return readUntil(WS); }
+    String readWord() { return readUntilAndSkip(WS); }
 
-    String readLine() { return readUntil(NL); }
+    String readLine() { return readUntilAndSkip(NL); }
+
+    String readUntilAndSkip(Symbol symbol) {
+        String result = readUntil(symbol);
+        if (more())
+            expect(symbol);
+        return result;
+    }
 
     String readUntil(Symbol symbol) {
         StringBuilder builder = new StringBuilder();
         while (more() && !is(symbol))
             builder.append(readString());
-        if (more())
-            expect(symbol);
         return builder.toString();
     }
 
