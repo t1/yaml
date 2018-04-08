@@ -4,6 +4,7 @@ import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.MappingNode;
+import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.SequenceNode;
 import lombok.RequiredArgsConstructor;
@@ -68,15 +69,30 @@ import static com.github.t1.yaml.parser.Scanner.lastChar;
 
     private void node() {
         if (more()) {
-            if (next.is(MINUS))
-                sequenceNode();
-            else if (next.is(CURLY_OPEN))
-                mappingBlockNode();
+            Node node;
+            if (isBlockSequence())
+                node = blockSequence();
+            else if (isFlowMapping())
+                node = flowMapping();
             else if (isBlockMapping())
-                mappingNode();
+                node = blockMapping();
             else
-                scalarNode();
+                node = scalarNode();
+            document.node(node);
         }
+    }
+
+    private boolean isBlockSequence() {
+        return next.is(MINUS);
+    }
+
+    private SequenceNode blockSequence() {
+        SequenceNode node = new SequenceNode();
+        while (more()) {
+            next.expect(MINUS).expect(SPACE);
+            node.entry(new ScalarNode().line(next.readLine()));
+        }
+        return node;
     }
 
     private boolean isBlockMapping() {
@@ -84,16 +100,7 @@ import static com.github.t1.yaml.parser.Scanner.lastChar;
         return token.length() >= 1 && COLON.matches(lastChar(token));
     }
 
-    private void sequenceNode() {
-        SequenceNode node = new SequenceNode();
-        while (more()) {
-            next.expect(MINUS).expect(SPACE);
-            node.entry(new ScalarNode().line(next.readLine()));
-        }
-        document.node(node);
-    }
-
-    private void mappingNode() {
+    private MappingNode blockMapping() {
         MappingNode mappingNode = new MappingNode();
         while (next.more()) {
             String key = next.readUntilAndSkip(COLON);
@@ -101,22 +108,35 @@ import static com.github.t1.yaml.parser.Scanner.lastChar;
             String value = next.readLine();
             mappingNode.entry(key, value);
         }
-        document.node(mappingNode);
+        return mappingNode;
     }
 
-    private void mappingBlockNode() {
+    private boolean isFlowMapping() {
+        return next.is(CURLY_OPEN);
+    }
+
+    private MappingNode flowMapping() {
         throw new YamlParseException("unexpected " + next);
     }
 
-    private void scalarNode() {
+    private ScalarNode scalarNode() {
         ScalarNode node = new ScalarNode();
-        while (more())
+        while (more()) {
+            if (isBlockSequence())
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence at " + next);
+            if (isFlowMapping())
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping at " + next);
+            if (isBlockMapping())
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping at " + next);
             node.line(next.readLine());
-        document.node(node);
+        }
+        return node;
     }
 
     private boolean more() {
-        return next.more() && !next.is(DIRECTIVES_END_MARKER) && !next.is(DOCUMENT_END_MARKER);
+        return next.more()
+                && !next.is(DOCUMENT_END_MARKER)
+                && !next.is(DIRECTIVES_END_MARKER); // of next document
     }
 
 

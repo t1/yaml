@@ -18,7 +18,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static test.Helpers.parse;
 import static test.Helpers.toStringWithoutTrailingNl;
 
 class YamlTest {
@@ -221,5 +223,29 @@ class YamlTest {
                     .entry("sea", "green")
             );
         }
+    }
+
+    @Test void expectScalarStartNotContinueWithBlockSequence() {
+        Throwable thrown = catchThrowable(() -> parse("scalar document\n- illegal sequence"));
+
+        assertThat(thrown)
+                .isInstanceOf(YamlParseException.class)
+                .hasMessage("Expected a scalar node to continue with scalar values but found block sequence at [-][HYPHEN-MINUS][0x2d] at line 2 char 1");
+    }
+
+    @Test void expectScalarStartNotContinueWithBlockMapping() {
+        Throwable thrown = catchThrowable(() -> parse("scalar document\nkey: value"));
+
+        assertThat(thrown)
+                .isInstanceOf(YamlParseException.class)
+                .hasMessage("Expected a scalar node to continue with scalar values but found block mapping at [k][LATIN SMALL LETTER K][0x6b] at line 2 char 1");
+    }
+
+    @Test void expectScalarStartNotContinueWithFlowMapping() {
+        Throwable thrown = catchThrowable(() -> parse("scalar document\n{key: value}"));
+
+        assertThat(thrown)
+                .isInstanceOf(YamlParseException.class)
+                .hasMessage("Expected a scalar node to continue with scalar values but found flow mapping at [{][LEFT CURLY BRACKET][0x7b] at line 2 char 1");
     }
 }
