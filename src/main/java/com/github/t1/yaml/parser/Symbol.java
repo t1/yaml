@@ -1,4 +1,4 @@
-package com.github.t1.yaml.model;
+package com.github.t1.yaml.parser;
 
 import lombok.RequiredArgsConstructor;
 

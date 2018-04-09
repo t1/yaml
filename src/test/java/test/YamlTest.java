@@ -198,30 +198,10 @@ class YamlTest {
         }
     }
 
-    @Nested class givenScalarDocument extends SingleDocument {
+    @Nested class givenScalar extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string";
             expected = new Document().node(new ScalarNode().line("dummy-string"));
-        }
-    }
-
-    @Nested class givenSequenceDocument extends SingleDocument {
-        @BeforeEach void setup() {
-            input = "- one\n- two";
-            expected = new Document().node(new SequenceNode()
-                    .entry(new ScalarNode().line("one"))
-                    .entry(new ScalarNode().line("two"))
-            );
-        }
-    }
-
-    @Nested class givenMappingDocument extends SingleDocument {
-        @BeforeEach void setup() {
-            input = "sky: blue\nsea: green";
-            expected = new Document().node(new MappingNode()
-                    .entry("sky", "blue")
-                    .entry("sea", "green")
-            );
         }
     }
 
@@ -247,5 +227,45 @@ class YamlTest {
         assertThat(thrown)
                 .isInstanceOf(YamlParseException.class)
                 .hasMessage("Expected a scalar node to continue with scalar values but found flow mapping at [{][LEFT CURLY BRACKET][0x7b] at line 2 char 1");
+    }
+
+    @Nested class givenSequence extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "- one\n- two";
+            expected = new Document().node(new SequenceNode()
+                    .entry(new ScalarNode().line("one"))
+                    .entry(new ScalarNode().line("two"))
+            );
+        }
+    }
+
+    @Nested class givenBlockMapping extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky: blue\nsea: green";
+            expected = new Document().node(new MappingNode()
+                    .entry("sky", "blue")
+                    .entry("sea", "green")
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithSpaceInKey extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky high: blue\nsea deep: green";
+            expected = new Document().node(new MappingNode()
+                    .entry("sky high", "blue")
+                    .entry("sea deep", "green")
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithColonInKey extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky:high: blue\nsea:deep: green";
+            expected = new Document().node(new MappingNode()
+                    .entry("sky:high", "blue")
+                    .entry("sea:deep", "green")
+            );
+        }
     }
 }

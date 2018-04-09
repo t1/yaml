@@ -1,7 +1,5 @@
 package com.github.t1.yaml.parser;
 
-import com.github.t1.yaml.model.Symbol;
-import com.github.t1.yaml.model.Token;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -10,11 +8,12 @@ import java.io.Reader;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static com.github.t1.yaml.model.Symbol.NL;
-import static com.github.t1.yaml.model.Symbol.WS;
+import static com.github.t1.yaml.parser.Symbol.NL;
+import static com.github.t1.yaml.parser.Symbol.WS;
 
 @RequiredArgsConstructor public class Scanner {
-    private static final int MAX_PEEK = 1024;
+    /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832 */
+    private static final int MAX_LOOK_AHEAD = 1024;
 
     private static String toString(int codePoint) { return (codePoint < 0) ? "" : new String(Character.toChars(codePoint)); }
 
@@ -34,7 +33,7 @@ import static com.github.t1.yaml.model.Symbol.WS;
     }
 
     Scanner expect(Token token) {
-        token.symbols().forEach(this::expect);
+        token.symbols.forEach(this::expect);
         return this;
     }
 
@@ -86,25 +85,37 @@ import static com.github.t1.yaml.model.Symbol.WS;
     @SneakyThrows(IOException.class)
     int[] peek(int count) {
         reader.mark(count);
-        int[] read = new int[count];
-        for (int i = 0; i < count; i++)
-            read[i] = reader.read();
-        reader.reset();
-        return read;
+        try {
+            int[] read = new int[count];
+            for (int i = 0; i < count; i++)
+                read[i] = reader.read();
+            return read;
+        } finally {
+            reader.reset();
+        }
     }
 
     @SneakyThrows(IOException.class)
-    String peekUntil(Symbol symbol) {
-        StringBuilder out = new StringBuilder();
-        reader.mark(MAX_PEEK);
-        while (true) {
-            int codePoint = reader.read();
-            if (codePoint < 0 || symbol.matches(codePoint))
-                break;
-            out.appendCodePoint(codePoint);
+    String peekUntil(Token token) {
+        reader.mark(MAX_LOOK_AHEAD);
+        try {
+            StringBuilder out = new StringBuilder();
+            int matchLength = 0;
+            while (true) {
+                int codePoint = reader.read();
+                if (codePoint < 0)
+                    return null;
+                if (token.symbol(matchLength).matches(codePoint)) {
+                    if (++matchLength == token.length())
+                        return out.toString();
+                } else {
+                    matchLength = 0;
+                    out.appendCodePoint(codePoint);
+                }
+            }
+        } finally {
+            reader.reset();
         }
-        reader.reset();
-        return out.toString();
     }
 
     @SneakyThrows(IOException.class)
@@ -139,6 +150,13 @@ import static com.github.t1.yaml.model.Symbol.WS;
     String readUntil(Symbol symbol) {
         StringBuilder builder = new StringBuilder();
         while (more() && !is(symbol))
+            builder.append(readString());
+        return builder.toString();
+    }
+
+    String readUntil(Token token) {
+        StringBuilder builder = new StringBuilder();
+        while (more() && !is(token))
             builder.append(readString());
         return builder.toString();
     }

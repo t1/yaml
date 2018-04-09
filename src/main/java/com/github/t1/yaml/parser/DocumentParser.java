@@ -11,17 +11,16 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
-import static com.github.t1.yaml.model.Symbol.COLON;
-import static com.github.t1.yaml.model.Symbol.CURLY_OPEN;
-import static com.github.t1.yaml.model.Symbol.HASH;
-import static com.github.t1.yaml.model.Symbol.MINUS;
-import static com.github.t1.yaml.model.Symbol.NL;
-import static com.github.t1.yaml.model.Symbol.PERCENT;
-import static com.github.t1.yaml.model.Symbol.SPACE;
-import static com.github.t1.yaml.model.Symbol.WS;
-import static com.github.t1.yaml.model.Token.DIRECTIVES_END_MARKER;
-import static com.github.t1.yaml.model.Token.DOCUMENT_END_MARKER;
-import static com.github.t1.yaml.parser.Scanner.lastChar;
+import static com.github.t1.yaml.parser.Symbol.CURLY_OPEN;
+import static com.github.t1.yaml.parser.Symbol.HASH;
+import static com.github.t1.yaml.parser.Symbol.MINUS;
+import static com.github.t1.yaml.parser.Symbol.NL;
+import static com.github.t1.yaml.parser.Symbol.PERCENT;
+import static com.github.t1.yaml.parser.Symbol.SPACE;
+import static com.github.t1.yaml.parser.Symbol.WS;
+import static com.github.t1.yaml.parser.Token.BLOCK_MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Token.DIRECTIVES_END_MARKER;
+import static com.github.t1.yaml.parser.Token.DOCUMENT_END_MARKER;
 
 @RequiredArgsConstructor public class DocumentParser {
     private final Scanner next;
@@ -96,15 +95,15 @@ import static com.github.t1.yaml.parser.Scanner.lastChar;
     }
 
     private boolean isBlockMapping() {
-        String token = next.peekUntil(WS);
-        return token.length() >= 1 && COLON.matches(lastChar(token));
+        String token = next.peekUntil(BLOCK_MAPPING_VALUE);
+        return token != null && token.length() >= 1 && !token.contains("\n");
     }
 
     private MappingNode blockMapping() {
         MappingNode mappingNode = new MappingNode();
         while (next.more()) {
-            String key = next.readUntilAndSkip(COLON);
-            next.expect(SPACE);
+            String key = next.readUntil(BLOCK_MAPPING_VALUE);
+            next.expect(BLOCK_MAPPING_VALUE);
             String value = next.readLine();
             mappingNode.entry(key, value);
         }
