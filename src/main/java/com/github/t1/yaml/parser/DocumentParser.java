@@ -6,11 +6,13 @@ import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.MappingNode;
 import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.ScalarNode;
+import com.github.t1.yaml.model.ScalarNode.Style;
 import com.github.t1.yaml.model.SequenceNode;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
+import static com.github.t1.yaml.parser.Quotes.PLAIN;
 import static com.github.t1.yaml.parser.Symbol.CURLY_OPEN;
 import static com.github.t1.yaml.parser.Symbol.HASH;
 import static com.github.t1.yaml.parser.Symbol.MINUS;
@@ -21,6 +23,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 import static com.github.t1.yaml.parser.Token.BLOCK_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Token.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Token.DOCUMENT_END_MARKER;
+import static com.github.t1.yaml.parser.Token.EOL;
 
 @RequiredArgsConstructor public class DocumentParser {
     private final Scanner next;
@@ -102,9 +105,9 @@ import static com.github.t1.yaml.parser.Token.DOCUMENT_END_MARKER;
     private MappingNode blockMapping() {
         MappingNode mappingNode = new MappingNode();
         while (next.more()) {
-            String key = next.readUntil(BLOCK_MAPPING_VALUE);
+            ScalarNode key = scalar(BLOCK_MAPPING_VALUE);
             next.expect(BLOCK_MAPPING_VALUE);
-            String value = next.readLine();
+            ScalarNode value = scalar(EOL);
             mappingNode.entry(key, value);
         }
         return mappingNode;
@@ -119,16 +122,25 @@ import static com.github.t1.yaml.parser.Token.DOCUMENT_END_MARKER;
     }
 
     private ScalarNode scalarNode() {
-        ScalarNode node = new ScalarNode();
-        while (more()) {
-            if (isBlockSequence())
-                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence at " + next);
-            if (isFlowMapping())
-                throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping at " + next);
-            if (isBlockMapping())
-                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping at " + next);
-            node.line(next.readLine());
-        }
+        ScalarNode node = scalar(EOL);
+        if (node.style() == Style.PLAIN)
+            while (more()) {
+                if (isBlockSequence())
+                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence at " + next);
+                if (isFlowMapping())
+                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping at " + next);
+                if (isBlockMapping())
+                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping at " + next);
+                node.line(PLAIN.scan(next));
+            }
+        return node;
+    }
+
+    private ScalarNode scalar(Token end) {
+        Quotes quotes = Quotes.recognize(next);
+        ScalarNode node = new ScalarNode().style(quotes.style)
+                .line((quotes == PLAIN) ? next.readUntil(end) : quotes.scan(next));
+        next.skip(NL);
         return node;
     }
 

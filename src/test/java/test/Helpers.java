@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @UtilityClass final class Helpers {
     private static final String BOM = "⇔";
+    private static final String EMPTY = "°";
 
     static String toStringWithoutTrailingNl(Object object) {
         if (object == null)
@@ -27,7 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
     }
 
     static Stream parse(String yaml) {
-        yaml = yaml.replace(BOM, "\uFEFF");
+        yaml = yaml
+                .replace(BOM, "\uFEFF")
+                .replace(EMPTY, "");
         return Yaml.parseAll(yaml);
     }
 }

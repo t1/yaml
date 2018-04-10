@@ -1,10 +1,11 @@
 package com.github.t1.yaml.parser;
 
+import com.github.t1.yaml.parser.CodePointReader.Mark;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -15,20 +16,16 @@ import static com.github.t1.yaml.parser.Symbol.WS;
     /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832 */
     private static final int MAX_LOOK_AHEAD = 1024;
 
-    private static String toString(int codePoint) { return (codePoint < 0) ? "" : new String(Character.toChars(codePoint)); }
-
-    private static String characterName(int codePoint) { return (codePoint < 0) ? "EOF" : Character.getName(codePoint); }
-
-    static int lastChar(String string) { return string.substring(string.length() - 1, string.length()).codePointAt(0); }
-
-    private final Reader reader;
+    private final CodePointReader reader;
     private int position = 1;
     private int lineNumber = 1;
+
+    public Scanner(Reader reader) { this(new CodePointReader(reader)); }
 
     private Supplier<? extends RuntimeException> error(String message) { return () -> new YamlParseException(message + " but got " + this); }
 
     Scanner expect(String token) {
-        token.codePoints().forEach(codePoint -> this.expect(c -> c == codePoint, "codePoint " + characterName(codePoint)));
+        CodePoint.stream(token).forEach(codePoint -> this.expect(codePoint::equals, "codePoint " + codePoint.info()));
         return this;
     }
 
@@ -39,8 +36,8 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 
     Scanner expect(Symbol symbol) { return expect(symbol::matches, symbol.name()); }
 
-    Scanner expect(Predicate<Character> predicate, String description) {
-        char next = (char) read();
+    Scanner expect(Predicate<CodePoint> predicate, String description) {
+        CodePoint next = read();
         if (!predicate.test(next))
             throw error("expected " + description).get();
         return this;
@@ -66,11 +63,10 @@ import static com.github.t1.yaml.parser.Symbol.WS;
             return false;
     }
 
-    boolean end() { return !more(); }
+    boolean end() { return peek().isEof(); }
 
-    public boolean more() { return peek() >= 0; }
+    public boolean more() { return !end(); }
 
-    @SneakyThrows(IOException.class)
     boolean acceptBom() {
         if (isBOM(peek())) {
             //noinspection ResultOfMethodCallIgnored
@@ -80,47 +76,39 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return false;
     }
 
-    int peek() { return peek(1)[0]; }
-
-    @SneakyThrows(IOException.class)
-    int[] peek(int count) {
-        reader.mark(count);
-        try {
-            int[] read = new int[count];
-            for (int i = 0; i < count; i++)
-                read[i] = reader.read();
-            return read;
-        } finally {
-            reader.reset();
+    CodePoint peek() {
+        try (Mark mark = reader.mark(1)) {
+            return reader.read();
         }
     }
 
-    @SneakyThrows(IOException.class)
+    List<CodePoint> peek(int count) {
+        try (Mark mark = reader.mark(count)) {
+            return reader.read(count);
+        }
+    }
+
     String peekUntil(Token token) {
-        reader.mark(MAX_LOOK_AHEAD);
-        try {
+        try (Mark mark = reader.mark(MAX_LOOK_AHEAD)) {
             StringBuilder out = new StringBuilder();
             int matchLength = 0;
             while (true) {
-                int codePoint = reader.read();
-                if (codePoint < 0)
+                CodePoint codePoint = reader.read();
+                if (codePoint.isEof())
                     return null;
                 if (token.symbol(matchLength).matches(codePoint)) {
                     if (++matchLength == token.length())
                         return out.toString();
                 } else {
                     matchLength = 0;
-                    out.appendCodePoint(codePoint);
+                    codePoint.appendTo(out);
                 }
             }
-        } finally {
-            reader.reset();
         }
     }
 
-    @SneakyThrows(IOException.class)
-    int read() {
-        int codePoint = reader.read();
+    CodePoint read() {
+        CodePoint codePoint = reader.read();
         if (isBOM(codePoint))
             throw new YamlParseException("A BOM must not appear inside a document");
         if (NL.matches(codePoint)) {
@@ -132,26 +120,26 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return codePoint;
     }
 
-    private boolean isBOM(int codePoint) { return codePoint == 0xFEFF; }
+    private boolean isBOM(CodePoint codePoint) { return codePoint.matches(0xFEFF); }
 
-    String readString() { return toString(read()); }
+    String readString() { return read().toString(); }
 
     String readWord() { return readUntilAndSkip(WS); }
 
     String readLine() { return readUntilAndSkip(NL); }
-
-    String readUntilAndSkip(Symbol symbol) {
-        String result = readUntil(symbol);
-        if (more())
-            expect(symbol);
-        return result;
-    }
 
     String readUntil(Symbol symbol) {
         StringBuilder builder = new StringBuilder();
         while (more() && !is(symbol))
             builder.append(readString());
         return builder.toString();
+    }
+
+    String readUntilAndSkip(Symbol symbol) {
+        String result = readUntil(symbol);
+        if (more())
+            expect(symbol);
+        return result;
     }
 
     String readUntil(Token token) {
@@ -161,13 +149,25 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return builder.toString();
     }
 
-    void skip(Symbol symbol) {
+    String readUntilAndSkip(Token token) {
+        String result = readUntil(token);
+        if (more())
+            expect(token);
+        return result;
+    }
+
+    Scanner skip(Symbol symbol) {
         while (is(symbol))
             expect(symbol);
+        return this;
     }
 
     @Override public String toString() {
-        int c = peek();
-        return "[" + toString(c) + "][" + characterName(c) + "][0x" + Integer.toHexString(c) + "] at line " + lineNumber + " char " + position;
+        CodePoint c = peek();
+        return "[" + c + "][" + c.info() + "][0x" + hex(c) + "] at line " + lineNumber + " char " + position;
+    }
+
+    @NotNull private String hex(CodePoint c) {
+        return Integer.toHexString(c.value);
     }
 }

@@ -268,4 +268,34 @@ class YamlTest {
             );
         }
     }
+
+    @Nested class givenBlockMappingWithDoubleQuotedKey extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "\"sky\": blue\n\"sea\": green";
+            expected = new Document().node(new MappingNode()
+                    .entry(new ScalarNode().doubleQuoted().line("sky"), "blue")
+                    .entry(new ScalarNode().doubleQuoted().line("sea"), "green")
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithDoubleQuotedValue extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky: \"blue\"\nsea: \"green\"";
+            expected = new Document().node(new MappingNode()
+                    .entry("sky", new ScalarNode().doubleQuoted().line("blue"))
+                    .entry("sea", new ScalarNode().doubleQuoted().line("green"))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithDoubleQuotedKeyAndValue extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "\"sky\": \"blue\"\n\"sea\": \"green\"";
+            expected = new Document().node(new MappingNode()
+                    .entry(new ScalarNode().doubleQuoted().line("sky"), new ScalarNode().doubleQuoted().line("blue"))
+                    .entry(new ScalarNode().doubleQuoted().line("sea"), new ScalarNode().doubleQuoted().line("green"))
+            );
+        }
+    }
 }
