@@ -53,6 +53,7 @@ public enum Symbol implements Token {
             || NEL.matches(c) || between(0xA0, 0xD7FF, c) || between(0xE000, 0xFFFD, c) // 16 bit
             || between(0x10000, 0x10FFFF, c) // 32-bit
     ),
+    C_MAPPING_KEY('?'),
     NB_CHAR(C_PRINTABLE.minus(any(B_CHAR, BOM))),
 
     WHITE(any(SPACE, TAB)),

@@ -14,6 +14,7 @@ import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
 import static com.github.t1.yaml.parser.Symbol.CURLY_OPEN;
+import static com.github.t1.yaml.parser.Symbol.C_MAPPING_KEY;
 import static com.github.t1.yaml.parser.Symbol.MINUS;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
@@ -50,6 +51,8 @@ public class NodeParser {
     }
 
     private boolean isBlockMapping() {
+        if (next.is(C_MAPPING_KEY))
+            return true;
         String token = next.peekUntil(BLOCK_MAPPING_VALUE);
         return token != null && token.length() >= 1 && !token.contains("\n");
     }
@@ -57,10 +60,13 @@ public class NodeParser {
     private MappingNode blockMapping() {
         MappingNode mappingNode = new MappingNode();
         while (next.more()) {
+            boolean markedKey = next.accept(C_MAPPING_KEY);
+            if (markedKey)
+                next.skip(SPACE);
             ScalarNode key = scalar(BLOCK_MAPPING_VALUE);
             next.expect(BLOCK_MAPPING_VALUE);
             ScalarNode value = scalar(NL);
-            mappingNode.entry(key, value);
+            mappingNode.entry(new MappingNode.Entry().hasMarkedKey(markedKey).key(key).value(value));
         }
         return mappingNode;
     }

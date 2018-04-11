@@ -298,4 +298,34 @@ class YamlTest {
             );
         }
     }
+
+    @Nested class givenBlockMappingWithMarkedKeys extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "? sky: blue\n? sea: green";
+            expected = new Document().node(new MappingNode()
+                    .entry(new MappingNode.Entry().hasMarkedKey(true).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
+                    .entry(new MappingNode.Entry().hasMarkedKey(true).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithFirstKeyMarked extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "? sky: blue\nsea: green";
+            expected = new Document().node(new MappingNode()
+                    .entry(new MappingNode.Entry().hasMarkedKey(true).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
+                    .entry(new MappingNode.Entry().hasMarkedKey(false).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithLastKeyMarked extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky: blue\n? sea: green";
+            expected = new Document().node(new MappingNode()
+                    .entry(new MappingNode.Entry().hasMarkedKey(false).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
+                    .entry(new MappingNode.Entry().hasMarkedKey(true).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            );
+        }
+    }
 }
