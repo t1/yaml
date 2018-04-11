@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
+import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
+import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
 import static com.github.t1.yaml.parser.Symbol.CURLY_OPEN;
 import static com.github.t1.yaml.parser.Symbol.HASH;
@@ -20,10 +23,6 @@ import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.PERCENT;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
-import static com.github.t1.yaml.parser.Token.BLOCK_MAPPING_VALUE;
-import static com.github.t1.yaml.parser.Token.DIRECTIVES_END_MARKER;
-import static com.github.t1.yaml.parser.Token.DOCUMENT_END_MARKER;
-import static com.github.t1.yaml.parser.Token.EOL;
 
 @RequiredArgsConstructor public class DocumentParser {
     private final Scanner next;
@@ -107,7 +106,7 @@ import static com.github.t1.yaml.parser.Token.EOL;
         while (next.more()) {
             ScalarNode key = scalar(BLOCK_MAPPING_VALUE);
             next.expect(BLOCK_MAPPING_VALUE);
-            ScalarNode value = scalar(EOL);
+            ScalarNode value = scalar(NL);
             mappingNode.entry(key, value);
         }
         return mappingNode;
@@ -122,7 +121,7 @@ import static com.github.t1.yaml.parser.Token.EOL;
     }
 
     private ScalarNode scalarNode() {
-        ScalarNode node = scalar(EOL);
+        ScalarNode node = scalar(NL);
         if (node.style() == Style.PLAIN)
             while (more()) {
                 if (isBlockSequence())

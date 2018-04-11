@@ -7,8 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Reader;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
+import static com.github.t1.yaml.parser.Symbol.BOM;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.WS;
 
@@ -22,37 +22,23 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 
     public Scanner(Reader reader) { this(new CodePointReader(reader)); }
 
-    private Supplier<? extends RuntimeException> error(String message) { return () -> new YamlParseException(message + " but got " + this); }
-
-    Scanner expect(String token) {
-        CodePoint.stream(token).forEach(codePoint -> this.expect(codePoint::equals, "codePoint " + codePoint.info()));
-        return this;
-    }
+    private RuntimeException error(String message) { return new YamlParseException(message + " but got " + this); }
 
     Scanner expect(Token token) {
-        token.symbols.forEach(this::expect);
+        for (Predicate<CodePoint> predicate : token.predicates())
+            if (!predicate.test(read()))
+                throw error("expected " + predicate);
         return this;
     }
 
-    Scanner expect(Symbol symbol) { return expect(symbol::matches, symbol.name()); }
-
-    Scanner expect(Predicate<CodePoint> predicate, String description) {
-        CodePoint next = read();
-        if (!predicate.test(next))
-            throw error("expected " + description).get();
-        return this;
-    }
-
-    boolean is(Symbol symbol) { return symbol.matches(peek()); }
-
-    boolean is(Token token) { return token.matches(peek(token.length())); }
-
-    boolean accept(Symbol symbol) {
-        if (is(symbol)) {
-            expect(symbol);
-            return true;
-        } else
-            return false;
+    boolean is(Token token) {
+        List<Predicate<CodePoint>> predicates = token.predicates();
+        List<CodePoint> codePoints = peek(predicates.size());
+        assert predicates.size() == codePoints.size();
+        for (int i = 0; i < predicates.size(); i++)
+            if (!predicates.get(i).test(codePoints.get(i)))
+                return false;
+        return true;
     }
 
     boolean accept(Token token) {
@@ -68,7 +54,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
     public boolean more() { return !end(); }
 
     boolean acceptBom() {
-        if (isBOM(peek())) {
+        if (is(BOM)) {
             //noinspection ResultOfMethodCallIgnored
             reader.skip(1);
             return true;
@@ -76,11 +62,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return false;
     }
 
-    CodePoint peek() {
-        try (Mark mark = reader.mark(1)) {
-            return reader.read();
-        }
-    }
+    CodePoint peek() { return peek(1).get(0); }
 
     List<CodePoint> peek(int count) {
         try (Mark mark = reader.mark(count)) {
@@ -89,6 +71,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
     }
 
     String peekUntil(Token token) {
+        List<Predicate<CodePoint>> predicates = token.predicates();
         try (Mark mark = reader.mark(MAX_LOOK_AHEAD)) {
             StringBuilder out = new StringBuilder();
             int matchLength = 0;
@@ -96,8 +79,8 @@ import static com.github.t1.yaml.parser.Symbol.WS;
                 CodePoint codePoint = reader.read();
                 if (codePoint.isEof())
                     return null;
-                if (token.symbol(matchLength).matches(codePoint)) {
-                    if (++matchLength == token.length())
+                if (predicates.get(matchLength).test(codePoint)) {
+                    if (++matchLength == predicates.size())
                         return out.toString();
                 } else {
                     matchLength = 0;
@@ -109,7 +92,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 
     CodePoint read() {
         CodePoint codePoint = reader.read();
-        if (isBOM(codePoint))
+        if (BOM.matches(codePoint))
             throw new YamlParseException("A BOM must not appear inside a document");
         if (NL.matches(codePoint)) {
             lineNumber++;
@@ -120,27 +103,11 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return codePoint;
     }
 
-    private boolean isBOM(CodePoint codePoint) { return codePoint.matches(0xFEFF); }
-
     String readString() { return read().toString(); }
 
     String readWord() { return readUntilAndSkip(WS); }
 
     String readLine() { return readUntilAndSkip(NL); }
-
-    String readUntil(Symbol symbol) {
-        StringBuilder builder = new StringBuilder();
-        while (more() && !is(symbol))
-            builder.append(readString());
-        return builder.toString();
-    }
-
-    String readUntilAndSkip(Symbol symbol) {
-        String result = readUntil(symbol);
-        if (more())
-            expect(symbol);
-        return result;
-    }
 
     String readUntil(Token token) {
         StringBuilder builder = new StringBuilder();
@@ -156,9 +123,9 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return result;
     }
 
-    Scanner skip(Symbol symbol) {
-        while (is(symbol))
-            expect(symbol);
+    Scanner skip(Token token) {
+        while (is(token))
+            expect(token);
         return this;
     }
 

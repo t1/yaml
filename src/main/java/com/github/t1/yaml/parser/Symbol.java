@@ -2,7 +2,10 @@ package com.github.t1.yaml.parser;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.function.Predicate;
+
+import static java.util.Collections.singletonList;
 
 /**
  * The character definitions from the spec.
@@ -37,20 +40,20 @@ import java.util.function.Predicate;
  * A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.
  */
 @RequiredArgsConstructor
-public enum Symbol {
+public enum Symbol implements Token {
     SPACE(' '),
     LF('\n'), // B_LINE_FEED
     CR('\r'), // B_CARRIAGE_RETURN
     TAB(' '),
     NEL('\u0085'), // Next Line
 
-    C_BYTE_ORDER_MARK('\uFEFF'), // BOM
+    BOM('\uFEFF'), // C_BYTE_ORDER_MARK
     B_CHAR(any(LF, CR)),
     C_PRINTABLE(c -> any(c, TAB, LF, CR) || between(0x20, 0x7E, c) // 8-bit
             || NEL.matches(c) || between(0xA0, 0xD7FF, c) || between(0xE000, 0xFFFD, c) // 16 bit
             || between(0x10000, 0x10FFFF, c) // 32-bit
     ),
-    NB_CHAR(C_PRINTABLE.minus(any(B_CHAR, C_BYTE_ORDER_MARK))),
+    NB_CHAR(C_PRINTABLE.minus(any(B_CHAR, BOM))),
 
     WHITE(any(SPACE, TAB)),
     WS(Character::isWhitespace),
@@ -93,4 +96,6 @@ public enum Symbol {
     public boolean matches(CodePoint codePoint) { return predicate.test(codePoint.value); }
 
     public boolean matches(int codePoint) { return predicate.test(codePoint); }
+
+    @Override public List<Predicate<CodePoint>> predicates() { return singletonList(this::matches); }
 }
