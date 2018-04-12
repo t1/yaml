@@ -13,9 +13,10 @@ import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
+import static com.github.t1.yaml.parser.Symbol.C_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Symbol.CURLY_OPEN;
 import static com.github.t1.yaml.parser.Symbol.C_MAPPING_KEY;
-import static com.github.t1.yaml.parser.Symbol.MINUS;
+import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 
@@ -38,13 +39,13 @@ public class NodeParser {
     }
 
     private boolean isBlockSequence() {
-        return next.is(MINUS);
+        return next.is(C_SEQUENCE_ENTRY);
     }
 
     private SequenceNode blockSequence() {
         SequenceNode node = new SequenceNode();
         while (more()) {
-            next.expect(MINUS).expect(SPACE);
+            next.expect(C_SEQUENCE_ENTRY).expect(SPACE);
             node.entry(new ScalarNode().line(next.readLine()));
         }
         return node;
@@ -60,13 +61,18 @@ public class NodeParser {
     private MappingNode blockMapping() {
         MappingNode mappingNode = new MappingNode();
         while (next.more()) {
-            boolean markedKey = next.accept(C_MAPPING_KEY);
-            if (markedKey)
+            MappingNode.Entry entry = new MappingNode.Entry();
+            entry.hasMarkedKey(next.accept(C_MAPPING_KEY));
+            if (entry.hasMarkedKey())
                 next.skip(SPACE);
-            ScalarNode key = scalar(BLOCK_MAPPING_VALUE);
-            next.expect(BLOCK_MAPPING_VALUE);
-            ScalarNode value = scalar(NL);
-            mappingNode.entry(new MappingNode.Entry().hasMarkedKey(markedKey).key(key).value(value));
+            entry.key(scalar(BLOCK_MAPPING_VALUE));
+            next.expect(C_MAPPING_VALUE);
+            if (next.accept(NL))
+                entry.hasNlAfterKey(true);
+            else
+                next.expect(SPACE);
+            entry.value(scalar(NL));
+            mappingNode.entry(entry);
         }
         return mappingNode;
     }

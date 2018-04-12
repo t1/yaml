@@ -41,19 +41,23 @@ import static java.util.Collections.singletonList;
  */
 @RequiredArgsConstructor
 public enum Symbol implements Token {
-    SPACE(' '),
+    TAB('\t'),
     LF('\n'), // B_LINE_FEED
     CR('\r'), // B_CARRIAGE_RETURN
-    TAB(' '),
     NEL('\u0085'), // Next Line
+    SPACE(' '),
 
-    BOM('\uFEFF'), // C_BYTE_ORDER_MARK
-    B_CHAR(any(LF, CR)),
     C_PRINTABLE(c -> any(c, TAB, LF, CR) || between(0x20, 0x7E, c) // 8-bit
             || NEL.matches(c) || between(0xA0, 0xD7FF, c) || between(0xE000, 0xFFFD, c) // 16 bit
             || between(0x10000, 0x10FFFF, c) // 32-bit
-    ),
-    C_MAPPING_KEY('?'),
+    ), // 1
+    // 2 nb-json	::=	#x9 | [#x20-#x10FFFF]
+    BOM('\uFEFF'), // 3 C_BYTE_ORDER_MARK
+    C_SEQUENCE_ENTRY('-'), // 4
+    C_MAPPING_KEY('?'), // 5
+    C_MAPPING_VALUE(':'), // 6
+
+    B_CHAR(any(LF, CR)),
     NB_CHAR(C_PRINTABLE.minus(any(B_CHAR, BOM))),
 
     WHITE(any(SPACE, TAB)),
@@ -62,12 +66,10 @@ public enum Symbol implements Token {
     PERCENT('%'),
     EQ('='),
     PLUS('+'),
-    MINUS('-'),
     MULT('*'),
     PERIOD('.'),
     SINGLE_QUOTE('\''),
     DOUBLE_QUOTE('\"'),
-    COLON(':'),
     CURLY_OPEN('{'),
     CURLY_CLOSE('}'),
     NL(c -> c == '\n' || c == '\r'),

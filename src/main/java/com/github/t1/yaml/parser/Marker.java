@@ -7,15 +7,15 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.github.t1.yaml.parser.Symbol.COLON;
-import static com.github.t1.yaml.parser.Symbol.MINUS;
+import static com.github.t1.yaml.parser.Symbol.C_MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Symbol.PERIOD;
 import static com.github.t1.yaml.parser.Symbol.WS;
 import static java.util.Arrays.asList;
 
 public enum Marker implements Token {
-    BLOCK_MAPPING_VALUE(COLON, WS),
-    DIRECTIVES_END_MARKER(MINUS, MINUS, MINUS),
+    BLOCK_MAPPING_VALUE(C_MAPPING_VALUE, WS),
+    DIRECTIVES_END_MARKER(C_SEQUENCE_ENTRY, C_SEQUENCE_ENTRY, C_SEQUENCE_ENTRY),
     DOCUMENT_END_MARKER(PERIOD, PERIOD, PERIOD);
 
     @Getter final List<Symbol> symbols;

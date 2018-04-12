@@ -328,4 +328,34 @@ class YamlTest {
             );
         }
     }
+
+    @Nested class givenBlockMappingWithNewLineAfterKey extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky:\nblue\nsea:\ngreen";
+            expected = new Document().node(new MappingNode()
+                    .entry(new MappingNode.Entry().hasNlAfterKey(true).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
+                    .entry(new MappingNode.Entry().hasNlAfterKey(true).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithNewLineAfterFirstKey extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky:\nblue\nsea: green";
+            expected = new Document().node(new MappingNode()
+                    .entry(new MappingNode.Entry().hasNlAfterKey(true).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
+                    .entry(new MappingNode.Entry().hasNlAfterKey(false).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithNewLineAfterLastKey extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky: blue\nsea:\ngreen";
+            expected = new Document().node(new MappingNode()
+                    .entry(new MappingNode.Entry().hasNlAfterKey(false).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
+                    .entry(new MappingNode.Entry().hasNlAfterKey(true).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            );
+        }
+    }
 }

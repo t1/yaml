@@ -44,10 +44,14 @@ public class MappingNode extends CollectionNode {
     @Data
     public static class Entry {
         private boolean hasMarkedKey = false;
+        private boolean hasNlAfterKey = false;
         private Node key;
         private Node value;
 
-        public String toString() { return (hasMarkedKey ? "? " : "") + key + ": " + value; }
+        public String toString() {
+            return (hasMarkedKey ? "? " : "") + key + ":"
+                    + (hasNlAfterKey ? "\n" : " ") + value;
+        }
 
         void canonicalize() {
             hasMarkedKey(true);
