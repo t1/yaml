@@ -21,4 +21,9 @@ public class SequenceNode extends CollectionNode {
     public String toString() {
         return content.stream().map(Node::toString).collect(joining("\n- ", "- ", ""));
     }
+
+    @Override public void canonicalize() {
+        for (Node node : content)
+            node.canonicalize();
+    }
 }

@@ -1,3 +1,19 @@
+# About Yaml
+
+I _love_ [YAML](http://yaml.org). It's more compact than JSON and more powerful than XML... and that's saying a lot!
+
+This project tries to add some missing features to YAML:
+
+1. A **DOM** (document object model) so a document can be manipulated in a generic manner
+
+1. **document-first**: many documents are carefully designed, include comments, structuring empty lines, sorted mappings, etc.
+    The load-dump cycle as defined in the YAML spec would loose all that helpful albeit necessary information.
+
+1. A **schema**, not for verification (that's actually mostly boring), but for documentation!
+   This includes examples, and allows generic YAML editors to support specific document types.
+
+# x
+
 We are not perfectly strict:
 
 | In this situation | The Spec says | We say |

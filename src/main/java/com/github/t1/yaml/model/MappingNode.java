@@ -55,6 +55,7 @@ public class MappingNode extends CollectionNode {
 
         void canonicalize() {
             hasMarkedKey(true);
+            hasNlAfterKey(true);
             key.canonicalize();
             value.canonicalize();
         }

@@ -10,8 +10,7 @@ import static test.Helpers.parse;
 import static test.Helpers.parseAndCheck;
 
 @Tag("spec") class Chapter5Test {
-    @Test
-    void spec_5_1_Byte_Order_Mark() {
+    @Test void spec_5_1_Byte_Order_Mark() {
         parseAndCheck("" +
                         "⇔# Comment only."
                 , "");
@@ -26,7 +25,7 @@ import static test.Helpers.parseAndCheck;
                 .hasMessage("A BOM must not appear inside a document");
     }
 
-    @Disabled @Test void sped_5_3_Block_Structure_Indicators() {
+    @Disabled @Test void spec_5_3_Block_Structure_Indicators() {
         parseAndCheck("" +
                         "sequence:\n" +
                         "- one\n" +
