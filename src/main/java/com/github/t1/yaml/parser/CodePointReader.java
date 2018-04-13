@@ -1,5 +1,6 @@
 package com.github.t1.yaml.parser;
 
+import com.github.t1.yaml.dump.CodePoint;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -11,8 +12,6 @@ import java.util.List;
 @RequiredArgsConstructor
 class CodePointReader {
     private final Reader reader;
-
-    @SneakyThrows(IOException.class) void skip(int count) { reader.skip(count); }
 
     Mark mark(int readAheadLimit) { return new Mark(readAheadLimit); }
 

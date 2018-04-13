@@ -89,6 +89,8 @@ public class AbstractYamlTest {
     interface ThenIsExpectedDocument {
         @Test default void thenDocumentIsExpected() {
             assertThat(thrown).isNull();
+            assertThat(document.isEmpty()).isEqualTo(expected.isEmpty());
+            assertThat(document.hasDirectives()).isEqualTo(expected.hasDirectives());
             assertThat(document).isEqualTo(expected);
         }
     }

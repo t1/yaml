@@ -1,5 +1,6 @@
 package com.github.t1.yaml.parser;
 
+import com.github.t1.yaml.dump.CodePoint;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -27,8 +28,4 @@ public enum Marker implements Token {
                 .flatMap(symbol -> symbol.predicates().stream())
                 .collect(Collectors.toList());
     }
-
-    public int length() { return symbols.size(); }
-
-    public Symbol symbol(int i) { return symbols.get(i); }
 }

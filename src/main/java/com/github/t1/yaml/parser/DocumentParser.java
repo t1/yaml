@@ -1,5 +1,6 @@
 package com.github.t1.yaml.parser;
 
+import com.github.t1.yaml.dump.CodePoint;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
@@ -9,9 +10,10 @@ import java.util.Optional;
 
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
-import static com.github.t1.yaml.parser.Symbol.HASH;
+import static com.github.t1.yaml.parser.Symbol.C_COMMENT;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.PERCENT;
+import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
 
@@ -38,8 +40,8 @@ import static com.github.t1.yaml.parser.Symbol.WS;
             document.directive(directive());
 
         if (next.accept(DIRECTIVES_END_MARKER)) {
-            next.expect(NL);
             document.hasDirectivesEndMarker(true);
+            next.expect(NL);
         }
     }
 
@@ -49,13 +51,20 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 
 
     private void prefixComments() {
-        while (next.accept(HASH))
+        while (isIndentedComment())
             document.prefixComment(comment());
     }
 
+    private boolean isIndentedComment() {
+        String spaces = next.peekUntil(SCALAR_END);
+        return spaces != null
+                && CodePoint.stream(spaces).allMatch(SPACE)
+                && next.peekAfter(spaces.length()).map(C_COMMENT::test).orElse(false);
+    }
+
     private Comment comment() {
-        next.skip(WS);
-        return new Comment().text(next.readLine());
+        return new Comment().indent(next.countSkip(WS))
+                .text(next.expect(C_COMMENT).skipOneSpace().readLine());
     }
 
 
@@ -66,12 +75,10 @@ import static com.github.t1.yaml.parser.Symbol.WS;
     private void documentEnd() {
         if (next.accept(DOCUMENT_END_MARKER)) {
             document.hasDocumentEndMarker(true);
-            if (next.accept(SPACE)) {
-                next.expect(HASH);
+            if (next.is(SPACE))
                 document.suffixComment(comment());
-            } else {
+            else
                 next.accept(NL);
-            }
         }
     }
 }

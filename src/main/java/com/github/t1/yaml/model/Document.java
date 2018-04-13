@@ -65,7 +65,7 @@ public class Document {
     private void appendDocumentEnd(StringBuilder out) {
         out.append("...");
         if (suffixComment != null)
-            out.append(" ").append(suffixComment);
+            out.append(suffixComment);
         out.append("\n");
     }
 

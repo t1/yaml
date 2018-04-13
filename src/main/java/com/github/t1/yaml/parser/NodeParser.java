@@ -1,8 +1,10 @@
 package com.github.t1.yaml.parser;
 
+import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.MappingNode;
 import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.ScalarNode;
+import com.github.t1.yaml.model.ScalarNode.LineAndComment;
 import com.github.t1.yaml.model.ScalarNode.Style;
 import com.github.t1.yaml.model.SequenceNode;
 import lombok.RequiredArgsConstructor;
@@ -13,11 +15,13 @@ import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
-import static com.github.t1.yaml.parser.Symbol.C_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Symbol.CURLY_OPEN;
+import static com.github.t1.yaml.parser.Symbol.C_COMMENT;
 import static com.github.t1.yaml.parser.Symbol.C_MAPPING_KEY;
+import static com.github.t1.yaml.parser.Symbol.C_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Symbol.NL;
+import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 
 @RequiredArgsConstructor
@@ -64,7 +68,7 @@ public class NodeParser {
             MappingNode.Entry entry = new MappingNode.Entry();
             entry.hasMarkedKey(next.accept(C_MAPPING_KEY));
             if (entry.hasMarkedKey())
-                next.skip(SPACE);
+                next.skipSpaces();
             entry.key(scalar(BLOCK_MAPPING_VALUE));
             next.expect(C_MAPPING_VALUE);
             if (next.accept(NL))
@@ -72,6 +76,8 @@ public class NodeParser {
             else
                 next.expect(SPACE);
             entry.value(scalar(NL));
+            if (next.more())
+                next.expect(NL);
             mappingNode.entry(entry);
         }
         return mappingNode;
@@ -86,8 +92,9 @@ public class NodeParser {
     }
 
     private ScalarNode scalarNode() {
-        ScalarNode node = scalar(NL);
-        if (node.style() == Style.PLAIN)
+        ScalarNode node = scalar(SCALAR_END);
+        if (node.style() == Style.PLAIN) {
+            boolean lineContinue = !next.accept(NL);
             while (more()) {
                 if (isBlockSequence())
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence at " + next);
@@ -95,22 +102,37 @@ public class NodeParser {
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping at " + next);
                 if (isBlockMapping())
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping at " + next);
-                node.line(PLAIN.scan(next));
+                if (next.accept(C_COMMENT)) {
+                    next.accept(SPACE);
+                    LineAndComment line = line(node, lineContinue);
+                    line.comment(new Comment().indent(line.rtrim()).text(next.readLine()));
+                    lineContinue = false;
+                } else {
+                    node.line(next.readUntil(SCALAR_END));
+                    lineContinue = !next.accept(NL);
+                }
             }
+        }
         return node;
     }
 
     private ScalarNode scalar(Token end) {
         Quotes quotes = Quotes.recognize(next);
-        ScalarNode node = new ScalarNode().style(quotes.style)
+        return new ScalarNode().style(quotes.style)
                 .line((quotes == PLAIN) ? next.readUntil(end) : quotes.scan(next));
-        next.skip(NL);
-        return node;
     }
 
     private boolean more() {
         return next.more()
                 && !next.is(DOCUMENT_END_MARKER)
                 && !next.is(DIRECTIVES_END_MARKER); // of next document
+    }
+
+    private LineAndComment line(ScalarNode node, boolean lineContinue) {
+        if (lineContinue)
+            return node.lastLine();
+        LineAndComment line = new LineAndComment();
+        node.line(line);
+        return line;
     }
 }

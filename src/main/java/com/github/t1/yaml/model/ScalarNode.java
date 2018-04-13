@@ -1,5 +1,6 @@
 package com.github.t1.yaml.model;
 
+import com.github.t1.yaml.dump.CodePoint;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -22,34 +23,65 @@ public class ScalarNode extends Node {
         private final String quote;
     }
 
-    private Style style = PLAIN;
+    @Data
+    public static class LineAndComment {
+        String text = "";
+        Comment comment;
+
+        public String toString() { return text + ((comment == null) ? "" : comment.toString()); }
+
+        public int rtrim() {
+            int spaces = 0;
+            int count = CodePoint.count(text);
+            while (spaces < count && CodePoint.at(count - spaces - 1, text).is(Character::isSpaceChar))
+                spaces++;
+            this.text = text.substring(0, count - spaces);
+            return spaces;
+        }
+    }
+
     private String tag;
+    private Style style = PLAIN;
+    private final List<LineAndComment> lines = new ArrayList<>();
 
-    private final List<String> lines = new ArrayList<>();
+    public ScalarNode line(String line) { return line(new LineAndComment().text(line)); }
 
-    public ScalarNode line(String line) {
+    public ScalarNode line(LineAndComment line) {
         lines.add(line);
         return this;
+    }
+
+    public ScalarNode comment(Comment comment) {
+        lastLine().comment(comment);
+        return this;
+    }
+
+    public LineAndComment lastLine() {
+        if (lines.isEmpty())
+            line("");
+        return lines.get(lines.size() - 1);
     }
 
     @Override public String toString() {
         StringBuilder out = new StringBuilder();
         if (tag != null)
             out.append(tag).append(' ');
-        out.append(lines.stream().collect(joining("\n", style.quote, style.quote)));
+        out.append(lines.stream()
+                .map(LineAndComment::toString)
+                .collect(joining("\n", style.quote, style.quote)));
         return out.toString();
     }
 
     @Override public void canonicalize() {
         doubleQuoted();
         if (!lines.isEmpty())
-            replaceWith(String.join(" ", lines));
+            replaceWith(lines.stream().map(LineAndComment::text).collect(joining(" ")));
         this.tag((lines.isEmpty()) ? "!!null" : "!!str");
     }
 
     private void replaceWith(String singleLine) {
         lines.clear();
-        lines.add(singleLine);
+        lines.add(new LineAndComment().text(singleLine));
     }
 
     public ScalarNode plain() { return style(PLAIN); }

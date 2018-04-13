@@ -1,10 +1,13 @@
 package com.github.t1.yaml.parser;
 
+import com.github.t1.yaml.dump.CodePoint;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.function.Predicate;
 
+import static com.github.t1.yaml.parser.Symbol.P.between;
+import static com.github.t1.yaml.parser.Symbol.P.not;
 import static java.util.Collections.singletonList;
 
 /**
@@ -40,65 +43,87 @@ import static java.util.Collections.singletonList;
  * A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.
  */
 @RequiredArgsConstructor
-public enum Symbol implements Token {
+public enum Symbol implements Token, Predicate<CodePoint> {
     TAB('\t'),
     LF('\n'), // B_LINE_FEED
     CR('\r'), // B_CARRIAGE_RETURN
     NEL('\u0085'), // Next Line
     SPACE(' '),
 
-    C_PRINTABLE(c -> any(c, TAB, LF, CR) || between(0x20, 0x7E, c) // 8-bit
-            || NEL.matches(c) || between(0xA0, 0xD7FF, c) || between(0xE000, 0xFFFD, c) // 16 bit
-            || between(0x10000, 0x10FFFF, c) // 32-bit
+    C_PRINTABLE(TAB.or(LF).or(CR).or(between(0x20, 0x7E)) // 8-bit
+            .or(NEL).or(between(0xA0, 0xD7FF)).or(between(0xE000, 0xFFFD)) // 16 bit
+            .or(between(0x10000, 0x10FFFF)) // 32-bit
     ), // 1
-    // 2 nb-json	::=	#x9 | [#x20-#x10FFFF]
+    NB_JSON(TAB.or(between(0x20, 0x10FFFF))), // 2
     BOM('\uFEFF'), // 3 C_BYTE_ORDER_MARK
     C_SEQUENCE_ENTRY('-'), // 4
     C_MAPPING_KEY('?'), // 5
     C_MAPPING_VALUE(':'), // 6
 
-    B_CHAR(any(LF, CR)),
-    NB_CHAR(C_PRINTABLE.minus(any(B_CHAR, BOM))),
+    C_COMMENT('#'), // 12
 
-    WHITE(any(SPACE, TAB)),
+    NL(LF.or(CR)), // 26 B_CHAR
+    NB_CHAR(C_PRINTABLE.minus(NL).minus(BOM)), // 27
+    // same as NL/B_CHAR: B_BREAK(CR.or(LF)), // 28
+
+    SCALAR_END(NL.or(C_COMMENT)),
+
+    // WHITE(SPACE.or(TAB)),
     WS(Character::isWhitespace),
-    HASH('#'),
     PERCENT('%'),
-    EQ('='),
-    PLUS('+'),
-    MULT('*'),
     PERIOD('.'),
     SINGLE_QUOTE('\''),
     DOUBLE_QUOTE('\"'),
     CURLY_OPEN('{'),
-    CURLY_CLOSE('}'),
-    NL(c -> c == '\n' || c == '\r'),
-    ALPHA(Character::isAlphabetic),
-    NUMBER(Character::isDigit),
+    // CURLY_CLOSE('}'),
+    // ALPHA(Character::isAlphabetic),
+    // NUMBER(Character::isDigit),
 
-    INDICATOR(c -> CodePoint.of(c).matchAny("-?:,[]{}#&*!|>'\"%@`”"));
+    // INDICATOR(c -> CodePoint.of(c).matchAny("-?:,[]{}#&*!|>'\"%@`”")),
+    ;
 
-    private Predicate<Integer> minus(Predicate<Integer> not) { return c -> this.predicate.test(c) && !not.test(c); }
+    private P or(Symbol that) { return or(that.predicate); }
 
-    private static boolean between(int min, int max, int c) { return min <= c && c <= max; }
+    private P or(P that) { return this.predicate.or(that); }
 
-    private static Predicate<Integer> any(Symbol... symbols) { return c -> any(c, symbols); }
+    private P minus(Symbol that) { return minus(that.predicate); }
 
-    private static boolean any(int c, Symbol... symbols) {
-        for (Symbol symbol : symbols) {
-            if (symbol.matches(c))
-                return true;
-        }
-        return false;
-    }
+    private P minus(P that) { return this.predicate.and(not(that)); }
 
-    private final Predicate<Integer> predicate;
+    private final P predicate;
 
     Symbol(int codePoint) { this(c -> c == codePoint); }
 
-    public boolean matches(CodePoint codePoint) { return predicate.test(codePoint.value); }
+    Symbol(Predicate<Integer> predicate) { this(new P(predicate)); }
 
-    public boolean matches(int codePoint) { return predicate.test(codePoint); }
+    @Override public boolean test(CodePoint codePoint) { return predicate.test(codePoint.value); }
 
-    @Override public List<Predicate<CodePoint>> predicates() { return singletonList(this::matches); }
+    @Override public List<Predicate<CodePoint>> predicates() { return singletonList(this); }
+
+    @RequiredArgsConstructor
+    static class P {
+        static P not(Symbol symbol) { return not(symbol.predicate); }
+
+        static P not(P predicate) { return new P(predicate.predicate.negate()); }
+
+        static P between(int min, int max) { return new P(c -> min <= c && c <= max); }
+
+
+        private final Predicate<Integer> predicate;
+
+        public boolean test(Integer integer) { return predicate.test(integer); }
+
+
+        private P or(Symbol that) { return or(that.predicate); }
+
+        private P or(P that) { return new P(this.predicate.or(that.predicate)); }
+
+        private P and(Symbol that) { return and(that.predicate); }
+
+        private P and(P that) { return new P(this.predicate.and(that.predicate)); }
+
+        private P minus(Symbol symbol) { return minus(symbol.predicate); }
+
+        private P minus(P that) { return and(not(that)); }
+    }
 }
