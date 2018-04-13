@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import static com.github.t1.yaml.dump.Tools.spaces;
 import static com.github.t1.yaml.model.ScalarNode.Style.DOUBLE_QUOTED;
 import static com.github.t1.yaml.model.ScalarNode.Style.PLAIN;
 import static com.github.t1.yaml.model.ScalarNode.Style.SINGLE_QUOTED;
@@ -24,11 +26,12 @@ public class ScalarNode extends Node {
     }
 
     @Data
-    public static class LineAndComment {
+    public static class Line {
+        int indent = 0;
         String text = "";
         Comment comment;
 
-        public String toString() { return text + ((comment == null) ? "" : comment.toString()); }
+        public String toString() { return spaces(indent) + text + Objects.toString(comment, ""); }
 
         public int rtrim() {
             int spaces = 0;
@@ -42,11 +45,11 @@ public class ScalarNode extends Node {
 
     private String tag;
     private Style style = PLAIN;
-    private final List<LineAndComment> lines = new ArrayList<>();
+    private final List<Line> lines = new ArrayList<>();
 
-    public ScalarNode line(String line) { return line(new LineAndComment().text(line)); }
+    public ScalarNode line(String line) { return line(new Line().text(line)); }
 
-    public ScalarNode line(LineAndComment line) {
+    public ScalarNode line(Line line) {
         lines.add(line);
         return this;
     }
@@ -56,7 +59,7 @@ public class ScalarNode extends Node {
         return this;
     }
 
-    public LineAndComment lastLine() {
+    public Line lastLine() {
         if (lines.isEmpty())
             line("");
         return lines.get(lines.size() - 1);
@@ -67,7 +70,7 @@ public class ScalarNode extends Node {
         if (tag != null)
             out.append(tag).append(' ');
         out.append(lines.stream()
-                .map(LineAndComment::toString)
+                .map(Line::toString)
                 .collect(joining("\n", style.quote, style.quote)));
         return out.toString();
     }
@@ -75,13 +78,13 @@ public class ScalarNode extends Node {
     @Override public void canonicalize() {
         doubleQuoted();
         if (!lines.isEmpty())
-            replaceWith(lines.stream().map(LineAndComment::text).collect(joining(" ")));
+            replaceWith(lines.stream().map(Line::text).collect(joining(" ")));
         this.tag((lines.isEmpty()) ? "!!null" : "!!str");
     }
 
     private void replaceWith(String singleLine) {
         lines.clear();
-        lines.add(new LineAndComment().text(singleLine));
+        lines.add(new Line().text(singleLine));
     }
 
     public ScalarNode plain() { return style(PLAIN); }

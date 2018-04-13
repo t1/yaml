@@ -3,6 +3,7 @@ package test;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.ScalarNode;
+import com.github.t1.yaml.model.ScalarNode.Line;
 import com.github.t1.yaml.parser.YamlParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -43,6 +44,46 @@ class ScalarTest extends AbstractYamlTest {
                 .isInstanceOf(YamlParseException.class)
                 .hasMessage("Expected a scalar node to continue with scalar values but found flow mapping at [{][LEFT CURLY BRACKET][0x7b] at line 2 char 1");
     }
+
+
+    @Nested class givenOneSpaceOnlyDocument extends SingleDocument {
+        @BeforeEach void setup() {
+            input = " ";
+            expected = new Document().node(new ScalarNode().line(new Line().text("").indent(1)));
+        }
+    }
+
+    @Nested class givenTwoSpacesOnlyDocument extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "  ";
+            expected = new Document().node(new ScalarNode().line(new Line().text("").indent(2)));
+        }
+    }
+
+    @Nested class givenIndentedScalarDocument extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "    foo";
+            expected = new Document().node(new ScalarNode().line(new Line().text("foo").indent(4)));
+        }
+    }
+
+    @Nested class givenIndentedScalarsDocument extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "    foo\n" +
+                    "  bar";
+            expected = new Document().node(new ScalarNode()
+                    .line(new Line().text("foo").indent(4))
+                    .line(new Line().text("bar").indent(2)));
+        }
+    }
+
+    @Nested class givenScalarWithSpacesBeforeAndAfter extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "    dummy-string  ";
+            expected = new Document().node(new ScalarNode().line(new Line().indent(4).text("dummy-string  ")));
+        }
+    }
+
 
     @Nested class givenScalarWithComment extends SingleDocument {
         @BeforeEach void setup() {
@@ -107,8 +148,19 @@ class ScalarTest extends AbstractYamlTest {
                     "        # after";
             expected = new Document()
                     .prefixComment(new Comment().indent(4).text("before"))
-                    .node(new ScalarNode().line("dummy-string")
-                            .line("").comment(new Comment().indent(8).text("after")));
+                    .node(new ScalarNode()
+                            .line("dummy-string")
+                            .line(new Line().indent(8).text(""))
+                            .comment(new Comment().text("after")));
+        }
+    }
+
+    @Nested class givenIndentedScalarWithIndentedComment extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "    dummy-string  # dummy-comment";
+            expected = new Document().node(new ScalarNode()
+                    .line(new Line().indent(4).text("dummy-string"))
+                    .comment(new Comment().indent(2).text("dummy-comment")));
         }
     }
 

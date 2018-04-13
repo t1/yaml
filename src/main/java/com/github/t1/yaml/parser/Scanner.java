@@ -11,7 +11,6 @@ import java.util.function.Predicate;
 
 import static com.github.t1.yaml.parser.Symbol.BOM;
 import static com.github.t1.yaml.parser.Symbol.NL;
-import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
 
 @RequiredArgsConstructor class Scanner {
@@ -44,11 +43,10 @@ import static com.github.t1.yaml.parser.Symbol.WS;
     }
 
     boolean accept(Token token) {
-        if (is(token)) {
-            expect(token);
-            return true;
-        } else
+        if (!is(token))
             return false;
+        expect(token);
+        return true;
     }
 
     boolean end() { return peek().isEof(); }
@@ -106,9 +104,9 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return codePoint;
     }
 
-    String readWord() { return readUntilAndSkip(WS); }
+    String readWord() { return readUntilEndOr(WS); }
 
-    String readLine() { return readUntilAndSkip(NL); }
+    String readLine() { return readUntilEndOr(NL); }
 
     String readUntil(Token end) {
         StringBuilder builder = new StringBuilder();
@@ -117,26 +115,23 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return builder.toString();
     }
 
-    String readUntilAndSkip(Token end) {
+    String readUntilEndOr(Token end) {
         String result = readUntil(end);
         if (more())
             expect(end);
         return result;
     }
 
-    void skipSpaces() { countSkip(SPACE); }
+    Scanner skip(Token token) {
+        accept(token);
+        return this;
+    }
 
-    int countSkip(Token token) {
+    int count(Token token) {
         int count = 0;
         while (accept(token))
             count++;
         return count;
-    }
-
-    Scanner skipOneSpace() {
-        if (is(SPACE))
-            expect(SPACE);
-        return this;
     }
 
     @Override public String toString() {

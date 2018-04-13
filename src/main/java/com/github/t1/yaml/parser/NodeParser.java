@@ -4,7 +4,7 @@ import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.MappingNode;
 import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.ScalarNode;
-import com.github.t1.yaml.model.ScalarNode.LineAndComment;
+import com.github.t1.yaml.model.ScalarNode.Line;
 import com.github.t1.yaml.model.ScalarNode.Style;
 import com.github.t1.yaml.model.SequenceNode;
 import lombok.RequiredArgsConstructor;
@@ -68,15 +68,18 @@ public class NodeParser {
             MappingNode.Entry entry = new MappingNode.Entry();
             entry.hasMarkedKey(next.accept(C_MAPPING_KEY));
             if (entry.hasMarkedKey())
-                next.skipSpaces();
+                next.count(SPACE);
             entry.key(scalar(BLOCK_MAPPING_VALUE));
             next.expect(C_MAPPING_VALUE);
             if (next.accept(NL))
                 entry.hasNlAfterKey(true);
             else
                 next.expect(SPACE);
-            entry.value(scalar(NL));
-            if (next.more())
+            ScalarNode valueNode = scalar(SCALAR_END);
+            entry.value(valueNode);
+            if (isComment())
+                comment(valueNode, true);
+            else if (next.more())
                 next.expect(NL);
             mappingNode.entry(entry);
         }
@@ -102,13 +105,11 @@ public class NodeParser {
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping at " + next);
                 if (isBlockMapping())
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping at " + next);
-                if (next.accept(C_COMMENT)) {
-                    next.accept(SPACE);
-                    LineAndComment line = line(node, lineContinue);
-                    line.comment(new Comment().indent(line.rtrim()).text(next.readLine()));
+                if (isComment()) {
+                    comment(node, lineContinue);
                     lineContinue = false;
                 } else {
-                    node.line(next.readUntil(SCALAR_END));
+                    node.line(new Line().indent(next.count(SPACE)).text(next.readUntil(SCALAR_END)));
                     lineContinue = !next.accept(NL);
                 }
             }
@@ -117,22 +118,35 @@ public class NodeParser {
     }
 
     private ScalarNode scalar(Token end) {
+        int indent = next.count(SPACE);
         Quotes quotes = Quotes.recognize(next);
-        return new ScalarNode().style(quotes.style)
-                .line((quotes == PLAIN) ? next.readUntil(end) : quotes.scan(next));
+        return new ScalarNode()
+                .style(quotes.style)
+                .line(new Line()
+                        .indent(indent)
+                        .text((quotes == PLAIN) ? next.readUntil(end) : quotes.scan(next))
+                );
+    }
+
+    private boolean isComment() { return next.accept(C_COMMENT); }
+
+    private void comment(ScalarNode node, boolean lineContinue) {
+        next.accept(SPACE);
+        Line line = line(node, lineContinue);
+        line.comment(new Comment().indent(line.rtrim()).text(next.readLine()));
+    }
+
+    private Line line(ScalarNode node, boolean lineContinue) {
+        if (lineContinue)
+            return node.lastLine();
+        Line line = new Line();
+        node.line(line);
+        return line;
     }
 
     private boolean more() {
         return next.more()
                 && !next.is(DOCUMENT_END_MARKER)
                 && !next.is(DIRECTIVES_END_MARKER); // of next document
-    }
-
-    private LineAndComment line(ScalarNode node, boolean lineContinue) {
-        if (lineContinue)
-            return node.lastLine();
-        LineAndComment line = new LineAndComment();
-        node.line(line);
-        return line;
     }
 }

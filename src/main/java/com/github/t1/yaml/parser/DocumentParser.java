@@ -76,8 +76,8 @@ public class DocumentParser {
     }
 
     private Comment comment() {
-        return new Comment().indent(next.countSkip(WS))
-                .text(next.expect(C_COMMENT).skipOneSpace().readLine());
+        return new Comment().indent(next.count(WS))
+                .text(next.expect(C_COMMENT).skip(SPACE).readLine());
     }
 
 
