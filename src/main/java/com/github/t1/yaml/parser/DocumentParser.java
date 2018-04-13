@@ -4,8 +4,9 @@ import com.github.t1.yaml.dump.CodePoint;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
-import lombok.RequiredArgsConstructor;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Optional;
 
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
@@ -17,11 +18,17 @@ import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
 
-@RequiredArgsConstructor public class DocumentParser {
+public class DocumentParser {
     private final Scanner next;
-    private final Document document = new Document();
+    private Document document;
+
+    public DocumentParser(String yaml) { this(new StringReader(yaml)); }
+
+    public DocumentParser(Reader reader) { this.next = new Scanner(reader); }
 
     public Optional<Document> document() {
+        this.document = new Document();
+
         next.acceptBom();
 
         if (next.end())
@@ -81,4 +88,8 @@ import static com.github.t1.yaml.parser.Symbol.WS;
                 next.accept(NL);
         }
     }
+
+    public boolean more() { return next.more(); }
+
+    @Override public String toString() { return next.toString(); }
 }

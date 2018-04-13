@@ -14,7 +14,7 @@ import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
 
-@RequiredArgsConstructor public class Scanner {
+@RequiredArgsConstructor class Scanner {
     /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832 */
     private static final int MAX_LOOK_AHEAD = 1024;
 
@@ -22,7 +22,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
     private int position = 1;
     private int lineNumber = 1;
 
-    public Scanner(Reader reader) { this(new CodePointReader(reader)); }
+    Scanner(Reader reader) { this(new CodePointReader(reader)); }
 
     private RuntimeException error(String message) { return new YamlParseException(message + " but got " + this); }
 
@@ -53,7 +53,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 
     boolean end() { return peek().isEof(); }
 
-    public boolean more() { return !end(); }
+    boolean more() { return !end(); }
 
     void acceptBom() {
         if (is(BOM))
