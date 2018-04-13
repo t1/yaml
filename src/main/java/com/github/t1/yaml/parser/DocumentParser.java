@@ -5,6 +5,9 @@ import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Optional;
@@ -17,12 +20,15 @@ import static com.github.t1.yaml.parser.Symbol.PERCENT;
 import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class DocumentParser {
     private final Scanner next;
     private Document document;
 
     public DocumentParser(String yaml) { this(new StringReader(yaml)); }
+
+    public DocumentParser(InputStream inputStream) { this(new BufferedReader(new InputStreamReader(inputStream, UTF_8))); }
 
     public DocumentParser(Reader reader) { this.next = new Scanner(reader); }
 
