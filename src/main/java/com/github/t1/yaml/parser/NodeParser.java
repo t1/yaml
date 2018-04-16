@@ -2,6 +2,7 @@ package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.MappingNode;
+import com.github.t1.yaml.model.MappingNode.Entry;
 import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.ScalarNode.Line;
@@ -11,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
+import static com.github.t1.yaml.dump.Tools.spaces;
 import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
@@ -28,11 +31,14 @@ import static com.github.t1.yaml.parser.Symbol.SPACE;
 public class NodeParser {
     private final Scanner next;
 
+    private int nesting;
+
     public Optional<Node> node() {
         return more() ? Optional.of(node_()) : Optional.empty();
     }
 
     private Node node_() {
+        next.expect(indent());
         if (isBlockSequence())
             return blockSequence();
         if (isFlowMapping())
@@ -42,18 +48,20 @@ public class NodeParser {
         return scalarNode();
     }
 
-    private boolean isBlockSequence() {
-        return next.is(C_SEQUENCE_ENTRY);
-    }
+    private boolean isBlockSequence() { return next.is(BLOCK_SEQUENCE_ENTRY); }
 
     private SequenceNode blockSequence() {
         SequenceNode node = new SequenceNode();
         while (more()) {
-            next.expect(C_SEQUENCE_ENTRY).expect(SPACE);
-            node.entry(new ScalarNode().line(next.readLine()));
+            next.expect(C_SEQUENCE_ENTRY);
+            next.accept(NL);
+            nesting++;
+            node().ifPresent(node::entry);
+            nesting--;
         }
         return node;
     }
+
 
     private boolean isBlockMapping() {
         if (next.is(C_MAPPING_KEY))
@@ -64,27 +72,43 @@ public class NodeParser {
 
     private MappingNode blockMapping() {
         MappingNode mappingNode = new MappingNode();
-        while (next.more()) {
-            MappingNode.Entry entry = new MappingNode.Entry();
-            entry.hasMarkedKey(next.accept(C_MAPPING_KEY));
-            if (entry.hasMarkedKey())
-                next.count(SPACE);
-            entry.key(scalar(BLOCK_MAPPING_VALUE));
-            next.expect(C_MAPPING_VALUE);
-            if (next.accept(NL))
-                entry.hasNlAfterKey(true);
-            else
-                next.expect(SPACE);
-            ScalarNode valueNode = scalar(SCALAR_END);
-            entry.value(valueNode);
-            if (isComment())
-                comment(valueNode, true);
-            else if (next.more())
-                next.expect(NL);
-            mappingNode.entry(entry);
-        }
+        while (next.more())
+            mappingNode.entry(blockMappingEntry());
         return mappingNode;
     }
+
+    private Entry blockMappingEntry() {
+        Entry entry = new Entry();
+        blockMappingKey(entry);
+        entry.hasNlAfterKey(blockMappingBreak());
+        entry.value(blockMappingValue());
+        return entry;
+    }
+
+    private void blockMappingKey(Entry entry) {
+        entry.hasMarkedKey(next.accept(C_MAPPING_KEY));
+        if (entry.hasMarkedKey())
+            next.count(SPACE);
+        entry.key(scalar(BLOCK_MAPPING_VALUE));
+    }
+
+    private boolean blockMappingBreak() {
+        next.expect(C_MAPPING_VALUE);
+        if (next.accept(NL))
+            return true;
+        next.expect(SPACE);
+        return false;
+    }
+
+    private ScalarNode blockMappingValue() {
+        ScalarNode valueNode = scalar(SCALAR_END);
+        if (isComment())
+            comment(valueNode, true);
+        else if (next.more())
+            next.expect(NL);
+        return valueNode;
+    }
+
 
     private boolean isFlowMapping() {
         return next.is(CURLY_OPEN);
@@ -98,13 +122,7 @@ public class NodeParser {
         ScalarNode node = scalar(SCALAR_END);
         if (node.style() == Style.PLAIN) {
             boolean lineContinue = !next.accept(NL);
-            while (more()) {
-                if (isBlockSequence())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence at " + next);
-                if (isFlowMapping())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping at " + next);
-                if (isBlockMapping())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping at " + next);
+            while (more() && !isEndOfScalar()) {
                 if (isComment()) {
                     comment(node, lineContinue);
                     lineContinue = false;
@@ -116,6 +134,8 @@ public class NodeParser {
         }
         return node;
     }
+
+    private boolean isEndOfScalar() { return isBlockSequence() || isFlowMapping() || isBlockMapping(); }
 
     private ScalarNode scalar(Token end) {
         int indent = next.count(SPACE);
@@ -146,7 +166,10 @@ public class NodeParser {
 
     private boolean more() {
         return next.more()
+                && next.is(indent())
                 && !next.is(DOCUMENT_END_MARKER)
                 && !next.is(DIRECTIVES_END_MARKER); // of next document
     }
+
+    private String indent() { return spaces(nesting * 2); }
 }

@@ -1,5 +1,6 @@
 package test;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -30,5 +31,19 @@ import static test.Helpers.parseAndCheck;
                         "? !!str \"hr\": !!str \"65\"\n" +
                         "? !!str \"avg\": !!str \"0.278\"\n" +
                         "? !!str \"rbi\": !!str \"147\"\n");
+    }
+
+    @Disabled @Test void spec_2_3_Mapping_Scalars_to_Sequences() {
+        parseAndCheck("" +
+                        "american:\n" +
+                        "  - Boston Red Sox\n" +
+                        "  - Detroit Tigers\n" +
+                        "  - New York Yankees\n" +
+                        "national:\n" +
+                        "  - New York Mets\n" +
+                        "  - Chicago Cubs\n" +
+                        "  - Atlanta Braves"
+                , "" +
+                        "");
     }
 }

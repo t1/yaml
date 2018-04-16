@@ -23,13 +23,19 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 
     Scanner(Reader reader) { this(new CodePointReader(reader)); }
 
-    private RuntimeException error(String message) { return new YamlParseException(message + " but got " + this); }
+    Scanner expect(String string) { return expect(new StringToken(string)); }
 
     Scanner expect(Token token) {
-        for (Predicate<CodePoint> predicate : token.predicates())
+        for (Predicate<CodePoint> predicate : token.predicates()) {
+            String info = this.toString();
             if (!predicate.test(read()))
-                throw error("expected " + predicate);
+                throw new YamlParseException(("expected " + predicate) + " but got " + info);
+        }
         return this;
+    }
+
+    boolean is(String string) {
+        return is(new StringToken(string));
     }
 
     boolean is(Token token) {
@@ -41,6 +47,8 @@ import static com.github.t1.yaml.parser.Symbol.WS;
                 return false;
         return true;
     }
+
+    boolean accept(String string) { return accept(new StringToken(string)); }
 
     boolean accept(Token token) {
         if (!is(token))

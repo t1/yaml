@@ -11,6 +11,8 @@ This project tries to add some missing features to YAML:
 
 1. A **schema**, not for verification (that's actually mostly boring), but for documentation!
    This includes examples, and allows generic YAML editors to support specific document types.
+   Documents may want to adhere to more than one schema, so we would also need **namespaces**,
+   but that may be something for the future.
 
 # x
 

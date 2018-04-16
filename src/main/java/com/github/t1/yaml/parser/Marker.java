@@ -15,6 +15,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 import static java.util.Arrays.asList;
 
 public enum Marker implements Token {
+    BLOCK_SEQUENCE_ENTRY(C_SEQUENCE_ENTRY, WS),
     BLOCK_MAPPING_VALUE(C_MAPPING_VALUE, WS),
     DIRECTIVES_END_MARKER(C_SEQUENCE_ENTRY, C_SEQUENCE_ENTRY, C_SEQUENCE_ENTRY),
     DOCUMENT_END_MARKER(PERIOD, PERIOD, PERIOD);

@@ -41,6 +41,10 @@ public class AbstractYamlTest {
         thrown = null;
     }
 
+    static void rethrow() {
+        if (thrown != null)
+            throw thrown;
+    }
 
     ///////////////////////////////////////////////////////////////////////// WHEN
 
@@ -67,28 +71,29 @@ public class AbstractYamlTest {
 
     interface ThenIsEmptyStream {
         @Test default void thenStreamIsEmpty() {
-            assertThat(thrown).isNull();
+            rethrow();
             assertThat(stream.documents()).isEmpty();
         }
     }
 
     interface ThenIsExpectedStream {
         @Test default void thenStreamIsExpected() {
-            assertThat(thrown).isNull();
+            rethrow();
             assertThat(stream).isEqualTo(expectedStream());
         }
     }
 
     interface ThenIsExpectedCanonicalStream {
         @Test default void thenCanonicalStreamIsExpected() {
-            assertThat(thrown).isNull();
+            if (thrown != null)
+                throw thrown;
             assertThat(stream.canonicalize()).isEqualTo(expectedCanonicalStream());
         }
     }
 
     interface ThenIsExpectedDocument {
         @Test default void thenDocumentIsExpected() {
-            assertThat(thrown).isNull();
+            rethrow();
             assertThat(document.isEmpty()).isEqualTo(expected.isEmpty());
             assertThat(document.hasDirectives()).isEqualTo(expected.hasDirectives());
             assertThat(document).isEqualTo(expected);
@@ -97,14 +102,14 @@ public class AbstractYamlTest {
 
     interface ThenIsExpectedCanonicalDocument {
         @Test default void thenCanonicalDocumentIsExpected() {
-            assertThat(thrown).isNull();
+            rethrow();
             assertThat(document.canonicalize()).isEqualTo(expectedCanonicalDocument());
         }
     }
 
     interface ThenDocumentToStringIsSameAsInput {
         @Test default void thenDocumentToStringIsSameAsInput() {
-            assertThat(thrown).isNull();
+            rethrow();
             assertThat(toStringWithoutTrailingNl(document)).isEqualTo(input);
         }
 
@@ -112,7 +117,7 @@ public class AbstractYamlTest {
 
     interface ThenStreamToStringIsSameAsInput {
         @Test default void thenStreamToStringIsSameAsInput() {
-            assertThat(thrown).isNull();
+            rethrow();
             assertThat(toStringWithoutTrailingNl(stream)).isEqualTo(input);
         }
     }
