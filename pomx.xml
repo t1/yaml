@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project xmlns="urn:xsd:maven:pomx:5.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="urn:xsd:maven:pomx:5.0.0 https://raw.githubusercontent.com/t1/pomx/master/src/main/resources/schemas/pomx-5.0.0.xsd">
+<project
+        xmlns="urn:xsd:maven:pomx:5.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:xsd:maven:pomx:5.0.0 https://raw.githubusercontent.com/t1/pomx/master/src/main/resources/schemas/pomx-5.0.0.xsd">
     <war>com.github.t1:yaml:1.0.0-SNAPSHOT</war>
     <name>Yaml</name>
 
@@ -21,6 +23,12 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <test>
+            <jar>org.jsoup:jsoup:1.11.3</jar>
+        </test>
+    </dependencies>
 
     <profiles>
         <profile>
