@@ -19,6 +19,8 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.Arrays.asList;
+
 @Accessors(fluent = true, chain = true)
 @RequiredArgsConstructor
 public class TokensGenerator {
@@ -33,13 +35,7 @@ public class TokensGenerator {
 
     private final Consumer<Production> consumer;
 
-    void run() {
-        val document = (Files.exists(CACHE)) ? load() : fetch();
-        for (val set : document.select("table.productionset table.productionset tr")) {
-            val production = new Production(set);
-            consumer.accept(production);
-        }
-    }
+    void run() { document((Files.exists(CACHE)) ? load() : fetch()); }
 
     @SneakyThrows(IOException.class)
     private static Document load() {
@@ -53,6 +49,16 @@ public class TokensGenerator {
         val document = Jsoup.connect("http://yaml.org/spec/1.2/spec.html").get();
         Files.write(CACHE, document.toString().getBytes());
         return document;
+    }
+
+    private void document(Document document) {
+        for (val set : document.select("table.productionset table.productionset tr"))
+            production(set);
+    }
+
+    private void production(Element set) {
+        val production = new Production(set);
+        consumer.accept(production);
     }
 
     @Data static class Production {
@@ -69,7 +75,7 @@ public class TokensGenerator {
             this.name = argsMatcher.group("name");
             this.args = argsMatcher.group("args");
 
-            if (counter > 164)
+            if (asList(67, 80, 110, 121, 127, 131, 136, 163, 164, 165, 166, 201).contains(counter))
                 return;
             Element rhs = set.selectFirst("td.productionrhs");
             try {

@@ -148,6 +148,8 @@ import static java.util.Collections.singletonList;
         return this;
     }
 
+    int count(String token) { return count(new StringToken(token)); }
+
     int count(Token token) { return readWhile(token).length(); }
 
     String readWhile(Token token) {

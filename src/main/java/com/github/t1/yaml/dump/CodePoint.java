@@ -6,6 +6,8 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public @Value class CodePoint {
+    public static final CodePoint EOF = of(-1);
+
     public static CodePoint lastCodePoint(String string) { return at(count(string) - 1, string); }
 
     public static CodePoint at(int index, String string) { return of(string.codePointAt(index)); }
@@ -19,6 +21,11 @@ public @Value class CodePoint {
     public final int value;
 
     public static Stream<CodePoint> stream(String string) { return string.codePoints().mapToObj(CodePoint::new); }
+
+    public static CodePoint of(String text) {
+        assert count(text) == 1;
+        return at(0, text);
+    }
 
     public String toString() { return (value < 0) ? "" : new String(toChars()); }
 
@@ -42,6 +49,8 @@ public @Value class CodePoint {
     }
 
     public String hex() { return Integer.toHexString(value); }
+
+    public boolean isHex() { return Character.isDigit(value) || value >= 'A' && value <= 'F' || value >= 'a' && value <= 'f'; }
 
     public boolean isEof() { return value < 0; }
 

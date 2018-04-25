@@ -3,6 +3,7 @@ package com.github.t1.yaml.parser;
 import com.github.t1.yaml.dump.CodePoint;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 
 import java.util.ArrayList;
@@ -34,6 +35,18 @@ class Expression {
     static class ContainerExpression extends Expression {
         final List<Expression> expressions = new ArrayList<>();
 
+        @SneakyThrows(ReflectiveOperationException.class)
+        static Expression of(Expression left, Expression right, Class<? extends ContainerExpression> type) {
+            ContainerExpression result = type.isInstance(left)
+                    ? (ContainerExpression) left
+                    : type.newInstance().add(left);
+            if (type.isInstance(right))
+                result.expressions.addAll(((ContainerExpression) right).expressions);
+            else
+                result.add(right);
+            return result;
+        }
+
         @Override Expression last() { return lastOf(expressions).last(); }
 
         @Override Expression replaceLastWith(Expression expression) {
@@ -59,12 +72,20 @@ class Expression {
     }
 
     static class AlternativesExpression extends ContainerExpression {
+        static Expression of(Expression left, Expression right) {
+            return ContainerExpression.of(left, right, AlternativesExpression.class);
+        }
+
         @Override public String toString() {
             return expressions.stream().map(Expression::toString).collect(joining(" ||\n   ", "[", "]"));
         }
     }
 
     static class SequenceExpression extends ContainerExpression {
+        static Expression of(Expression left, Expression right) {
+            return ContainerExpression.of(left, right, SequenceExpression.class);
+        }
+
         @Override public String toString() {
             return expressions.isEmpty() ? "<empty sequence>" :
                     expressions.stream().map(Expression::toString).collect(joining(" + "));
@@ -104,6 +125,18 @@ class Expression {
         private final Expression minuend;
         private List<Expression> subtrahends = new ArrayList<>();
 
+        static Expression of(Expression minuend, Expression subtrahend) {
+            MinusExpression result = (minuend instanceof MinusExpression) ? (MinusExpression) minuend : new MinusExpression(minuend);
+            if (subtrahend instanceof MinusExpression) {
+                MinusExpression minus = (MinusExpression) subtrahend;
+                result.merge(minus.minuend);
+                minus.subtrahends.forEach(result::merge);
+            } else {
+                result.merge(subtrahend);
+            }
+            return result;
+        }
+
         @Override Expression merge(Expression that) {
             subtrahends.add(that);
             return this;
@@ -120,7 +153,7 @@ class Expression {
         Expression expression;
         String repetitions;
 
-        @Override public String toString() { return expression + " × " + repetitions; }
+        @Override public String toString() { return "(" + expression + " × " + repetitions + ")"; }
     }
 
     static class SwitchExpression extends ContainerExpression {

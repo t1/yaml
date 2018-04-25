@@ -1,143 +1,144 @@
 package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.dump.CodePoint;
+import com.github.t1.yaml.parser.Expression.AlternativesExpression;
 import com.github.t1.yaml.parser.Expression.CodePointExpression;
-import com.github.t1.yaml.parser.Expression.LiteralExpression;
+import com.github.t1.yaml.parser.Expression.MinusExpression;
 import com.github.t1.yaml.parser.Expression.NullExpression;
+import com.github.t1.yaml.parser.Expression.RangeExpression;
 import com.github.t1.yaml.parser.Expression.ReferenceExpression;
 import com.github.t1.yaml.parser.Expression.RepeatedExpression;
-import com.github.t1.yaml.parser.Expression.SwitchExpression;
-import lombok.RequiredArgsConstructor;
+import com.github.t1.yaml.parser.Expression.SequenceExpression;
 import lombok.experimental.var;
 import lombok.val;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
 
 import java.util.List;
-import java.util.Stack;
 
-@RequiredArgsConstructor class NodeExpressionParser {
-    private final List<Node> nodes;
-    private boolean commentSkipping = false;
-    private Node node;
-    private Expression expression = new NullExpression();
-    private final Stack<Expression> stack = new Stack<>();
-    private int i = 0;
+/**
+ * A recursive descend parser for the grammar html snippets in the yaml spec.
+ * Error messages are generally failed assertions only, so you need the source to see what happened.
+ * Some errors in the grammar description are not detected... the result may not be valid.
+ */
+class NodeExpressionParser {
+    private final NodeScanner next;
+
+    NodeExpressionParser(List<Node> nodes) { this.next = new NodeScanner(nodes); }
 
     Expression expression() {
-        while (more()) {
-            next();
-            try {
-                if (isText(node)) {
-                    text();
-                } else if (commentSkipping) {
-                    // skip
-                } else if (isSpan(node) && classAttr(node).equals("quote")) {
-                    quoteSpan();
-                } else if (isHref(node)) {
-                    href();
-                } else if (isCode(node) && classAttr(node).equals("varname")) {
-                    variable();
-                } else if (isBR(node)) {
-                    if (expression instanceof SwitchExpression)
-                        if (((SwitchExpression) expression).balanced())
-                            ((SwitchExpression) expression).mergeCase(new NullExpression()); // br closes case
-                } else {
-                    throw new IllegalStateException("unexpected node: " + node);
-                }
-            } catch (RuntimeException | AssertionError e) {
-                throw new RuntimeException("at node " + nodes.indexOf(node), e);
-            }
-        }
-        assert stack.isEmpty();
+        skipWhitespaceAndComments();
+
+        Expression expression = body();
+
+        skipWhitespaceAndComments();
+
+        expression = postfix(expression);
+
         return expression;
     }
 
-    private boolean more() { return i < nodes.size(); }
-
-    private void next() { node = nodes.get(i++); }
-
-    private void text() {
-        var text = text(node);
-        if (commentSkipping) {
-            if (text.contains("*/")) {
-                commentSkipping = false;
-                text = text.substring(text.indexOf("*/") + 2);
-            } else
-                return;
-        }
-
-        if (text.contains(" /*") && !text.contains("*/")) {
-            commentSkipping = true;
-            text = text.substring(0, text.indexOf("/*"));
-        }
-
-        while (text.indexOf(" /*") < text.indexOf("*/"))
-            text = text.substring(0, text.indexOf(" /*")) + text.substring(text.indexOf("*/") + 2);
-
-        if (text.endsWith("“"))
-            text = text.substring(0, text.length() - 1);
-        if (text.startsWith("”"))
-            text = text.substring(1);
-
-        expression = new LineExpressionParser(text, expression, stack).expression();
+    private Expression body() {
+        if (next.accept("("))
+            return expression();
+        if (next.accept("#x"))
+            return hex();
+        if (next.accept("[#x"))
+            return range();
+        if (next.accept("“"))
+            return quote();
+        if (next.isElement("a"))
+            return href(next.readElement());
+        if (next.end())
+            return new NullExpression();
+        throw new AssertionError("unexpected start " + next);
     }
 
-    private void quoteSpan() {
-        val textNode = node.childNode(0);
-        expression = expression.merge(new CodePointExpression(CodePoint.at(0, text(textNode))));
+    private Expression postfix(Expression expression) {
+        if (next.accept("-"))
+            expression = MinusExpression.of(expression, expression());
+        if (next.accept("×"))
+            expression = new RepeatedExpression(expression, repetitions());
+        if (next.accept("+"))
+            expression = new RepeatedExpression(expression, "+");
+        if (next.accept("?"))
+            expression = new RepeatedExpression(expression, "?");
+        if (next.accept("*"))
+            expression = new RepeatedExpression(expression, "*");
+
+        skipWhitespaceAndComments();
+
+        if (next.accept("|")) {
+            skipWhitespaceAndComments();
+            if (next.more() && !next.accept(")")) // an empty trailing pipe is allowed :(
+                expression = AlternativesExpression.of(expression, expression());
+        } else if (next.accept(")"))
+            ; // simply return
+        else if (next.more())
+            expression = SequenceExpression.of(expression, expression());
+        return expression;
     }
 
-    private void href() {
-        var href = element(node).attr("href");
+    private void skipWhitespaceAndComments() {
+        int count;
+        do
+        {
+            count = next.count(" ");
+            if (next.accept("/*")) {
+                next.readUntilAndSkip("*/");
+                count++;
+            }
+            if (next.isElement("br")) {
+                next.expectElement("br");
+                count++;
+            }
+        }
+        while (count > 0);
+    }
+
+    private Expression hex() {
+        val hex = new StringBuilder();
+        while (next.peek().isHex())
+            hex.append(next.read());
+        return new CodePointExpression(CodePoint.decode("0x" + hex));
+    }
+
+    private Expression range() {
+        val from = hex();
+        next.expect("-#x");
+        val to = hex();
+        next.expect("]");
+        return new RangeExpression(from, to);
+    }
+
+    private Expression quote() {
+        Element span = next.readElement();
+        assert span.tagName().equals("span");
+        assert span.className().equals("quote");
+        CodePoint codePoint = CodePoint.of(span.text());
+        next.expect("”");
+        return new CodePointExpression(codePoint);
+    }
+
+    private Expression href(Element element) {
+        var href = element.attr("href");
         assert href.startsWith("#");
         href = href.substring(1);
-        expression = expression.merge(new ReferenceExpression(href));
+        return new ReferenceExpression(href);
     }
 
-    private void variable() {
-        val name = element(node).text();
-        if (expression instanceof NullExpression) {
-            expression = new SwitchExpression();
-            switchExpression(name);
-        } else if (expression instanceof SwitchExpression) {
-            switchExpression(name);
+    private String repetitions() {
+        skipWhitespaceAndComments();
+        String repetitions;
+        if (next.isText()) {
+            repetitions = next.read().toString();
         } else {
-            RepeatedExpression repeatedExpression = (RepeatedExpression) expression;
-            assert repeatedExpression.repetitions.isEmpty();
-            repeatedExpression.repetitions = name;
+            Element element = next.readElement();
+            assert element.tagName().equals("code");
+            assert element.className().equals("varname");
+            repetitions = element.text();
         }
+        skipWhitespaceAndComments();
+        return repetitions;
     }
-
-    private void switchExpression(String variable) {
-        LiteralExpression literal = new LiteralExpression(variable);
-        val switchExpression = (SwitchExpression) this.expression;
-        if (switchExpression.balanced() || switchExpression.lastCase() instanceof NullExpression) {
-            switchExpression.mergeCase(literal);
-        } else {
-            switchExpression.merge(literal);
-        }
-    }
-
-
-    private static boolean isText(Node node) { return node instanceof TextNode; }
-
-    private static String text(Node node) { return ((TextNode) node).text(); }
-
-    private static boolean isHref(Node node) { return "a".equals(tagName(node)) && element(node).hasAttr("href"); }
-
-    private static boolean isBR(Node node) { return "br".equals(tagName(node)); }
-
-    private static boolean isSpan(Node node) { return "span".equals(tagName(node)); }
-
-    private static boolean isCode(Node node) { return "code".equals(tagName(node)); }
-
-    private static String classAttr(Node node) { return element(node).attr("class"); }
-
-    private static String tagName(Node node) { return isElement(node) ? element(node).tagName() : null; }
-
-    private static boolean isElement(Node node) { return node instanceof Element; }
-
-    private static Element element(Node node) { return (Element) node; }
 }
