@@ -1,7 +1,6 @@
 package com.github.t1.yaml.parser;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import lombok.experimental.var;
@@ -15,23 +14,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Accessors(fluent = true, chain = true)
-@RequiredArgsConstructor
 public class TokensGenerator {
     private static final Path CACHE = Paths.get("target", "spec.html");
 
     public static void main(String[] args) {
-        new TokensGenerator(production -> {
-            System.out.println(production);
-            System.out.flush();
-        }).run();
+        new TokensGenerator().run();
     }
 
-    private final Consumer<Production> consumer;
+    final List<Production> productions = new ArrayList<>();
 
     void run() { document((Files.exists(CACHE)) ? load() : fetch()); }
 
@@ -51,12 +47,7 @@ public class TokensGenerator {
 
     private void document(Document document) {
         for (val set : document.select("table.productionset table.productionset tr"))
-            production(set);
-    }
-
-    private void production(Element set) {
-        val production = new Production(set);
-        consumer.accept(production);
+            productions.add(new Production(set));
     }
 
     @Data static class Production {

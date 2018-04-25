@@ -13,11 +13,12 @@ import static org.assertj.core.api.Assertions.contentOf;
 
 class TokensGeneratorTest {
     @Test void shouldParseFullSpec() {
-        List<Production> productions = new ArrayList<>();
-        new TokensGenerator(productions::add).run();
+        TokensGenerator generator = new TokensGenerator();
+
+        generator.run();
 
         StringBuilder actual = new StringBuilder();
-        for (Production production : productions)
+        for (Production production : generator.productions)
             actual.append(production).append("\n\n");
         assertThat(actual.toString()).isEqualTo(contentOf(TokensGeneratorTest.class.getResource("expected.txt")));
     }
