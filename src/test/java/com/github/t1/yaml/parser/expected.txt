@@ -278,10 +278,10 @@
   (->s-white × +)
 
 [67] : s-line-prefix [n,c]:
-  «<c> + <= block-out > ⇒ ->s-block-line-prefix(n)
-    <c> + <= block-in > ⇒ ->s-block-line-prefix(n)
-    <c> + <= flow-out > ⇒ ->s-flow-line-prefix(n)
-    <c> + <= flow-in > ⇒ ->s-flow-line-prefix(n)»
+  <c = block-out> ⇒ <->s-block-line-prefix(n)>
+  <c = block-in> ⇒ <->s-block-line-prefix(n)>
+  <c = flow-out> ⇒ <->s-flow-line-prefix(n)>
+  <c = flow-in> ⇒ <->s-flow-line-prefix(n)>
 
 [68] : s-block-line-prefix [n]:
   ->s-indent(n)
@@ -322,12 +322,12 @@
   ->s-b-comment + (->l-comment × *)
 
 [80] : s-separate [n,c]:
-  «<c> + <= block-out > ⇒ ->s-separate-lines(n)
-    <c> + <= block-in > ⇒ ->s-separate-lines(n)
-    <c> + <= flow-out > ⇒ ->s-separate-lines(n)
-    <c> + <= flow-in > ⇒ ->s-separate-lines(n)
-    <c> + <= block-key > ⇒ ->s-separate-in-line
-    <c> + <= flow-key > ⇒ ->s-separate-in-line»
+  <c = block-out> ⇒ <->s-separate-lines(n)>
+  <c = block-in> ⇒ <->s-separate-lines(n)>
+  <c = flow-out> ⇒ <->s-separate-lines(n)>
+  <c = flow-in> ⇒ <->s-separate-lines(n)>
+  <c = block-key> ⇒ <->s-separate-in-line>
+  <c = flow-key> ⇒ <->s-separate-in-line>
 
 [81] : s-separate-lines [n]:
   [->s-l-comments + ->s-flow-line-prefix(n) ||
@@ -427,10 +427,10 @@
   ->c-double-quote + ->nb-double-text(n,c) + ->c-double-quote
 
 [110] : nb-double-text [n,c]:
-  «<c> + <= flow-out > ⇒ ->nb-double-multi-line(n)
-    <c> + <= flow-in > ⇒ ->nb-double-multi-line(n)
-    <c> + <= block-key > ⇒ ->nb-double-one-line
-    <c> + <= flow-key > ⇒ ->nb-double-one-line»
+  <c = flow-out> ⇒ <->nb-double-multi-line(n)>
+  <c = flow-in> ⇒ <->nb-double-multi-line(n)>
+  <c = block-key> ⇒ <->nb-double-one-line>
+  <c = flow-key> ⇒ <->nb-double-one-line>
 
 [111] : nb-double-one-line:
   (->nb-double-char × *)
@@ -467,10 +467,10 @@
   ->c-single-quote + ->nb-single-text(n,c) + ->c-single-quote
 
 [121] : nb-single-text [n,c]:
-  «<c> + <= flow-out > ⇒ ->nb-single-multi-line(n)
-    <c> + <= flow-in > ⇒ ->nb-single-multi-line(n)
-    <c> + <= block-key > ⇒ ->nb-single-one-line
-    <c> + <= flow-key > ⇒ ->nb-single-one-line»
+  <c = flow-out> ⇒ <->nb-single-multi-line(n)>
+  <c = flow-in> ⇒ <->nb-single-multi-line(n)>
+  <c = block-key> ⇒ <->nb-single-one-line>
+  <c = flow-key> ⇒ <->nb-single-one-line>
 
 [122] : nb-single-one-line:
   (->nb-single-char × *)
@@ -493,10 +493,10 @@
    ->c-sequence-entry]
 
 [127] : ns-plain-safe [c]:
-  «<c> + <= flow-out > ⇒ ->ns-plain-safe-out
-    <c> + <= flow-in > ⇒ ->ns-plain-safe-in
-    <c> + <= block-key > ⇒ ->ns-plain-safe-out
-    <c> + <= flow-key > ⇒ ->ns-plain-safe-in»
+  <c = flow-out> ⇒ <->ns-plain-safe-out>
+  <c = flow-in> ⇒ <->ns-plain-safe-in>
+  <c = block-key> ⇒ <->ns-plain-safe-out>
+  <c = flow-key> ⇒ <->ns-plain-safe-in>
 
 [128] : ns-plain-safe-out:
   ->ns-char
@@ -510,10 +510,10 @@
    ->c-mapping-value]
 
 [131] : ns-plain [n,c]:
-  «<c> + <= flow-out > ⇒ ->ns-plain-multi-line(n,c)
-    <c> + <= flow-in > ⇒ ->ns-plain-multi-line(n,c)
-    <c> + <= block-key > ⇒ ->ns-plain-one-line(c)
-    <c> + <= flow-key > ⇒ ->ns-plain-one-line(c)»
+  <c = flow-out> ⇒ <->ns-plain-multi-line(n,c)>
+  <c = flow-in> ⇒ <->ns-plain-multi-line(n,c)>
+  <c = block-key> ⇒ <->ns-plain-one-line(c)>
+  <c = flow-key> ⇒ <->ns-plain-one-line(c)>
 
 [132] : nb-ns-plain-in-line [c]:
   ((->s-white × *) + ->ns-plain-char(c) × *)
@@ -528,10 +528,10 @@
   ->ns-plain-one-line(c) + (->s-ns-plain-next-line(n,c) × *)
 
 [136] : in-flow [c]:
-  «<c> + <= flow-out > ⇒ <flow-in>
-    <c> + <= flow-in > ⇒ <flow-in>
-    <c> + <= block-key > ⇒ <flow-key>
-    <c> + <= flow-key > ⇒ <flow-key >»
+  <c = flow-out> ⇒ <flow-in>
+  <c = flow-in> ⇒ <flow-in>
+  <c = block-key> ⇒ <flow-key>
+  <c = flow-key> ⇒ <flow-key>
 
 [137] : c-flow-sequence [n,c]:
   ->c-sequence-start + (->s-separate(n,c) × ?) + ->ns-s-flow-seq-entries(n,c) + ->in-flow(c) + (->ns-s-flow-seq-entries(n,c) × ?) + ->c-sequence-end
@@ -635,24 +635,23 @@
    ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment
 
 [163] : c-indentation-indicator [m]:
-  «->ns-dec-digit ⇒ <m = > + ->ns-dec-digit - <[0][DIGIT ZERO][0x30]>
-    <> ⇒ <m = auto-detect() >»
+  ->ns-dec-digit ⇒ <m =->ns-dec-digit - #x30>
+  <> ⇒ <m = auto-detect()>
 
 [164] : c-chomping-indicator [t]:
-  «<[-][HYPHEN-MINUS][0x2d]> ⇒ <t> + <= strip>
-    <empty> ⇒ <[+][PLUS SIGN][0x2b]>
-    <> ⇒ <t> + <= keep>
-    <> ⇒ <t> + <= clip >»
+  <[-][HYPHEN-MINUS][0x2d]> ⇒ <t = strip>
+  <<[+][PLUS SIGN][0x2b]>> ⇒ <t = keep>
+  <> ⇒ <t = clip>
 
 [165] : b-chomped-last [t]:
-  «t = strip ⇒ b-non-content | /* End of file */
-   t = clip  ⇒ b-as-line-feed | /* End of file */
-   t = keep  ⇒ b-as-line-feed | /* End of file */»
+  <t = strip> ⇒ <->b-non-content | /* End of file */>
+  <t = clip> ⇒ <->b-as-line-feed | /* End of file */>
+  <t = keep> ⇒ <->b-as-line-feed | /* End of file */>
 
 [166] : l-chomped-empty [n,t]:
-  «t = strip ⇒ l-strip-empty(n)
-   t = clip  ⇒ l-strip-empty(n)
-   t = keep  ⇒ l-keep-empty(n)»
+  <t = strip> ⇒ <->l-strip-empty(n)>
+  <t = clip> ⇒ <->l-strip-empty(n)>
+  <t = keep> ⇒ <->l-keep-empty(n)>
 
 [167] : l-strip-empty [n]:
   (->s-indent(n) + ->b-non-content × *) + (->l-trail-comments(n) × ?)
@@ -770,8 +769,8 @@
    ->l+block-mapping(n)]
 
 [201] : seq-spaces [n,c]:
-  «c = block-out ⇒ n-1
-   c = block-in  ⇒ n»
+  <c = block-out> ⇒ <n-1>
+  <c = block-in> ⇒ <n>
 
 [202] : l-document-prefix:
   (->c-byte-order-mark × ?) + (->l-comment × *)

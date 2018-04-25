@@ -3,18 +3,21 @@ package com.github.t1.yaml.parser;
 import com.github.t1.yaml.dump.CodePoint;
 import com.github.t1.yaml.parser.Expression.AlternativesExpression;
 import com.github.t1.yaml.parser.Expression.CodePointExpression;
+import com.github.t1.yaml.parser.Expression.LiteralExpression;
 import com.github.t1.yaml.parser.Expression.MinusExpression;
 import com.github.t1.yaml.parser.Expression.NullExpression;
 import com.github.t1.yaml.parser.Expression.RangeExpression;
 import com.github.t1.yaml.parser.Expression.ReferenceExpression;
 import com.github.t1.yaml.parser.Expression.RepeatedExpression;
 import com.github.t1.yaml.parser.Expression.SequenceExpression;
+import com.github.t1.yaml.parser.Expression.SwitchExpression;
 import lombok.experimental.var;
 import lombok.val;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * A recursive descend parser for the grammar html snippets in the yaml spec.
@@ -45,10 +48,12 @@ class NodeExpressionParser {
             return hex();
         if (next.accept("[#x"))
             return range();
-        if (next.accept("“"))
+        if (isQuote())
             return quote();
-        if (next.isElement("a"))
-            return href(next.readElement());
+        if (isHref())
+            return href();
+        if (isVar())
+            return switchLabel(); // can only be in switch
         if (next.end())
             return new NullExpression();
         throw new AssertionError("unexpected start " + next);
@@ -72,6 +77,8 @@ class NodeExpressionParser {
             skipWhitespaceAndComments();
             if (next.more() && !next.accept(")")) // an empty trailing pipe is allowed :(
                 expression = AlternativesExpression.of(expression, expression());
+        } else if (next.accept("⇒")) {
+            expression = switchExpression(expression);
         } else if (next.accept(")"))
             ; // simply return
         else if (next.more())
@@ -88,13 +95,15 @@ class NodeExpressionParser {
                 next.readUntilAndSkip("*/");
                 count++;
             }
-            if (next.isElement("br")) {
+            if (isBr()) {
                 next.expectElement("br");
                 count++;
             }
         }
         while (count > 0);
     }
+
+    private boolean isBr() { return next.isElement("br"); }
 
     private Expression hex() {
         val hex = new StringBuilder();
@@ -111,6 +120,8 @@ class NodeExpressionParser {
         return new RangeExpression(from, to);
     }
 
+    private boolean isQuote() { return next.accept("“"); }
+
     private Expression quote() {
         Element span = next.readElement();
         assert span.tagName().equals("span");
@@ -120,8 +131,10 @@ class NodeExpressionParser {
         return new CodePointExpression(codePoint);
     }
 
-    private Expression href(Element element) {
-        var href = element.attr("href");
+    private boolean isHref() { return next.isElement("a") && next.peekElement().hasAttr("href"); }
+
+    private Expression href() {
+        var href = next.readElement().attr("href");
         assert href.startsWith("#");
         href = href.substring(1);
         return new ReferenceExpression(href);
@@ -129,16 +142,50 @@ class NodeExpressionParser {
 
     private String repetitions() {
         skipWhitespaceAndComments();
-        String repetitions;
-        if (next.isText()) {
-            repetitions = next.read().toString();
-        } else {
-            Element element = next.readElement();
-            assert element.tagName().equals("code");
-            assert element.className().equals("varname");
-            repetitions = element.text();
-        }
+        String repetitions = next.isText() ? next.read().toString() : readVar();
         skipWhitespaceAndComments();
         return repetitions;
+    }
+
+    private boolean isVar() { return next.isElement("code") && next.peekElement().className().equals("varname"); }
+
+    private String readVar() {
+        Element element = next.readElement();
+        assert element.tagName().equals("code");
+        assert element.className().equals("varname");
+        return element.text();
+    }
+
+    private Expression switchExpression(Expression label) {
+        skipWhitespaceAndComments();
+        val switchExpression = new SwitchExpression();
+        switchExpression.mergeCase(label).merge(switchValue());
+        while (next.more()) {
+            switchExpression.mergeCase(switchLabel());
+            next.expect("⇒");
+            switchExpression.merge(switchValue());
+        }
+        return switchExpression;
+    }
+
+    private LiteralExpression switchLabel() { return readLiteralUntil(() -> next.is("⇒")); }
+
+    private LiteralExpression switchValue() { return readLiteralUntil(() -> next.isElement("br") || next.end()); }
+
+    private LiteralExpression readLiteralUntil(Supplier<Boolean> end) {
+        StringBuilder out = new StringBuilder();
+        while (!end.get())
+            if (isQuote())
+                out.append(quote()).append(" ");
+            else if (isVar())
+                out.append(readVar()).append(" ");
+            else if (isHref())
+                out.append(href()).append(" ");
+            else if (next.isText())
+                out.appendCodePoint(next.read().value);
+            else
+                throw new AssertionError("unexpected switch literal " + next);
+        skipWhitespaceAndComments();
+        return new LiteralExpression(out.toString().trim());
     }
 }

@@ -19,8 +19,7 @@ class TokensGeneratorTest {
         StringBuilder actual = new StringBuilder();
         for (Production production : productions)
             actual.append(production).append("\n\n");
-        assertThat(actual.toString()).isEqualTo(contentOf(TokensGeneratorTest.class.getResource("expected.txt"))
-                .replaceAll("(?s)«.*?»", "null"));
+        assertThat(actual.toString()).isEqualTo(contentOf(TokensGeneratorTest.class.getResource("expected.txt")));
     }
 
     private Production parse(int counter, String name, String expression) {
@@ -167,5 +166,17 @@ class TokensGeneratorTest {
         assertThat(production.toString()).isEqualTo("" +
                 "[105] : e-scalar:\n" +
                 "  <empty>");
+    }
+
+    @Test void shouldParseSwitch() {
+        Production production = parse(67, "s-line-prefix(n,c)",
+                "<code class=\"varname\">c</code> = block-out ⇒ <a href=\"#s-block-line-prefix(n)\">s-block-line-prefix(n)</a><br> <code class=\"varname\">c</code> = block-in&nbsp; ⇒ <a href=\"#s-block-line-prefix(n)\">s-block-line-prefix(n)</a><br> <code class=\"varname\">c</code> = flow-out&nbsp; ⇒ <a href=\"#s-flow-line-prefix(n)\">s-flow-line-prefix(n)</a><br> <code class=\"varname\">c</code> = flow-in&nbsp;&nbsp; ⇒ <a href=\"#s-flow-line-prefix(n)\">s-flow-line-prefix(n)</a>");
+
+        assertThat(production.toString()).isEqualTo("" +
+                "[67] : s-line-prefix [n,c]:\n" +
+                "  <c = block-out> ⇒ <->s-block-line-prefix(n)>\n" +
+                "  <c = block-in> ⇒ <->s-block-line-prefix(n)>\n" +
+                "  <c = flow-out> ⇒ <->s-flow-line-prefix(n)>\n" +
+                "  <c = flow-in> ⇒ <->s-flow-line-prefix(n)>");
     }
 }

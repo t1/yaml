@@ -25,13 +25,6 @@ class Expression {
         @Override public String toString() { return "<empty>"; }
     }
 
-    @AllArgsConstructor
-    static class ParenthesesExpression extends Expression {
-        Expression expression;
-
-        @Override public String toString() { return "(" + expression + ")"; }
-    }
-
     static class ContainerExpression extends Expression {
         final List<Expression> expressions = new ArrayList<>();
 
@@ -161,8 +154,6 @@ class Expression {
 
         boolean balanced() { return cases.size() == expressions.size(); }
 
-        Expression lastCase() { return lastOf(cases); }
-
         SwitchExpression mergeCase(Expression expression) {
             if (balanced())
                 cases.add(expression);
@@ -185,9 +176,9 @@ class Expression {
             val out = new StringBuilder();
             for (int i = 0; i < cases.size(); i++) {
                 if (i > 0)
-                    out.append("  ");
-                out.append("  ").append(cases.get(i)).append(" ⇒ ")
-                        .append(i < expressions.size() ? expressions.get(i) : "?").append("\n");
+                    out.append("\n  ");
+                out.append(cases.get(i)).append(" ⇒ ")
+                        .append(i < expressions.size() ? expressions.get(i) : "?");
             }
             return out.toString();
         }

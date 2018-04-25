@@ -11,12 +11,17 @@ import java.util.function.Supplier;
 
 import static com.github.t1.yaml.dump.CodePoint.EOF;
 
+/**
+ * Scans an html snippet which includes seamless scanning of text nodes.
+ */
 @RequiredArgsConstructor class NodeScanner {
     private final List<Node> nodes;
     private int i = 0;
     private Scanner nextText;
 
-    @Override public String toString() { return more() ? "in node " + i + ": " + ((nextText == null) ? node() : nextText) : "<end>"; }
+    @Override public String toString() {
+        return more() ? "in node " + i + ": [" + ((nextText == null) ? node() : nextText) + "]" : "<end>";
+    }
 
     private Node node() { return nodes.get(i); }
 
@@ -24,9 +29,9 @@ import static com.github.t1.yaml.dump.CodePoint.EOF;
 
     boolean end() { return !more(); }
 
-    boolean more() { return i < nodes.size() || nextText != null && nextText.skip(" ").more(); }
+    boolean more() { return i < nodes.size() || nextText != null && nextText.more(); }
 
-    boolean isText() { return more() && node() instanceof TextNode; }
+    boolean isText() { return more() && node() instanceof TextNode && withText(() -> nextText.more()); }
 
     int count(String text) { return isText() ? withText(() -> nextText.count(text)) : 0; }
 
@@ -36,6 +41,8 @@ import static com.github.t1.yaml.dump.CodePoint.EOF;
             return false;
         return withText(() -> nextText.accept(text));
     }
+
+    boolean is(String text) { return nextText != null && nextText.is(text); }
 
     CodePoint peek() { return (nextText == null) ? EOF : nextText.peek(); }
 
@@ -60,14 +67,9 @@ import static com.github.t1.yaml.dump.CodePoint.EOF;
         return this;
     }
 
-    NodeScanner skip(String text) {
-        if (more() && isText())
-            withText(() -> nextText.skip(text));
-        return this;
-    }
-
     private <T> T withText(Supplier<T> runnable) {
-        assert isText();
+        assert more();
+        assert node() instanceof TextNode;
         if (nextText == null)
             nextText = new Scanner(((TextNode) node()).text().trim());
         T result = runnable.get();
@@ -76,6 +78,8 @@ import static com.github.t1.yaml.dump.CodePoint.EOF;
         return result;
     }
 
+    Element peekElement() { return (Element) node(); }
+
     Element readElement() {
         Node node = node();
         next();
@@ -83,7 +87,7 @@ import static com.github.t1.yaml.dump.CodePoint.EOF;
     }
 
     boolean isElement(String tagName) {
-        if (!more() || isText())
+        if (isText() || end())
             return false;
         Node node = node();
         return (node instanceof Element && ((Element) node).tagName().equals(tagName));

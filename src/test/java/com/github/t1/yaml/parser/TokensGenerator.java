@@ -19,8 +19,6 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.Arrays.asList;
-
 @Accessors(fluent = true, chain = true)
 @RequiredArgsConstructor
 public class TokensGenerator {
@@ -75,8 +73,6 @@ public class TokensGenerator {
             this.name = argsMatcher.group("name");
             this.args = argsMatcher.group("args");
 
-            if (asList(67, 80, 110, 121, 127, 131, 136, 163, 164, 165, 166, 201).contains(counter))
-                return;
             Element rhs = set.selectFirst("td.productionrhs");
             try {
                 val parser = new NodeExpressionParser(rhs.childNodes());
