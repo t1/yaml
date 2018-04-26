@@ -26,35 +26,33 @@ abstract class Expression {
 
 
         ///////////// fixed number of subexpressions
-        void visit(RepeatedExpression repeatedExpression) {}
+        Visitor visit(RepeatedExpression repeatedExpression) { return this; }
 
         void leave(RepeatedExpression repeatedExpression) {}
 
 
-        void visit(RangeExpression rangeExpression) {}
+        Visitor visit(RangeExpression rangeExpression) { return this; }
 
         void leave(RangeExpression rangeExpression) {}
 
 
         ///////////// arbitrary subexpressions
-        void visit(MinusExpression minusExpression) {}
+        Visitor visit(MinusExpression minusExpression) { return this; }
 
         void leave(MinusExpression minusExpression) {}
 
 
-        void visit(AlternativesExpression alternativesExpression) {}
+        Visitor visit(AlternativesExpression alternativesExpression) { return this; }
 
         void leave(AlternativesExpression alternativesExpression) {}
 
 
-        void visit(SequenceExpression sequenceExpression) {}
+        Visitor visit(SequenceExpression sequenceExpression) { return this; }
 
         void leave(SequenceExpression sequenceExpression) {}
 
 
-        void visit(SwitchExpression switchExpression) {}
-
-        void visitCase(SwitchExpression switchExpression, Expression caseExpression, Expression valueExpression) {}
+        Visitor visit(SwitchExpression switchExpression) { return this; }
 
         void leave(SwitchExpression switchExpression) {}
     }
@@ -117,9 +115,9 @@ abstract class Expression {
         }
 
         @Override void guide(Visitor visitor) {
-            visitor.visit(this);
-            expressions.forEach(expression -> expression.guide(visitor));
-            visitor.leave(this);
+            Visitor sub = visitor.visit(this);
+            expressions.forEach(expression -> expression.guide(sub));
+            sub.leave(this);
         }
     }
 
@@ -134,15 +132,15 @@ abstract class Expression {
         }
 
         @Override void guide(Visitor visitor) {
-            visitor.visit(this);
-            expressions.forEach(expression -> expression.guide(visitor));
-            visitor.leave(this);
+            Visitor sub = visitor.visit(this);
+            expressions.forEach(expression -> expression.guide(sub));
+            sub.leave(this);
         }
     }
 
     @AllArgsConstructor
     static class CodePointExpression extends Expression {
-        private CodePoint codePoint;
+        CodePoint codePoint;
 
         @Override public String toString() { return "<" + codePoint.xinfo() + ">"; }
 
@@ -151,7 +149,7 @@ abstract class Expression {
 
     @AllArgsConstructor
     static class LiteralExpression extends Expression {
-        private String literal;
+        String literal;
 
         @Override public String toString() { return "<" + literal + ">"; }
 
@@ -165,10 +163,10 @@ abstract class Expression {
         @Override public String toString() { return "[" + left + "-" + right + "]"; }
 
         @Override void guide(Visitor visitor) {
-            visitor.visit(this);
-            left.guide(visitor);
-            right.guide(visitor);
-            visitor.leave(this);
+            Visitor sub = visitor.visit(this);
+            left.guide(sub);
+            right.guide(sub);
+            sub.leave(this);
         }
     }
 
@@ -205,10 +203,10 @@ abstract class Expression {
         }
 
         @Override void guide(Visitor visitor) {
-            visitor.visit(this);
-            minuend.guide(visitor);
-            subtrahends.forEach(subtrahend -> subtrahend.guide(visitor));
-            visitor.leave(this);
+            Visitor sub = visitor.visit(this);
+            minuend.guide(sub);
+            subtrahends.forEach(subtrahend -> subtrahend.guide(sub));
+            sub.leave(this);
         }
     }
 
@@ -220,9 +218,9 @@ abstract class Expression {
         @Override public String toString() { return "(" + expression + " × " + repetitions + ")"; }
 
         @Override void guide(Visitor visitor) {
-            visitor.visit(this);
-            expression.guide(visitor);
-            visitor.leave(this);
+            Visitor sub = visitor.visit(this);
+            expression.guide(sub);
+            sub.leave(this);
         }
     }
 
@@ -261,13 +259,13 @@ abstract class Expression {
         }
 
         @Override void guide(Visitor visitor) {
-            visitor.visit(this);
+            Visitor sub = visitor.visit(this);
             for (int i = 0; i < cases.size(); i++) {
-                cases.get(i).guide(visitor);
+                cases.get(i).guide(sub);
                 if (expressions.size() > i)
-                    expressions.get(i).guide(visitor);
+                    expressions.get(i).guide(sub);
             }
-            visitor.leave(this);
+            sub.leave(this);
         }
     }
 

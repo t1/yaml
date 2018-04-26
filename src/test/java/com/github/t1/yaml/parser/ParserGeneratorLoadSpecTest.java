@@ -1,6 +1,6 @@
 package com.github.t1.yaml.parser;
 
-import com.github.t1.yaml.parser.TokensGenerator.Production;
+import com.github.t1.yaml.parser.ParserGenerator.Production;
 import org.assertj.core.api.SoftAssertions;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
@@ -11,16 +11,16 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
 
-class TokensGeneratorLoadSpecTest {
+class ParserGeneratorLoadSpecTest {
     @Test void shouldParseFullSpec() {
-        TokensGenerator generator = new TokensGenerator().loadSpec();
+        ParserGenerator generator = new ParserGenerator().loadSpec();
 
         StringBuilder actual = new StringBuilder();
         for (Production production : generator.productions)
             actual.append(production).append("\n\n");
 
         // not softly, so we get a diff from AssertJ
-        assertThat(actual.toString()).isEqualTo(contentOf(TokensGeneratorLoadSpecTest.class.getResource("expected.txt")));
+        assertThat(actual.toString()).isEqualTo(contentOf(ParserGeneratorLoadSpecTest.class.getResource("expected.txt")));
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(generator.get("c-printable")).isEqualTo(generator.productions.get(0));
@@ -56,7 +56,7 @@ class TokensGeneratorLoadSpecTest {
                 "</table>" +
                 "</body></html>").selectFirst("tr");
 
-        return new TokensGenerator().parse(element);
+        return new ParserGenerator().parse(element);
     }
 
     @Test

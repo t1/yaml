@@ -39,6 +39,8 @@ import static java.util.Collections.singletonList;
         return this;
     }
 
+    boolean is(CodePoint codePoint) { return codePoint.equals(peek()); }
+
     boolean is(String string) {
         return is(new StringToken(string));
     }
