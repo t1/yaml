@@ -5,6 +5,7 @@ import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.ScalarNode.Line;
 import com.github.t1.yaml.model.SequenceNode;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 
 class SequenceTest extends AbstractYamlTest {
@@ -19,7 +20,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Nested class givenSequenceWithIndentedScalars extends SingleDocument {
+    @Disabled @Nested class givenSequenceWithIndentedScalars extends SingleDocument {
         @BeforeEach void setup() {
             input = "- 1\n" +
                     "  2\n" +
@@ -38,7 +39,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Nested class givenSequenceWithIndentedScalarsInNewLines extends SingleDocument {
+    @Disabled @Nested class givenSequenceWithIndentedScalarsInNewLines extends SingleDocument {
         @BeforeEach void setup() {
             input = "-\n" +
                     "  1\n" +
@@ -59,7 +60,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Nested class givenSequenceOfSequence extends SingleDocument {
+    @Disabled @Nested class givenSequenceOfSequence extends SingleDocument {
         @BeforeEach void setup() {
             input = "" +
                     "-\n" +
