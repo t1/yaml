@@ -5,6 +5,7 @@ import com.github.t1.yaml.parser.CodePointReader.Mark;
 import lombok.RequiredArgsConstructor;
 
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -12,6 +13,7 @@ import java.util.function.Predicate;
 import static com.github.t1.yaml.parser.Symbol.BOM;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.WS;
+import static java.util.Collections.singletonList;
 
 @RequiredArgsConstructor class Scanner {
     /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832 */
@@ -23,6 +25,9 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 
     Scanner(Reader reader) { this(new CodePointReader(reader)); }
 
+    Scanner(String text) { this(new StringReader(text)); }
+
+
     Scanner expect(String string) { return expect(new StringToken(string)); }
 
     Scanner expect(Token token) {
@@ -33,6 +38,8 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         }
         return this;
     }
+
+    boolean is(CodePoint codePoint) { return codePoint.equals(peek()); }
 
     boolean is(String string) {
         return is(new StringToken(string));
@@ -66,7 +73,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
             reader.read();
     }
 
-    private CodePoint peek() { return peek(1).get(0); }
+    CodePoint peek() { return peek(1).get(0); }
 
     private List<CodePoint> peek(int count) {
         try (Mark mark = reader.mark(count)) {
@@ -99,7 +106,7 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return (peek.size() < count + 1) ? Optional.empty() : Optional.of(peek.get(peek.size() - 1));
     }
 
-    private CodePoint read() {
+    CodePoint read() {
         CodePoint codePoint = reader.read();
         if (BOM.test(codePoint))
             throw new YamlParseException("A BOM must not appear inside a document");
@@ -112,38 +119,49 @@ import static com.github.t1.yaml.parser.Symbol.WS;
         return codePoint;
     }
 
-    String readWord() { return readUntilEndOr(WS); }
+    String readWord() { return readUntilAndSkip(WS); }
 
-    String readLine() { return readUntilEndOr(NL); }
+    String readLine() { return readUntilAndSkip(NL); }
+
+    Integer readInteger() { return Integer.decode(readWhile(() -> singletonList(codePoint -> codePoint.is(Character::isDigit)))); }
+
+    String readUntil(String end) { return readUntil(new StringToken(end)); }
 
     String readUntil(Token end) {
         StringBuilder builder = new StringBuilder();
         while (more() && !is(end))
-            builder.append(read());
+            builder.appendCodePoint(read().value);
         return builder.toString();
     }
 
-    String readUntilEndOr(Token end) {
+    String readUntilAndSkip(String end) { return readUntilAndSkip(new StringToken(end)); }
+
+    String readUntilAndSkip(Token end) {
         String result = readUntil(end);
         if (more())
             expect(end);
         return result;
     }
 
+    Scanner skip(String token) { return skip(new StringToken(token)); }
+
     Scanner skip(Token token) {
         accept(token);
         return this;
     }
 
-    int count(Token token) {
-        int count = 0;
-        while (accept(token))
-            count++;
-        return count;
+    int count(String token) { return count(new StringToken(token)); }
+
+    int count(Token token) { return readWhile(token).length(); }
+
+    String readWhile(Token token) {
+        StringBuilder out = new StringBuilder();
+        while (is(token))
+            out.appendCodePoint(read().value);
+        return out.toString();
     }
 
     @Override public String toString() {
-        CodePoint c = peek();
-        return "[" + c + "][" + c.info() + "][0x" + c.hex() + "] at line " + lineNumber + " char " + position;
+        return peek().xinfo() + " at line " + lineNumber + " char " + position;
     }
 }

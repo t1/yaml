@@ -25,7 +25,7 @@ public enum Quotes {
     public final Style style;
 
     public String scan(Scanner scanner) {
-        String string = scanner.readUntilEndOr(symbol);
+        String string = scanner.readUntilAndSkip(symbol);
         if (string == null)
             throw new YamlParseException("expected " + style + " string to end with " + symbol + " but found " + scanner);
         return string;
