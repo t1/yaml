@@ -159,9 +159,9 @@ class NodeExpressionParser {
     private Expression switchExpression(Expression label) {
         skipWhitespaceAndComments();
         val switchExpression = new SwitchExpression();
-        switchExpression.mergeCase(label).merge(switchValue());
+        switchExpression.addCase(label).merge(switchValue());
         while (next.more()) {
-            switchExpression.mergeCase(switchLabel());
+            switchExpression.addCase(switchLabel());
             next.expect("⇒");
             switchExpression.merge(switchValue());
         }

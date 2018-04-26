@@ -11,21 +11,42 @@ import java.util.List;
 
 import static java.util.stream.Collectors.joining;
 
-class Expression {
-    Expression merge(Expression that) { return new SequenceExpression().add(this).add(that); }
+abstract class Expression {
+    abstract void guide(Visitor visitor);
 
-    Expression last() { return this; }
+    @SuppressWarnings("unused") static class Visitor {
+        void visit(NullExpression nullExpression) {}
 
-    Expression replaceLastWith(Expression expression) { return expression; }
+        void visit(AlternativesExpression alternativesExpression) {}
 
-    /** just a starting point to merge expressions into */
-    static class NullExpression extends Expression {
-        @Override Expression merge(Expression that) { return that; }
+        void visit(SequenceExpression sequenceExpression) {}
 
-        @Override public String toString() { return "<empty>"; }
+        void visit(CodePointExpression codePointExpression) {}
+
+        void visit(LiteralExpression literalExpression) {}
+
+        void visit(RangeExpression rangeExpression) {}
+
+        void visit(ReferenceExpression referenceExpression) {}
+
+        void visit(MinusExpression minusExpression) {}
+
+        void visit(RepeatedExpression repeatedExpression) {}
+
+        void visit(SwitchExpression switchExpression) {}
     }
 
-    static class ContainerExpression extends Expression {
+    protected Expression last() { throw new UnsupportedOperationException(); }
+
+    protected void replaceLastWith(Expression expression) { throw new UnsupportedOperationException(); }
+
+    static class NullExpression extends Expression {
+        @Override public String toString() { return "<empty>"; }
+
+        @Override void guide(Visitor visitor) { visitor.visit(this); }
+    }
+
+    static abstract class ContainerExpression extends Expression {
         final List<Expression> expressions = new ArrayList<>();
 
         @SneakyThrows(ReflectiveOperationException.class)
@@ -40,14 +61,13 @@ class Expression {
             return result;
         }
 
-        @Override Expression last() { return lastOf(expressions).last(); }
+        @Override protected Expression last() { return lastOf(expressions).last(); }
 
-        @Override Expression replaceLastWith(Expression expression) {
+        @Override protected void replaceLastWith(Expression expression) {
             if (lastOf(expressions) instanceof ContainerExpression)
                 lastOf(expressions).replaceLastWith(expression);
             else
                 setLastOf(expressions, expression);
-            return this;
         }
 
         ContainerExpression add(Expression expression) {
@@ -55,12 +75,11 @@ class Expression {
             return this;
         }
 
-        Expression merge(Expression expression) {
+        void merge(Expression expression) {
             if (expression instanceof ContainerExpression)
                 expressions.addAll(((ContainerExpression) expression).expressions);
             else
                 expressions.add(expression);
-            return this;
         }
     }
 
@@ -71,6 +90,11 @@ class Expression {
 
         @Override public String toString() {
             return expressions.stream().map(Expression::toString).collect(joining(" ||\n   ", "[", "]"));
+        }
+
+        @Override void guide(Visitor visitor) {
+            visitor.visit(this);
+            expressions.forEach(expression -> expression.guide(visitor));
         }
     }
 
@@ -83,6 +107,11 @@ class Expression {
             return expressions.isEmpty() ? "<empty sequence>" :
                     expressions.stream().map(Expression::toString).collect(joining(" + "));
         }
+
+        @Override void guide(Visitor visitor) {
+            visitor.visit(this);
+            expressions.forEach(expression -> expression.guide(visitor));
+        }
     }
 
     @AllArgsConstructor
@@ -90,6 +119,8 @@ class Expression {
         private CodePoint codePoint;
 
         @Override public String toString() { return "<" + codePoint.xinfo() + ">"; }
+
+        @Override void guide(Visitor visitor) { visitor.visit(this); }
     }
 
     @AllArgsConstructor
@@ -97,6 +128,8 @@ class Expression {
         private String literal;
 
         @Override public String toString() { return "<" + literal + ">"; }
+
+        @Override void guide(Visitor visitor) { visitor.visit(this); }
     }
 
     @AllArgsConstructor
@@ -104,13 +137,17 @@ class Expression {
         private Expression left, right;
 
         @Override public String toString() { return "[" + left + "-" + right + "]"; }
+
+        @Override void guide(Visitor visitor) { visitor.visit(this); }
     }
 
     @AllArgsConstructor
     static class ReferenceExpression extends Expression {
-        private String ref;
+        String ref;
 
         @Override public String toString() { return "->" + ref; }
+
+        @Override void guide(Visitor visitor) { visitor.visit(this); }
     }
 
     @RequiredArgsConstructor
@@ -119,26 +156,23 @@ class Expression {
         private List<Expression> subtrahends = new ArrayList<>();
 
         static Expression of(Expression minuend, Expression subtrahend) {
-            MinusExpression result = (minuend instanceof MinusExpression) ? (MinusExpression) minuend : new MinusExpression(minuend);
+            MinusExpression result = new MinusExpression(minuend);
             if (subtrahend instanceof MinusExpression) {
                 MinusExpression minus = (MinusExpression) subtrahend;
-                result.merge(minus.minuend);
-                minus.subtrahends.forEach(result::merge);
+                result.subtrahends.add((minus.minuend));
+                result.subtrahends.addAll(minus.subtrahends);
             } else {
-                result.merge(subtrahend);
+                result.subtrahends.add(subtrahend);
             }
             return result;
-        }
-
-        @Override Expression merge(Expression that) {
-            subtrahends.add(that);
-            return this;
         }
 
         @Override public String toString() {
             return minuend + " - " +
                     subtrahends.stream().map(Expression::toString).collect(joining(" - "));
         }
+
+        @Override void guide(Visitor visitor) { visitor.visit(this); }
     }
 
     @AllArgsConstructor
@@ -147,6 +181,8 @@ class Expression {
         String repetitions;
 
         @Override public String toString() { return "(" + expression + " × " + repetitions + ")"; }
+
+        @Override void guide(Visitor visitor) { visitor.visit(this); }
     }
 
     static class SwitchExpression extends ContainerExpression {
@@ -154,22 +190,21 @@ class Expression {
 
         boolean balanced() { return cases.size() == expressions.size(); }
 
-        SwitchExpression mergeCase(Expression expression) {
+        SwitchExpression addCase(Expression expression) {
             if (balanced())
                 cases.add(expression);
             else
-                setLastOf(cases, lastOf(cases).merge(expression));
+                setLastOf(cases, expression);
             return this;
         }
 
-        @Override Expression merge(Expression that) {
+        void merge(Expression that) {
             if (balanced()) {
-                replaceLastWith(last().merge(that));
+                replaceLastWith(that);
             } else {
                 assert cases.size() == expressions.size() + 1;
                 expressions.add(that);
             }
-            return this;
         }
 
         @Override public String toString() {
@@ -181,6 +216,15 @@ class Expression {
                         .append(i < expressions.size() ? expressions.get(i) : "?");
             }
             return out.toString();
+        }
+
+        @Override void guide(Visitor visitor) {
+            visitor.visit(this);
+            for (int i = 0; i < cases.size(); i++) {
+                cases.get(i).guide(visitor);
+                if (expressions.size() > i)
+                    expressions.get(i).guide(visitor);
+            }
         }
     }
 

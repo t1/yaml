@@ -1,26 +1,48 @@
 package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.parser.TokensGenerator.Production;
+import org.assertj.core.api.SoftAssertions;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
 
-class TokensGeneratorTest {
+class TokensGeneratorLoadSpecTest {
     @Test void shouldParseFullSpec() {
-        TokensGenerator generator = new TokensGenerator();
-
-        generator.run();
+        TokensGenerator generator = new TokensGenerator().loadSpec();
 
         StringBuilder actual = new StringBuilder();
         for (Production production : generator.productions)
             actual.append(production).append("\n\n");
-        assertThat(actual.toString()).isEqualTo(contentOf(TokensGeneratorTest.class.getResource("expected.txt")));
+
+        // not softly, so we get a diff from AssertJ
+        assertThat(actual.toString()).isEqualTo(contentOf(TokensGeneratorLoadSpecTest.class.getResource("expected.txt")));
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(generator.get("c-printable")).isEqualTo(generator.productions.get(0));
+            softly.assertThat(generator.get("c-sequence-end")).isEqualTo(generator.productions.get(8));
+            softly.assertThat(generator.get("s-indent(<n)")).isEqualTo(generator.productions.get(63));
+            softly.assertThat(generator.get("ns-flow-node(n,c)")).isEqualTo(generator.productions.get(160));
+
+            softly.assertThat(generator.get("c-printable").references()).isEmpty();
+            Map<String, Production> b_char_refs = generator.get("b-char").references();
+            softly.assertThat(b_char_refs.keySet()).containsOnly("b-line-feed", "b-carriage-return");
+            softly.assertThat(b_char_refs.values()).containsOnly(
+                    generator.get("b-line-feed"),
+                    generator.get("b-carriage-return")
+            );
+            Map<String, Production> l_empty_refs = generator.get("l-empty(n,c)").references();
+            softly.assertThat(l_empty_refs.keySet()).containsOnly("s-line-prefix(n,c)", "s-indent(n)", "b-as-line-feed");
+            softly.assertThat(l_empty_refs.values()).containsOnly(
+                    generator.get("s-line-prefix(n,c)"),
+                    generator.get("s-indent(n)"),
+                    generator.get("b-as-line-feed")
+            );
+        });
     }
 
     private Production parse(int counter, String name, String expression) {
@@ -34,7 +56,7 @@ class TokensGeneratorTest {
                 "</table>" +
                 "</body></html>").selectFirst("tr");
 
-        return new Production(element);
+        return new TokensGenerator().parse(element);
     }
 
     @Test
