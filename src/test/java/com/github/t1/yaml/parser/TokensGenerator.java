@@ -1,6 +1,7 @@
 package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.parser.Expression.ReferenceExpression;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.experimental.var;
@@ -22,6 +23,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
 
 public class TokensGenerator {
     private static final Path CACHE = Paths.get("target", "spec.html");
@@ -83,10 +87,10 @@ public class TokensGenerator {
 
     @Value static class Production {
         int counter;
-        String name;
+        @NonNull String name;
         String args;
 
-        Expression expression;
+        @NonNull Expression expression;
 
         private final Map<String, Production> references = new HashMap<>();
 
@@ -179,10 +183,14 @@ public class TokensGenerator {
     }
 
     private String methodName(Production production) {
-        return production.name.replace("-", "_");
+        return production.name.replace("-", "_").replace("+", "_")
+                + (production.args.contains("<") ? "_less" : "")
+                + (production.args.contains("≤") ? "_lessEq" : "");
     }
 
     private String args(Production production) {
-        return (production.args == null) ? "" : production.args;
+        return (production.args == null || production.args.isEmpty()) ? "" :
+                Stream.of(production.args.replace("≤", "").replace("<", "")
+                        .split(",")).collect(joining(", int ", "int ", ""));
     }
 }

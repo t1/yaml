@@ -23,34 +23,84 @@ class TokensGeneratorJavaTest {
         return writer.toString();
     }
 
+    private String java(String body) {
+        return "package com.github.t1.yaml.parser;\n" +
+                "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "@Generated(\"\")\n" +
+                "@lombok.Generated\n" +
+                "public class FooParser {\n" +
+                body +
+                "}\n";
+    }
+
     @Test void shouldGenerateEmptySource() {
         String written = generate();
 
-        assertThat(written).isEqualTo("" +
-                "package com.github.t1.yaml.parser;\n" +
-                "\n" +
-                "import javax.annotation.Generated;\n" +
-                "\n" +
-                "@Generated(\"\")\n" +
-                "@lombok.Generated\n" +
-                "public class FooParser {\n" +
-                "}\n");
+        assertThat(written).isEqualTo(java(""));
     }
 
-    @Test void shouldGenerateSimpleProduction() {
+    @Test void shouldGenerateSimpleLiteralProduction() {
         String written = generate(new Production(0, "foo", "",
                 new LiteralExpression("bar")));
 
-        assertThat(written).isEqualTo("" +
-                "package com.github.t1.yaml.parser;\n" +
-                "\n" +
-                "import javax.annotation.Generated;\n" +
-                "\n" +
-                "@Generated(\"\")\n" +
-                "@lombok.Generated\n" +
-                "public class FooParser {\n" +
+        assertThat(written).isEqualTo(java("" +
                 "    void foo() {\n" +
-                "    }\n" +
-                "}\n");
+                "    }\n"));
+    }
+
+    @Test void shouldGenerateLiteralProductionWithOneArg() {
+        String written = generate(new Production(0, "foo", "n",
+                new LiteralExpression("bar")));
+
+        assertThat(written).isEqualTo(java("" +
+                "    void foo(int n) {\n" +
+                "    }\n"));
+    }
+
+    @Test void shouldGenerateLiteralProductionWithLessArg() {
+        String written = generate(new Production(0, "foo", "<n",
+                new LiteralExpression("bar")));
+
+        assertThat(written).isEqualTo(java("" +
+                "    void foo_less(int n) {\n" +
+                "    }\n"));
+    }
+
+    @Test void shouldGenerateLiteralProductionWithLessEqArg() {
+        String written = generate(new Production(0, "foo", "≤n",
+                new LiteralExpression("bar")));
+
+        assertThat(written).isEqualTo(java("" +
+                "    void foo_lessEq(int n) {\n" +
+                "    }\n"));
+    }
+
+    @Test void shouldGenerateLiteralProductionWithTwoArgs() {
+        String written = generate(new Production(0, "foo", "c,n",
+                new LiteralExpression("bar")));
+
+        assertThat(written).isEqualTo(java("" +
+                "    void foo(int c, int n) {\n" +
+                "    }\n"));
+    }
+
+    @Test void shouldGenerateLiteralProductionWithMinus() {
+        String written = generate(new Production(0, "c-foo", "",
+                new LiteralExpression("bar")));
+
+        assertThat(written).isEqualTo(java("" +
+                "    void c_foo() {\n" +
+                "    }\n"));
+    }
+
+    @Test void shouldGenerateLiteralProductionWithPlus() {
+        String written = generate(new Production(0, "c+foo", "",
+                new LiteralExpression("bar")));
+
+        assertThat(written).isEqualTo(java("" +
+                "    void c_foo() {\n" +
+                "    }\n"));
     }
 }
