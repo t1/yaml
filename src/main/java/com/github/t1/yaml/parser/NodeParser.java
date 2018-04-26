@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
+import static com.github.t1.yaml.dump.Tools.spaces;
 import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
@@ -28,6 +29,9 @@ import static com.github.t1.yaml.parser.Symbol.SPACE;
 @RequiredArgsConstructor
 public class NodeParser {
     private final Scanner next;
+    private int nesting;
+
+    @Override public String toString() { return "NodeParser " + next + " nesting: " + nesting; }
 
     public Optional<Node> node() {
         return more() ? Optional.of(node_()) : Optional.empty();
@@ -40,7 +44,7 @@ public class NodeParser {
             return flowMapping();
         if (isBlockMapping())
             return blockMapping();
-        return scalarNode();
+        return scalar();
     }
 
     private boolean isBlockSequence() { return next.is(BLOCK_SEQUENCE_ENTRY); }
@@ -49,7 +53,9 @@ public class NodeParser {
         SequenceNode node = new SequenceNode();
         while (more()) {
             next.expect(C_SEQUENCE_ENTRY).expect(SPACE);
-            node.entry(new ScalarNode().line(next.readLine()));
+            nesting++;
+            node.entry(scalar());
+            nesting--;
         }
         return node;
     }
@@ -93,11 +99,11 @@ public class NodeParser {
         throw new YamlParseException("unexpected " + next);
     }
 
-    private ScalarNode scalarNode() {
+    private ScalarNode scalar() {
         ScalarNode node = scalar(SCALAR_END);
         if (node.style() == Style.PLAIN) {
             boolean lineContinue = !next.accept(NL);
-            while (more()) {
+            while (more() && next.accept(indent())) {
                 if (isBlockSequence())
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence at " + next);
                 if (isFlowMapping())
@@ -108,7 +114,7 @@ public class NodeParser {
                     comment(node, lineContinue);
                     lineContinue = false;
                 } else {
-                    node.line(new Line().indent(next.count(SPACE)).text(next.readUntil(SCALAR_END)));
+                    node.line(new Line().indent(nesting * 2 + next.count(SPACE)).text(next.readUntil(SCALAR_END)));
                     lineContinue = !next.accept(NL);
                 }
             }
@@ -148,4 +154,6 @@ public class NodeParser {
                 && !next.is(DOCUMENT_END_MARKER)
                 && !next.is(DIRECTIVES_END_MARKER); // of next document
     }
+
+    private String indent() { return spaces(nesting * 2); }
 }

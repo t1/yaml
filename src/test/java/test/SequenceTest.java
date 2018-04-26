@@ -20,7 +20,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled @Nested class givenSequenceWithIndentedScalars extends SingleDocument {
+    @Nested class givenSequenceWithIndentedScalars extends SingleDocument {
         @BeforeEach void setup() {
             input = "- 1\n" +
                     "  2\n" +

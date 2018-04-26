@@ -19,5 +19,4 @@ public class Tools {
         assert indent <= SPACES.length();
         return SPACES.substring(0, indent);
     }
-
 }
