@@ -14,10 +14,48 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static test.Helpers.parse;
 
 class ScalarTest extends AbstractYamlTest {
-    @Nested class givenScalar extends SingleDocument {
+    @Nested class givenPlainScalar extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string";
-            expected = new Document().node(new ScalarNode().line("dummy-string"));
+            expected = new Document().node(new ScalarNode().plain().line("dummy-string"));
+        }
+    }
+
+    @Nested class givenSingleQuotedScalar extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "'dummy-string'";
+            expected = new Document().node(new ScalarNode().singleQuoted().line("dummy-string"));
+        }
+    }
+
+    @Nested class givenDoubleQuotedScalar extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "\"dummy-string\"";
+            expected = new Document().node(new ScalarNode().doubleQuoted().line("dummy-string"));
+        }
+    }
+
+    @Nested class givenTwoLinePlainScalar extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "dummy\n" +
+                    "string";
+            expected = new Document().node(new ScalarNode().plain().line("dummy").line("string"));
+        }
+    }
+
+    @Nested class givenTwoLineSingleQuotedScalar extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "'dummy\n" +
+                    "string'";
+            expected = new Document().node(new ScalarNode().singleQuoted().line("dummy\nstring"));
+        }
+    }
+
+    @Nested class givenTwoLineDoubleQuotedScalar extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "\"dummy\n" +
+                    "string\"";
+            expected = new Document().node(new ScalarNode().doubleQuoted().line("dummy\nstring"));
         }
     }
 

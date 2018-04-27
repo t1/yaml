@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class MappingNode extends CollectionNode {
-    private List<Entry> content = new ArrayList<>();
+    private List<Entry> entries = new ArrayList<>();
 
     public MappingNode entry(String key, String value) { return entry(new ScalarNode().line(key), value); }
 
@@ -20,26 +20,25 @@ public class MappingNode extends CollectionNode {
     public MappingNode entry(Node key, Node value) { return entry(new Entry().key(key).value(value)); }
 
     public MappingNode entry(Entry entry) {
-        content.add(entry);
+        entries.add(entry);
         return this;
     }
 
-    public String toString() {
-        StringBuilder out = new StringBuilder();
-        boolean first = true;
-        for (Entry pair : content) {
-            if (first)
-                first = false;
-            else
-                out.append('\n');
-            out.append(pair);
+    @Override public void guide(Visitor visitor) {
+        visitor.visit(this);
+        for (Entry entry : entries) {
+            visitor.enterMappingEntry(this, entry);
+            entry.guide(visitor);
+            visitor.leaveMappingEntry(this, entry);
         }
-        return out.toString();
+        visitor.leave(this);
     }
 
     public void canonicalize() {
-        content.forEach(Entry::canonicalize);
+        entries.forEach(Entry::canonicalize);
     }
+
+    public Entry lastEntry() { return entries.get(entries.size() - 1); }
 
     @Data
     public static class Entry {
@@ -48,9 +47,13 @@ public class MappingNode extends CollectionNode {
         private Node key;
         private Node value;
 
-        public String toString() {
-            return (hasMarkedKey ? "? " : "") + key + ":"
-                    + (hasNlAfterKey ? "\n" : " ") + value;
+        void guide(Visitor visitor) {
+            visitor.enterMappingKey(this, key);
+            key.guide(visitor);
+            visitor.leaveMappingKey(this, key);
+            visitor.enterMappingValue(this, value);
+            value.guide(visitor);
+            visitor.leaveMappingValue(this, value);
         }
 
         void canonicalize() {

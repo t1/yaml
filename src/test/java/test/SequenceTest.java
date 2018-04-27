@@ -14,8 +14,8 @@ class SequenceTest extends AbstractYamlTest {
             input = "- one\n" +
                     "- two";
             expected = new Document().node(new SequenceNode()
-                    .entry(new ScalarNode().line("one"))
-                    .entry(new ScalarNode().line("two"))
+                    .item(new ScalarNode().line("one"))
+                    .item(new ScalarNode().line("two"))
             );
         }
     }
@@ -28,10 +28,10 @@ class SequenceTest extends AbstractYamlTest {
                     "  4\n" +
                     "  5";
             expected = new Document().node(new SequenceNode()
-                    .entry(new ScalarNode()
+                    .item(new ScalarNode()
                             .line(new Line().text("1"))
                             .line(new Line().indent(2).text("2")))
-                    .entry(new ScalarNode()
+                    .item(new ScalarNode()
                             .line(new Line().text("3"))
                             .line(new Line().indent(2).text("4"))
                             .line(new Line().indent(2).text("5")))
@@ -49,10 +49,10 @@ class SequenceTest extends AbstractYamlTest {
                     "  4\n" +
                     "  5";
             expected = new Document().node(new SequenceNode()
-                    .entry(new ScalarNode()
+                    .item(new ScalarNode()
                             .line(new Line().text("1"))
                             .line(new Line().indent(2).text("2")))
-                    .entry(new ScalarNode()
+                    .item(new ScalarNode()
                             .line(new Line().text("3"))
                             .line(new Line().indent(2).text("4"))
                             .line(new Line().indent(2).text("5")))
@@ -71,16 +71,16 @@ class SequenceTest extends AbstractYamlTest {
                     "  - 4\n" +
                     "  - 5";
             expected = new Document().node(new SequenceNode()
-                    .entry(
+                    .item(
                             new SequenceNode()
-                                    .entry(new ScalarNode().line("1.1"))
-                                    .entry(new ScalarNode().line("1.2"))
+                                    .item(new ScalarNode().line("1.1"))
+                                    .item(new ScalarNode().line("1.2"))
                     )
-                    .entry(
+                    .item(
                             new SequenceNode()
-                                    .entry(new ScalarNode().line("2.1"))
-                                    .entry(new ScalarNode().line("2.2"))
-                                    .entry(new ScalarNode().line("2.3"))
+                                    .item(new ScalarNode().line("2.1"))
+                                    .item(new ScalarNode().line("2.2"))
+                                    .item(new ScalarNode().line("2.3"))
                     )
             );
         }

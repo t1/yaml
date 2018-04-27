@@ -54,7 +54,7 @@ public class NodeParser {
         while (more()) {
             next.expect(C_SEQUENCE_ENTRY).expect(SPACE);
             nesting++;
-            node.entry(scalar());
+            node.item(scalar());
             nesting--;
         }
         return node;

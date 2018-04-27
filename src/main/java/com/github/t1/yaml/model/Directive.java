@@ -9,7 +9,5 @@ public class Directive {
     private String name;
     private String parameters;
 
-    public String toString() { return "%" + name + " " + parameters; }
-
     boolean matchName(Directive that) { return name.equals(that.name); }
 }

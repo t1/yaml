@@ -37,37 +37,7 @@ public class Document {
         return this;
     }
 
-    @Override public String toString() {
-        StringBuilder out = new StringBuilder();
-        appendDirectives(out);
-        if (!prefixComments.isEmpty())
-            out.append(prefixComments.stream().map(Comment::toString).collect(joining("\n", "", "\n")));
-        appendNode(out);
-        if (hasDocumentEndMarker)
-            appendDocumentEnd(out);
-        return out.toString();
-    }
-
-    private void appendDirectives(StringBuilder out) {
-        if (!directives.isEmpty() || hasDirectivesEndMarker) {
-            for (Directive directive : directives)
-                out.append(directive).append('\n');
-            out.append("---\n");
-        }
-    }
-
-    private void appendNode(StringBuilder out) {
-        if (node != null) {
-            out.append(node).append("\n");
-        }
-    }
-
-    private void appendDocumentEnd(StringBuilder out) {
-        out.append("...");
-        if (suffixComment != null)
-            out.append(suffixComment);
-        out.append("\n");
-    }
+    @Override public String toString() { return new ToStringVisitor(this).toString(); }
 
     public Document canonicalize() {
         if (directives.stream().noneMatch(Directive.YAML_VERSION::matchName))

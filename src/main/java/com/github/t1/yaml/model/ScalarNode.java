@@ -7,9 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import static com.github.t1.yaml.dump.Tools.spaces;
 import static com.github.t1.yaml.model.ScalarNode.Style.DOUBLE_QUOTED;
 import static com.github.t1.yaml.model.ScalarNode.Style.PLAIN;
 import static com.github.t1.yaml.model.ScalarNode.Style.SINGLE_QUOTED;
@@ -22,7 +20,7 @@ public class ScalarNode extends Node {
     public enum Style {
         PLAIN(""), SINGLE_QUOTED("\'"), DOUBLE_QUOTED("\"");
 
-        private final String quote;
+        final String quote;
     }
 
     @Data
@@ -30,8 +28,6 @@ public class ScalarNode extends Node {
         int indent = 0;
         String text = "";
         Comment comment;
-
-        public String toString() { return spaces(indent) + text + Objects.toString(comment, ""); }
 
         public int rtrim() {
             int spaces = 0;
@@ -65,14 +61,14 @@ public class ScalarNode extends Node {
         return lines.get(lines.size() - 1);
     }
 
-    @Override public String toString() {
-        StringBuilder out = new StringBuilder();
-        if (tag != null)
-            out.append(tag).append(' ');
-        out.append(lines.stream()
-                .map(Line::toString)
-                .collect(joining("\n", style.quote, style.quote)));
-        return out.toString();
+    @Override public void guide(Visitor visitor) {
+        visitor.visit(this);
+        for (Line line : lines) {
+            visitor.enterScalarLine(this, line);
+            visitor.visit(line);
+            visitor.leaveScalarLine(this, line);
+        }
+        visitor.leave(this);
     }
 
     @Override public void canonicalize() {
