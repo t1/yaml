@@ -7,6 +7,7 @@ import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.ScalarNode.Line;
 import com.github.t1.yaml.model.ScalarNode.Style;
 import com.github.t1.yaml.model.SequenceNode;
+import com.github.t1.yaml.model.SequenceNode.Item;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -52,9 +53,14 @@ public class NodeParser {
     private SequenceNode blockSequence() {
         SequenceNode node = new SequenceNode();
         while (more()) {
-            next.expect(C_SEQUENCE_ENTRY).expect(SPACE);
+            next.expect(C_SEQUENCE_ENTRY);
+            boolean nlItem = next.accept(NL);
+            if (nlItem)
+                next.expect(indent());
+            else
+                next.expect(SPACE);
             nesting++;
-            node.item(scalar());
+            node.item(new Item().nl(nlItem).node(scalar()));
             nesting--;
         }
         return node;

@@ -2,6 +2,7 @@ package com.github.t1.yaml.model;
 
 import com.github.t1.yaml.model.MappingNode.Entry;
 import com.github.t1.yaml.model.ScalarNode.Line;
+import com.github.t1.yaml.model.SequenceNode.Item;
 import lombok.RequiredArgsConstructor;
 
 import static com.github.t1.yaml.dump.Tools.spaces;
@@ -56,9 +57,9 @@ import static com.github.t1.yaml.dump.Tools.spaces;
 
                 @Override public void visit(SequenceNode sequence) {}
 
-                @Override public void enterSequenceItem(SequenceNode sequence, Node item) { out.append("- "); }
+                @Override public void enterSequenceItem(SequenceNode sequence, Item item) { out.append("-").append(item.nl() ? '\n' : ' ');}
 
-                @Override public void leaveSequenceItem(SequenceNode sequence, Node item) {
+                @Override public void leaveSequenceItem(SequenceNode sequence, Item item) {
                     if (item != sequence.lastItem())
                         nl();
                 }

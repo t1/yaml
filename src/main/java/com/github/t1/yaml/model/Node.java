@@ -11,9 +11,9 @@ public abstract class Node {
 
         default void visit(SequenceNode sequence) {}
 
-        default void enterSequenceItem(SequenceNode sequence, Node item) {}
+        default void enterSequenceItem(SequenceNode sequence, SequenceNode.Item item) {}
 
-        default void leaveSequenceItem(SequenceNode sequence, Node item) {}
+        default void leaveSequenceItem(SequenceNode sequence, SequenceNode.Item item) {}
 
         default void leave(SequenceNode sequence) {}
 

@@ -7,6 +7,7 @@ import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.ScalarNode.Line;
 import com.github.t1.yaml.model.SequenceNode;
+import com.github.t1.yaml.model.SequenceNode.Item;
 import helpers.MockitoExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -36,10 +37,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
     @Test void shouldVisitSequenceNode() {
-        AliasNode item1 = new AliasNode();
+        AliasNode alias = new AliasNode();
+        Item item1 = new Item().node(alias);
         Line line1 = new Line().text("foo");
         Line line2 = new Line().text("bar");
-        ScalarNode item2 = new ScalarNode().plain().line(line1).line(line2);
+        ScalarNode scalar = new ScalarNode().plain().line(line1).line(line2);
+        Item item2 = new Item().node(scalar);
         SequenceNode node = new SequenceNode().item(item1).item(item2);
 
         node.guide(visitor);
@@ -47,17 +50,17 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
         InOrder inOrder = inOrder(visitor);
         inOrder.verify(visitor).visit(node);
         inOrder.verify(visitor).enterSequenceItem(node, item1);
-        inOrder.verify(visitor).visit(item1);
+        inOrder.verify(visitor).visit(alias);
         inOrder.verify(visitor).leaveSequenceItem(node, item1);
         inOrder.verify(visitor).enterSequenceItem(node, item2);
-        inOrder.verify(visitor).visit(item2);
-        inOrder.verify(visitor).enterScalarLine(item2, line1);
+        inOrder.verify(visitor).visit(scalar);
+        inOrder.verify(visitor).enterScalarLine(scalar, line1);
         inOrder.verify(visitor).visit(line1);
-        inOrder.verify(visitor).leaveScalarLine(item2, line1);
-        inOrder.verify(visitor).enterScalarLine(item2, line2);
+        inOrder.verify(visitor).leaveScalarLine(scalar, line1);
+        inOrder.verify(visitor).enterScalarLine(scalar, line2);
         inOrder.verify(visitor).visit(line2);
-        inOrder.verify(visitor).leaveScalarLine(item2, line2);
-        inOrder.verify(visitor).leave(item2);
+        inOrder.verify(visitor).leaveScalarLine(scalar, line2);
+        inOrder.verify(visitor).leave(scalar);
         inOrder.verify(visitor).leaveSequenceItem(node, item2);
         inOrder.verify(visitor).leave(node);
     }
@@ -130,37 +133,64 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
         Entry entry1 = new Entry().key(key1).value(value1);
         inOrder.verify(visitor).enterMappingEntry(node, entry1);
-        /**/inOrder.verify(visitor).enterMappingKey(entry1, key1);
-        /**//**/inOrder.verify(visitor).visit(key1);
-        /**/inOrder.verify(visitor).leaveMappingKey(entry1, key1);
-        /**/inOrder.verify(visitor).enterMappingValue(entry1, value1);
-        /**//**/inOrder.verify(visitor).visit(value1);
-        /**//**//**/inOrder.verify(visitor).enterScalarLine(value1, value1line1);
-        /**//**//**//**/inOrder.verify(visitor).visit(value1line1);
-        /**//**//**/inOrder.verify(visitor).leaveScalarLine(value1, value1line1);
-        /**//**//**/inOrder.verify(visitor).enterScalarLine(value1, value1line2);
-        /**//**//**//**/inOrder.verify(visitor).visit(value1line2);
-        /**//**//**/inOrder.verify(visitor).leaveScalarLine(value1, value1line2);
-        /**//**/inOrder.verify(visitor).leave(value1);
-        /**/inOrder.verify(visitor).leaveMappingValue(entry1, value1);
+        /**/
+        inOrder.verify(visitor).enterMappingKey(entry1, key1);
+        /**//**/
+        inOrder.verify(visitor).visit(key1);
+        /**/
+        inOrder.verify(visitor).leaveMappingKey(entry1, key1);
+        /**/
+        inOrder.verify(visitor).enterMappingValue(entry1, value1);
+        /**//**/
+        inOrder.verify(visitor).visit(value1);
+        /**//**//**/
+        inOrder.verify(visitor).enterScalarLine(value1, value1line1);
+        /**//**//**//**/
+        inOrder.verify(visitor).visit(value1line1);
+        /**//**//**/
+        inOrder.verify(visitor).leaveScalarLine(value1, value1line1);
+        /**//**//**/
+        inOrder.verify(visitor).enterScalarLine(value1, value1line2);
+        /**//**//**//**/
+        inOrder.verify(visitor).visit(value1line2);
+        /**//**//**/
+        inOrder.verify(visitor).leaveScalarLine(value1, value1line2);
+        /**//**/
+        inOrder.verify(visitor).leave(value1);
+        /**/
+        inOrder.verify(visitor).leaveMappingValue(entry1, value1);
         inOrder.verify(visitor).leaveMappingEntry(node, entry1);
 
         Entry entry2 = new Entry().key(key2).value(value2);
         inOrder.verify(visitor).enterMappingEntry(node, entry2);
-        /**/inOrder.verify(visitor).enterMappingKey(entry2, key2);
-        /**//**/inOrder.verify(visitor).visit(key2);
-        /**//**//**/inOrder.verify(visitor).enterScalarLine(key2, key2line1);
-        /**//**//**//**/inOrder.verify(visitor).visit(key2line1);
-        /**//**//**/inOrder.verify(visitor).leaveScalarLine(key2, key2line1);
-        /**//**/inOrder.verify(visitor).leave(key2);
-        /**/inOrder.verify(visitor).leaveMappingKey(entry2, key2);
-        /**/inOrder.verify(visitor).enterMappingValue(entry2, value2);
-        /**//**/inOrder.verify(visitor).visit(value2);
-        /**//**//**/inOrder.verify(visitor).enterScalarLine(value2, value2line1);
-        /**//**//**//**/inOrder.verify(visitor).visit(value2line1);
-        /**//**//**/inOrder.verify(visitor).leaveScalarLine(value2, value2line1);
-        /**//**/inOrder.verify(visitor).leave(value2);
-        /**/inOrder.verify(visitor).leaveMappingValue(entry2, value2);
+        /**/
+        inOrder.verify(visitor).enterMappingKey(entry2, key2);
+        /**//**/
+        inOrder.verify(visitor).visit(key2);
+        /**//**//**/
+        inOrder.verify(visitor).enterScalarLine(key2, key2line1);
+        /**//**//**//**/
+        inOrder.verify(visitor).visit(key2line1);
+        /**//**//**/
+        inOrder.verify(visitor).leaveScalarLine(key2, key2line1);
+        /**//**/
+        inOrder.verify(visitor).leave(key2);
+        /**/
+        inOrder.verify(visitor).leaveMappingKey(entry2, key2);
+        /**/
+        inOrder.verify(visitor).enterMappingValue(entry2, value2);
+        /**//**/
+        inOrder.verify(visitor).visit(value2);
+        /**//**//**/
+        inOrder.verify(visitor).enterScalarLine(value2, value2line1);
+        /**//**//**//**/
+        inOrder.verify(visitor).visit(value2line1);
+        /**//**//**/
+        inOrder.verify(visitor).leaveScalarLine(value2, value2line1);
+        /**//**/
+        inOrder.verify(visitor).leave(value2);
+        /**/
+        inOrder.verify(visitor).leaveMappingValue(entry2, value2);
         inOrder.verify(visitor).leaveMappingEntry(node, entry2);
 
         inOrder.verify(visitor).leave(node);

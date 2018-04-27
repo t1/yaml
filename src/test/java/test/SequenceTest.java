@@ -4,6 +4,7 @@ import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.ScalarNode;
 import com.github.t1.yaml.model.ScalarNode.Line;
 import com.github.t1.yaml.model.SequenceNode;
+import com.github.t1.yaml.model.SequenceNode.Item;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -39,7 +40,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled @Nested class givenSequenceWithIndentedScalarsInNewLines extends SingleDocument {
+    @Nested class givenSequenceWithIndentedScalarsInNewLines extends SingleDocument {
         @BeforeEach void setup() {
             input = "-\n" +
                     "  1\n" +
@@ -49,13 +50,13 @@ class SequenceTest extends AbstractYamlTest {
                     "  4\n" +
                     "  5";
             expected = new Document().node(new SequenceNode()
-                    .item(new ScalarNode()
-                            .line(new Line().text("1"))
-                            .line(new Line().indent(2).text("2")))
-                    .item(new ScalarNode()
-                            .line(new Line().text("3"))
+                    .item(new Item().nl(true).node(new ScalarNode()
+                            .line(new Line().indent(2).text("1"))
+                            .line(new Line().indent(2).text("2"))))
+                    .item(new Item().nl(true).node(new ScalarNode()
+                            .line(new Line().indent(2).text("3"))
                             .line(new Line().indent(2).text("4"))
-                            .line(new Line().indent(2).text("5")))
+                            .line(new Line().indent(2).text("5"))))
             );
         }
     }
