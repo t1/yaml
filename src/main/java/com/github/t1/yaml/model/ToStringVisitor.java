@@ -52,16 +52,34 @@ import static com.github.t1.yaml.dump.Tools.spaces;
     private void node() {
         if (document.node() != null) {
             document.node().guide(new Node.Visitor() {
+                boolean skipNextIndent;
+                int indent = 0;
+
+                private String indent() {
+                    if (skipNextIndent) {
+                        skipNextIndent = false;
+                        return "";
+                    }
+                    return spaces(indent * 2);
+                }
+
+
                 @Override public void visit(AliasNode alias) { out.append(alias); }
 
 
                 @Override public void visit(SequenceNode sequence) {}
 
-                @Override public void enterSequenceItem(SequenceNode sequence, Item item) { out.append("-").append(item.nl() ? '\n' : ' ');}
+                @Override public void enterSequenceItem(SequenceNode sequence, Item item) {
+                    out.append(indent());
+                    skipNextIndent = !item.nl();
+                    indent++;
+                    out.append("-").append(item.nl() ? "\n" : " ");
+                }
 
                 @Override public void leaveSequenceItem(SequenceNode sequence, Item item) {
                     if (item != sequence.lastItem())
                         nl();
+                    indent--;
                 }
 
                 @Override public void leave(SequenceNode sequence) {}
@@ -76,7 +94,7 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                 @Override public void enterScalarLine(ScalarNode node, Line line) {}
 
                 @Override public void visit(Line line) {
-                    out.append(spaces(line.indent));
+                    out.append(indent()).append(spaces(line.indent));
                     out.append(line.text);
                     if (line.comment != null)
                         append(line.comment);

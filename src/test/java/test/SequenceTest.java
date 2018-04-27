@@ -6,7 +6,6 @@ import com.github.t1.yaml.model.ScalarNode.Line;
 import com.github.t1.yaml.model.SequenceNode;
 import com.github.t1.yaml.model.SequenceNode.Item;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 
 class SequenceTest extends AbstractYamlTest {
@@ -31,11 +30,11 @@ class SequenceTest extends AbstractYamlTest {
             expected = new Document().node(new SequenceNode()
                     .item(new ScalarNode()
                             .line(new Line().text("1"))
-                            .line(new Line().indent(2).text("2")))
+                            .line(new Line().text("2")))
                     .item(new ScalarNode()
                             .line(new Line().text("3"))
-                            .line(new Line().indent(2).text("4"))
-                            .line(new Line().indent(2).text("5")))
+                            .line(new Line().text("4"))
+                            .line(new Line().text("5")))
             );
         }
     }
@@ -51,20 +50,19 @@ class SequenceTest extends AbstractYamlTest {
                     "  5";
             expected = new Document().node(new SequenceNode()
                     .item(new Item().nl(true).node(new ScalarNode()
-                            .line(new Line().indent(2).text("1"))
-                            .line(new Line().indent(2).text("2"))))
+                            .line(new Line().text("1"))
+                            .line(new Line().text("2"))))
                     .item(new Item().nl(true).node(new ScalarNode()
-                            .line(new Line().indent(2).text("3"))
-                            .line(new Line().indent(2).text("4"))
-                            .line(new Line().indent(2).text("5"))))
+                            .line(new Line().text("3"))
+                            .line(new Line().text("4"))
+                            .line(new Line().text("5"))))
             );
         }
     }
 
-    @Disabled @Nested class givenSequenceOfSequence extends SingleDocument {
+    @Nested class givenSequenceOfSequence extends SingleDocument {
         @BeforeEach void setup() {
-            input = "" +
-                    "-\n" +
+            input = "-\n" +
                     "  - 1\n" +
                     "  - 2\n" +
                     "-\n" +
@@ -72,17 +70,13 @@ class SequenceTest extends AbstractYamlTest {
                     "  - 4\n" +
                     "  - 5";
             expected = new Document().node(new SequenceNode()
-                    .item(
-                            new SequenceNode()
-                                    .item(new ScalarNode().line("1.1"))
-                                    .item(new ScalarNode().line("1.2"))
-                    )
-                    .item(
-                            new SequenceNode()
-                                    .item(new ScalarNode().line("2.1"))
-                                    .item(new ScalarNode().line("2.2"))
-                                    .item(new ScalarNode().line("2.3"))
-                    )
+                    .item(new Item().nl(true).node(new SequenceNode()
+                            .item(new ScalarNode().line("1"))
+                            .item(new ScalarNode().line("2"))))
+                    .item(new Item().nl(true).node(new SequenceNode()
+                            .item(new ScalarNode().line("3"))
+                            .item(new ScalarNode().line("4"))
+                            .item(new ScalarNode().line("5"))))
             );
         }
     }

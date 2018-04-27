@@ -31,9 +31,9 @@ public @Value class CodePoint {
 
     private char[] toChars() { return Character.toChars(value); }
 
-    public String info() { return (value < 0) ? "EOF" : Character.getName(value); }
-
     public String xinfo() { return "[" + escaped() + "][" + info() + "][0x" + hex() + "]"; }
+
+    public String info() { return (value < 0) ? "EOF" : Character.getName(value); }
 
     private String escaped() {
         switch (value) {

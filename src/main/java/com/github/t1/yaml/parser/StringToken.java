@@ -16,10 +16,12 @@ class StringToken implements Token {
         this.predicates = CodePoint
                 .stream(string)
                 .map(codePoint -> new Predicate<CodePoint>() {
-                    @Override public boolean test(CodePoint c) {
-                        return c.equals(codePoint);
-                    }
+                    @Override public boolean test(CodePoint c) { return c.equals(codePoint); }
+
+                    @Override public String toString() { return codePoint.xinfo(); }
                 })
                 .collect(toList());
     }
+
+    @Override public String toString() { return "StringToken" + predicates; }
 }

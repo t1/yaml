@@ -4,7 +4,6 @@ import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.ScalarNode;
-import com.github.t1.yaml.model.ScalarNode.Line;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 

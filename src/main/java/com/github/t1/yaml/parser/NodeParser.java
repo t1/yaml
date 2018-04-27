@@ -9,6 +9,7 @@ import com.github.t1.yaml.model.ScalarNode.Style;
 import com.github.t1.yaml.model.SequenceNode;
 import com.github.t1.yaml.model.SequenceNode.Item;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.util.Optional;
 
@@ -30,7 +31,32 @@ import static com.github.t1.yaml.parser.Symbol.SPACE;
 @RequiredArgsConstructor
 public class NodeParser {
     private final Scanner next;
-    private int nesting;
+    private final Nesting nesting = new Nesting();
+
+    private class Nesting {
+        private int level;
+        @Setter private boolean skipNext;
+
+        @Override public String toString() { return "Nesting:" + level + (skipNext ? " skip next" : ""); }
+
+        void up() { level++; }
+
+        void down() { level--; }
+
+        void expect() {
+            next.expect(indent());
+            skipNext = false;
+        }
+
+        boolean accept() {
+            boolean accepted = next.accept(indent());
+            if (accepted)
+                skipNext = false;
+            return accepted;
+        }
+
+        private String indent() { return skipNext ? "" : spaces(level * 2); }
+    }
 
     @Override public String toString() { return "NodeParser " + next + " nesting: " + nesting; }
 
@@ -39,6 +65,7 @@ public class NodeParser {
     }
 
     private Node node_() {
+        nesting.expect();
         if (isBlockSequence())
             return blockSequence();
         if (isFlowMapping())
@@ -51,19 +78,25 @@ public class NodeParser {
     private boolean isBlockSequence() { return next.is(BLOCK_SEQUENCE_ENTRY); }
 
     private SequenceNode blockSequence() {
-        SequenceNode node = new SequenceNode();
-        while (more()) {
-            next.expect(C_SEQUENCE_ENTRY);
-            boolean nlItem = next.accept(NL);
-            if (nlItem)
-                next.expect(indent());
-            else
-                next.expect(SPACE);
-            nesting++;
-            node.item(new Item().nl(nlItem).node(scalar()));
-            nesting--;
+        SequenceNode sequence = new SequenceNode();
+        do
+            sequence.item(blockSequenceItem());
+        while (more() && nesting.accept());
+        return sequence;
+    }
+
+    private Item blockSequenceItem() {
+        next.expect(C_SEQUENCE_ENTRY);
+        boolean nlItem = next.accept(NL);
+        if (!nlItem) {
+            next.expect(SPACE);
+            nesting.skipNext(true);
         }
-        return node;
+        Item item = new Item().nl(nlItem);
+        nesting.up();
+        item.node(node_());
+        nesting.down();
+        return item;
     }
 
     private boolean isBlockMapping() {
@@ -74,7 +107,7 @@ public class NodeParser {
     }
 
     private MappingNode blockMapping() {
-        MappingNode mappingNode = new MappingNode();
+        MappingNode mapping = new MappingNode();
         while (next.more()) {
             MappingNode.Entry entry = new MappingNode.Entry();
             entry.hasMarkedKey(next.accept(C_MAPPING_KEY));
@@ -86,15 +119,15 @@ public class NodeParser {
                 entry.hasNlAfterKey(true);
             else
                 next.expect(SPACE);
-            ScalarNode valueNode = scalar(SCALAR_END);
-            entry.value(valueNode);
+            ScalarNode value = scalar(SCALAR_END);
+            entry.value(value);
             if (isComment())
-                comment(valueNode, true);
+                comment(value, true);
             else if (next.more())
                 next.expect(NL);
-            mappingNode.entry(entry);
+            mapping.entry(entry);
         }
-        return mappingNode;
+        return mapping;
     }
 
     private boolean isFlowMapping() {
@@ -106,10 +139,10 @@ public class NodeParser {
     }
 
     private ScalarNode scalar() {
-        ScalarNode node = scalar(SCALAR_END);
-        if (node.style() == Style.PLAIN) {
+        ScalarNode scalar = scalar(SCALAR_END);
+        if (scalar.style() == Style.PLAIN) {
             boolean lineContinue = !next.accept(NL);
-            while (more() && next.accept(indent())) {
+            while (more() && nesting.accept()) {
                 if (isBlockSequence())
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence at " + next);
                 if (isFlowMapping())
@@ -117,15 +150,15 @@ public class NodeParser {
                 if (isBlockMapping())
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping at " + next);
                 if (isComment()) {
-                    comment(node, lineContinue);
+                    comment(scalar, lineContinue);
                     lineContinue = false;
                 } else {
-                    node.line(new Line().indent(nesting * 2 + next.count(SPACE)).text(next.readUntil(SCALAR_END)));
+                    scalar.line(new Line().indent(next.count(SPACE)).text(next.readUntil(SCALAR_END)));
                     lineContinue = !next.accept(NL);
                 }
             }
         }
-        return node;
+        return scalar;
     }
 
     private ScalarNode scalar(Token end) {
@@ -141,17 +174,17 @@ public class NodeParser {
 
     private boolean isComment() { return next.accept(C_COMMENT); }
 
-    private void comment(ScalarNode node, boolean lineContinue) {
+    private void comment(ScalarNode scalar, boolean lineContinue) {
         next.accept(SPACE);
-        Line line = line(node, lineContinue);
+        Line line = line(scalar, lineContinue);
         line.comment(new Comment().indent(line.rtrim()).text(next.readLine()));
     }
 
-    private Line line(ScalarNode node, boolean lineContinue) {
+    private Line line(ScalarNode scalar, boolean lineContinue) {
         if (lineContinue)
-            return node.lastLine();
+            return scalar.lastLine();
         Line line = new Line();
-        node.line(line);
+        scalar.line(line);
         return line;
     }
 
@@ -160,6 +193,4 @@ public class NodeParser {
                 && !next.is(DOCUMENT_END_MARKER)
                 && !next.is(DIRECTIVES_END_MARKER); // of next document
     }
-
-    private String indent() { return spaces(nesting * 2); }
 }
