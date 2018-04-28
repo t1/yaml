@@ -2,7 +2,7 @@ package test;
 
 import com.github.t1.yaml.Yaml;
 import com.github.t1.yaml.model.Document;
-import com.github.t1.yaml.model.ScalarNode;
+import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Stream;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ class FileTest {
         yamlFile = Files.createTempFile("test-", ".yaml");
         Files.write(yamlFile, "dummy-string".getBytes(UTF_8));
 
-        expectedDocument = new Document().node(new ScalarNode().line("dummy-string"));
+        expectedDocument = new Document().node(new Scalar().line("dummy-string"));
         expectedStream = new Stream().document(expectedDocument);
     }
 

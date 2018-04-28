@@ -1,6 +1,6 @@
 package com.github.t1.yaml.parser;
 
-import com.github.t1.yaml.model.ScalarNode.Style;
+import com.github.t1.yaml.model.Scalar.Style;
 import lombok.RequiredArgsConstructor;
 
 import static com.github.t1.yaml.parser.Symbol.SCALAR_END;

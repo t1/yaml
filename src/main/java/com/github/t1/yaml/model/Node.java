@@ -6,44 +6,44 @@ import lombok.Data;
 public abstract class Node {
     @SuppressWarnings("unused")
     public interface Visitor {
-        default void visit(AliasNode alias) {}
+        default void visit(Alias alias) {}
 
 
-        default void visit(SequenceNode sequence) {}
+        default void visit(Sequence sequence) {}
 
-        default void enterSequenceItem(SequenceNode sequence, SequenceNode.Item item) {}
+        default void enterSequenceItem(Sequence sequence, Sequence.Item item) {}
 
-        default void leaveSequenceItem(SequenceNode sequence, SequenceNode.Item item) {}
+        default void leaveSequenceItem(Sequence sequence, Sequence.Item item) {}
 
-        default void leave(SequenceNode sequence) {}
-
-
-        default void visit(ScalarNode scalar) {}
-
-        default void enterScalarLine(ScalarNode node, ScalarNode.Line line) {}
-
-        default void visit(ScalarNode.Line line) {}
-
-        default void leaveScalarLine(ScalarNode node, ScalarNode.Line line) {}
-
-        default void leave(ScalarNode scalar) {}
+        default void leave(Sequence sequence) {}
 
 
-        default void visit(MappingNode mapping) {}
+        default void visit(Scalar scalar) {}
 
-        default void enterMappingEntry(MappingNode mapping, MappingNode.Entry entry) {}
+        default void enterScalarLine(Scalar node, Scalar.Line line) {}
 
-        default void enterMappingKey(MappingNode.Entry entry, Node key) {}
+        default void visit(Scalar.Line line) {}
 
-        default void leaveMappingKey(MappingNode.Entry entry, Node key) {}
+        default void leaveScalarLine(Scalar node, Scalar.Line line) {}
 
-        default void enterMappingValue(MappingNode.Entry entry, Node key) {}
+        default void leave(Scalar scalar) {}
 
-        default void leaveMappingValue(MappingNode.Entry entry, Node key) {}
 
-        default void leaveMappingEntry(MappingNode mapping, MappingNode.Entry entry) {}
+        default void visit(Mapping mapping) {}
 
-        default void leave(MappingNode mapping) {}
+        default void enterMappingEntry(Mapping mapping, Mapping.Entry entry) {}
+
+        default void enterMappingKey(Mapping.Entry entry, Node key) {}
+
+        default void leaveMappingKey(Mapping.Entry entry, Node key) {}
+
+        default void enterMappingValue(Mapping.Entry entry, Node key) {}
+
+        default void leaveMappingValue(Mapping.Entry entry, Node key) {}
+
+        default void leaveMappingEntry(Mapping mapping, Mapping.Entry entry) {}
+
+        default void leave(Mapping mapping) {}
     }
 
 

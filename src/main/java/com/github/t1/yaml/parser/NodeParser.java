@@ -1,21 +1,21 @@
 package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.model.Comment;
-import com.github.t1.yaml.model.MappingNode;
+import com.github.t1.yaml.model.Mapping;
 import com.github.t1.yaml.model.Node;
-import com.github.t1.yaml.model.ScalarNode;
-import com.github.t1.yaml.model.ScalarNode.Line;
-import com.github.t1.yaml.model.ScalarNode.Style;
-import com.github.t1.yaml.model.SequenceNode;
-import com.github.t1.yaml.model.SequenceNode.Item;
+import com.github.t1.yaml.model.Scalar;
+import com.github.t1.yaml.model.Scalar.Line;
+import com.github.t1.yaml.model.Scalar.Style;
+import com.github.t1.yaml.model.Sequence;
+import com.github.t1.yaml.model.Sequence.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.util.Optional;
 
 import static com.github.t1.yaml.dump.Tools.spaces;
-import static com.github.t1.yaml.model.CollectionNode.Style.BLOCK;
-import static com.github.t1.yaml.model.CollectionNode.Style.FLOW;
+import static com.github.t1.yaml.model.Collection.Style.BLOCK;
+import static com.github.t1.yaml.model.Collection.Style.FLOW;
 import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
@@ -87,7 +87,7 @@ public class NodeParser {
 
     private Node flowSequence() {
         next.expect(C_SEQUENCE_START);
-        SequenceNode sequence = new SequenceNode().style(FLOW);
+        Sequence sequence = new Sequence().style(FLOW);
         do
             sequence.item(flowSequenceItem());
         while (more() && next.accept(C_COLLECT_ENTRY));
@@ -99,13 +99,13 @@ public class NodeParser {
         next.skip(SPACE);
         String line = next.readUntil(FLOW_SEQUENCE_ITEM_END); // TODO this must be a call to node()!
         next.skip(SPACE);
-        return new Item().node(new ScalarNode().line(line));
+        return new Item().node(new Scalar().line(line));
     }
 
     private boolean isBlockSequence() { return next.is(BLOCK_SEQUENCE_ENTRY); }
 
-    private SequenceNode blockSequence() {
-        SequenceNode sequence = new SequenceNode().style(BLOCK);
+    private Sequence blockSequence() {
+        Sequence sequence = new Sequence().style(BLOCK);
         do
             sequence.item(blockSequenceItem());
         while (more() && nesting.accept());
@@ -133,10 +133,10 @@ public class NodeParser {
         return token != null && token.length() >= 1 && !token.contains("\n");
     }
 
-    private MappingNode blockMapping() {
-        MappingNode mapping = new MappingNode();
+    private Mapping blockMapping() {
+        Mapping mapping = new Mapping();
         while (next.more()) {
-            MappingNode.Entry entry = new MappingNode.Entry();
+            Mapping.Entry entry = new Mapping.Entry();
             entry.hasMarkedKey(next.accept(C_MAPPING_KEY));
             if (entry.hasMarkedKey())
                 next.count(SPACE);
@@ -146,7 +146,7 @@ public class NodeParser {
                 entry.hasNlAfterKey(true);
             else
                 next.expect(SPACE);
-            ScalarNode value = scalar(SCALAR_END);
+            Scalar value = scalar(SCALAR_END);
             entry.value(value);
             if (isComment())
                 comment(value, true);
@@ -161,12 +161,12 @@ public class NodeParser {
         return next.is(CURLY_OPEN);
     }
 
-    private MappingNode flowMapping() {
+    private Mapping flowMapping() {
         throw new YamlParseException("unexpected " + next);
     }
 
-    private ScalarNode scalar() {
-        ScalarNode scalar = scalar(SCALAR_END);
+    private Scalar scalar() {
+        Scalar scalar = scalar(SCALAR_END);
         if (scalar.style() == Style.PLAIN) {
             boolean lineContinue = !next.accept(NL);
             while (more() && nesting.accept()) {
@@ -190,10 +190,10 @@ public class NodeParser {
         return scalar;
     }
 
-    private ScalarNode scalar(Token end) {
+    private Scalar scalar(Token end) {
         int indent = next.count(SPACE);
         Quotes quotes = Quotes.recognize(next);
-        return new ScalarNode()
+        return new Scalar()
                 .style(quotes.style)
                 .line(new Line()
                         .indent(indent)
@@ -203,13 +203,13 @@ public class NodeParser {
 
     private boolean isComment() { return next.accept(C_COMMENT); }
 
-    private void comment(ScalarNode scalar, boolean lineContinue) {
+    private void comment(Scalar scalar, boolean lineContinue) {
         next.accept(SPACE);
         Line line = line(scalar, lineContinue);
         line.comment(new Comment().indent(line.rtrim()).text(next.readLine()));
     }
 
-    private Line line(ScalarNode scalar, boolean lineContinue) {
+    private Line line(Scalar scalar, boolean lineContinue) {
         if (lineContinue)
             return scalar.lastLine();
         Line line = new Line();

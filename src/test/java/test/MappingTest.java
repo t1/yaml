@@ -1,8 +1,8 @@
 package test;
 
 import com.github.t1.yaml.model.Document;
-import com.github.t1.yaml.model.MappingNode;
-import com.github.t1.yaml.model.ScalarNode;
+import com.github.t1.yaml.model.Mapping;
+import com.github.t1.yaml.model.Scalar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 
@@ -12,7 +12,7 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMapping extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky: blue\nsea: green";
-            expected = new Document().node(new MappingNode()
+            expected = new Document().node(new Mapping()
                     .entry("sky", "blue")
                     .entry("sea", "green")
             );
@@ -22,7 +22,7 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithSpaceInKey extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky high: blue\nsea deep: green";
-            expected = new Document().node(new MappingNode()
+            expected = new Document().node(new Mapping()
                     .entry("sky high", "blue")
                     .entry("sea deep", "green")
             );
@@ -32,7 +32,7 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithColonInKey extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky:high: blue\nsea:deep: green";
-            expected = new Document().node(new MappingNode()
+            expected = new Document().node(new Mapping()
                     .entry("sky:high", "blue")
                     .entry("sea:deep", "green")
             );
@@ -42,9 +42,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithDoubleQuotedKey extends SingleDocument {
         @BeforeEach void setup() {
             input = "\"sky\": blue\n\"sea\": green";
-            expected = new Document().node(new MappingNode()
-                    .entry(new ScalarNode().doubleQuoted().line("sky"), "blue")
-                    .entry(new ScalarNode().doubleQuoted().line("sea"), "green")
+            expected = new Document().node(new Mapping()
+                    .entry(new Scalar().doubleQuoted().line("sky"), "blue")
+                    .entry(new Scalar().doubleQuoted().line("sea"), "green")
             );
         }
     }
@@ -52,9 +52,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithDoubleQuotedValue extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky: \"blue\"\nsea: \"green\"";
-            expected = new Document().node(new MappingNode()
-                    .entry("sky", new ScalarNode().doubleQuoted().line("blue"))
-                    .entry("sea", new ScalarNode().doubleQuoted().line("green"))
+            expected = new Document().node(new Mapping()
+                    .entry("sky", new Scalar().doubleQuoted().line("blue"))
+                    .entry("sea", new Scalar().doubleQuoted().line("green"))
             );
         }
     }
@@ -62,9 +62,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithDoubleQuotedKeyAndValue extends SingleDocument {
         @BeforeEach void setup() {
             input = "\"sky\": \"blue\"\n\"sea\": \"green\"";
-            expected = new Document().node(new MappingNode()
-                    .entry(new ScalarNode().doubleQuoted().line("sky"), new ScalarNode().doubleQuoted().line("blue"))
-                    .entry(new ScalarNode().doubleQuoted().line("sea"), new ScalarNode().doubleQuoted().line("green"))
+            expected = new Document().node(new Mapping()
+                    .entry(new Scalar().doubleQuoted().line("sky"), new Scalar().doubleQuoted().line("blue"))
+                    .entry(new Scalar().doubleQuoted().line("sea"), new Scalar().doubleQuoted().line("green"))
             );
         }
     }
@@ -72,9 +72,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithMarkedKeys extends SingleDocument {
         @BeforeEach void setup() {
             input = "? sky: blue\n? sea: green";
-            expected = new Document().node(new MappingNode()
-                    .entry(new MappingNode.Entry().hasMarkedKey(true).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
-                    .entry(new MappingNode.Entry().hasMarkedKey(true).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry().hasMarkedKey(true).key(new Scalar().line("sky")).value(new Scalar().line("blue")))
+                    .entry(new Mapping.Entry().hasMarkedKey(true).key(new Scalar().line("sea")).value(new Scalar().line("green")))
             );
         }
     }
@@ -82,9 +82,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithFirstKeyMarked extends SingleDocument {
         @BeforeEach void setup() {
             input = "? sky: blue\nsea: green";
-            expected = new Document().node(new MappingNode()
-                    .entry(new MappingNode.Entry().hasMarkedKey(true).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
-                    .entry(new MappingNode.Entry().hasMarkedKey(false).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry().hasMarkedKey(true).key(new Scalar().line("sky")).value(new Scalar().line("blue")))
+                    .entry(new Mapping.Entry().hasMarkedKey(false).key(new Scalar().line("sea")).value(new Scalar().line("green")))
             );
         }
     }
@@ -92,9 +92,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithLastKeyMarked extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky: blue\n? sea: green";
-            expected = new Document().node(new MappingNode()
-                    .entry(new MappingNode.Entry().hasMarkedKey(false).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
-                    .entry(new MappingNode.Entry().hasMarkedKey(true).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry().hasMarkedKey(false).key(new Scalar().line("sky")).value(new Scalar().line("blue")))
+                    .entry(new Mapping.Entry().hasMarkedKey(true).key(new Scalar().line("sea")).value(new Scalar().line("green")))
             );
         }
     }
@@ -102,9 +102,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithNewLineAfterKey extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky:\nblue\nsea:\ngreen";
-            expected = new Document().node(new MappingNode()
-                    .entry(new MappingNode.Entry().hasNlAfterKey(true).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
-                    .entry(new MappingNode.Entry().hasNlAfterKey(true).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry().hasNlAfterKey(true).key(new Scalar().line("sky")).value(new Scalar().line("blue")))
+                    .entry(new Mapping.Entry().hasNlAfterKey(true).key(new Scalar().line("sea")).value(new Scalar().line("green")))
             );
         }
     }
@@ -112,9 +112,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithNewLineAfterFirstKey extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky:\nblue\nsea: green";
-            expected = new Document().node(new MappingNode()
-                    .entry(new MappingNode.Entry().hasNlAfterKey(true).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
-                    .entry(new MappingNode.Entry().hasNlAfterKey(false).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry().hasNlAfterKey(true).key(new Scalar().line("sky")).value(new Scalar().line("blue")))
+                    .entry(new Mapping.Entry().hasNlAfterKey(false).key(new Scalar().line("sea")).value(new Scalar().line("green")))
             );
         }
     }
@@ -122,9 +122,9 @@ class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMappingWithNewLineAfterLastKey extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky: blue\nsea:\ngreen";
-            expected = new Document().node(new MappingNode()
-                    .entry(new MappingNode.Entry().hasNlAfterKey(false).key(new ScalarNode().line("sky")).value(new ScalarNode().line("blue")))
-                    .entry(new MappingNode.Entry().hasNlAfterKey(true).key(new ScalarNode().line("sea")).value(new ScalarNode().line("green")))
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry().hasNlAfterKey(false).key(new Scalar().line("sky")).value(new Scalar().line("blue")))
+                    .entry(new Mapping.Entry().hasNlAfterKey(true).key(new Scalar().line("sea")).value(new Scalar().line("green")))
             );
         }
     }

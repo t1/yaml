@@ -2,8 +2,8 @@ package test;
 
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Document;
-import com.github.t1.yaml.model.ScalarNode;
-import com.github.t1.yaml.model.ScalarNode.Line;
+import com.github.t1.yaml.model.Scalar;
+import com.github.t1.yaml.model.Scalar.Line;
 import com.github.t1.yaml.parser.YamlParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -17,21 +17,21 @@ class ScalarTest extends AbstractYamlTest {
     @Nested class givenPlainScalar extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string";
-            expected = new Document().node(new ScalarNode().plain().line("dummy-string"));
+            expected = new Document().node(new Scalar().plain().line("dummy-string"));
         }
     }
 
     @Nested class givenSingleQuotedScalar extends SingleDocument {
         @BeforeEach void setup() {
             input = "'dummy-string'";
-            expected = new Document().node(new ScalarNode().singleQuoted().line("dummy-string"));
+            expected = new Document().node(new Scalar().singleQuoted().line("dummy-string"));
         }
     }
 
     @Nested class givenDoubleQuotedScalar extends SingleDocument {
         @BeforeEach void setup() {
             input = "\"dummy-string\"";
-            expected = new Document().node(new ScalarNode().doubleQuoted().line("dummy-string"));
+            expected = new Document().node(new Scalar().doubleQuoted().line("dummy-string"));
         }
     }
 
@@ -39,7 +39,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "dummy\n" +
                     "string";
-            expected = new Document().node(new ScalarNode().plain().line("dummy").line("string"));
+            expected = new Document().node(new Scalar().plain().line("dummy").line("string"));
         }
     }
 
@@ -47,7 +47,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "'dummy\n" +
                     "string'";
-            expected = new Document().node(new ScalarNode().singleQuoted().line("dummy\nstring"));
+            expected = new Document().node(new Scalar().singleQuoted().line("dummy\nstring"));
         }
     }
 
@@ -55,7 +55,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "\"dummy\n" +
                     "string\"";
-            expected = new Document().node(new ScalarNode().doubleQuoted().line("dummy\nstring"));
+            expected = new Document().node(new Scalar().doubleQuoted().line("dummy\nstring"));
         }
     }
 
@@ -156,21 +156,21 @@ class ScalarTest extends AbstractYamlTest {
     @Nested class givenOneSpaceOnlyDocument extends SingleDocument {
         @BeforeEach void setup() {
             input = " ";
-            expected = new Document().node(new ScalarNode().line(new Line().text("").indent(1)));
+            expected = new Document().node(new Scalar().line(new Line().text("").indent(1)));
         }
     }
 
     @Nested class givenTwoSpacesOnlyDocument extends SingleDocument {
         @BeforeEach void setup() {
             input = "  ";
-            expected = new Document().node(new ScalarNode().line(new Line().text("").indent(2)));
+            expected = new Document().node(new Scalar().line(new Line().text("").indent(2)));
         }
     }
 
     @Nested class givenIndentedScalarDocument extends SingleDocument {
         @BeforeEach void setup() {
             input = "    foo";
-            expected = new Document().node(new ScalarNode().line(new Line().text("foo").indent(4)));
+            expected = new Document().node(new Scalar().line(new Line().text("foo").indent(4)));
         }
     }
 
@@ -178,7 +178,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "    foo\n" +
                     "  bar";
-            expected = new Document().node(new ScalarNode()
+            expected = new Document().node(new Scalar()
                     .line(new Line().text("foo").indent(4))
                     .line(new Line().text("bar").indent(2)));
         }
@@ -187,7 +187,7 @@ class ScalarTest extends AbstractYamlTest {
     @Nested class givenScalarWithSpacesBeforeAndAfter extends SingleDocument {
         @BeforeEach void setup() {
             input = "    dummy-string  ";
-            expected = new Document().node(new ScalarNode().line(new Line().indent(4).text("dummy-string  ")));
+            expected = new Document().node(new Scalar().line(new Line().indent(4).text("dummy-string  ")));
         }
     }
 
@@ -195,7 +195,7 @@ class ScalarTest extends AbstractYamlTest {
     @Nested class givenScalarWithComment extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string # dummy-comment";
-            expected = new Document().node(new ScalarNode().line("dummy-string")
+            expected = new Document().node(new Scalar().line("dummy-string")
                     .comment(new Comment().indent(1).text("dummy-comment")));
         }
     }
@@ -203,7 +203,7 @@ class ScalarTest extends AbstractYamlTest {
     @Nested class givenScalarWithIndentedComment extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string    # dummy-comment";
-            expected = new Document().node(new ScalarNode().line("dummy-string")
+            expected = new Document().node(new Scalar().line("dummy-string")
                     .comment(new Comment().indent(4).text("dummy-comment")));
         }
     }
@@ -211,7 +211,7 @@ class ScalarTest extends AbstractYamlTest {
     @Nested class givenScalarWithCommentWithLeadingSpaces extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string #     dummy-comment";
-            expected = new Document().node(new ScalarNode().line("dummy-string")
+            expected = new Document().node(new Scalar().line("dummy-string")
                     .comment(new Comment().indent(1).text("    dummy-comment")));
         }
     }
@@ -222,7 +222,7 @@ class ScalarTest extends AbstractYamlTest {
                     "dummy-string";
             expected = new Document()
                     .prefixComment(new Comment().text("dummy-comment"))
-                    .node(new ScalarNode().line("dummy-string"));
+                    .node(new Scalar().line("dummy-string"));
         }
     }
 
@@ -231,7 +231,7 @@ class ScalarTest extends AbstractYamlTest {
             input = "dummy-string\n" +
                     "# dummy-comment";
             expected = new Document()
-                    .node(new ScalarNode().line("dummy-string")
+                    .node(new Scalar().line("dummy-string")
                             .line("").comment(new Comment().text("dummy-comment")));
         }
     }
@@ -243,7 +243,7 @@ class ScalarTest extends AbstractYamlTest {
                     "# after";
             expected = new Document()
                     .prefixComment(new Comment().text("before"))
-                    .node(new ScalarNode().line("dummy-string")
+                    .node(new Scalar().line("dummy-string")
                             .line("").comment(new Comment().text("after")));
         }
     }
@@ -255,7 +255,7 @@ class ScalarTest extends AbstractYamlTest {
                     "        # after";
             expected = new Document()
                     .prefixComment(new Comment().indent(4).text("before"))
-                    .node(new ScalarNode()
+                    .node(new Scalar()
                             .line("dummy-string")
                             .line(new Line().indent(8).text(""))
                             .comment(new Comment().text("after")));
@@ -265,7 +265,7 @@ class ScalarTest extends AbstractYamlTest {
     @Nested class givenIndentedScalarWithIndentedComment extends SingleDocument {
         @BeforeEach void setup() {
             input = "    dummy-string  # dummy-comment";
-            expected = new Document().node(new ScalarNode()
+            expected = new Document().node(new Scalar()
                     .line(new Line().indent(4).text("dummy-string"))
                     .comment(new Comment().indent(2).text("dummy-comment")));
         }
@@ -275,7 +275,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "before # inside\n" +
                     "after";
-            expected = new Document().node(new ScalarNode()
+            expected = new Document().node(new Scalar()
                     .line("before").comment(new Comment().indent(1).text("inside"))
                     .line("after"));
         }
@@ -285,7 +285,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "one\n" +
                     "two # comment";
-            expected = new Document().node(new ScalarNode()
+            expected = new Document().node(new Scalar()
                     .line("one")
                     .line("two").comment(new Comment().indent(1).text("comment")));
         }
@@ -295,7 +295,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "one # first\n" +
                     "two # second";
-            expected = new Document().node(new ScalarNode()
+            expected = new Document().node(new Scalar()
                     .line("one").comment(new Comment().indent(1).text("first"))
                     .line("two").comment(new Comment().indent(1).text("second")));
         }
@@ -305,7 +305,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "one      # first\n" +
                     "long-two # second";
-            expected = new Document().node(new ScalarNode()
+            expected = new Document().node(new Scalar()
                     .line("one").comment(new Comment().indent(6).text("first"))
                     .line("long-two").comment(new Comment().indent(1).text("second")));
         }
@@ -316,7 +316,7 @@ class ScalarTest extends AbstractYamlTest {
             input = "one\n" +
                     "# comment\n" +
                     "two";
-            expected = new Document().node(new ScalarNode()
+            expected = new Document().node(new Scalar()
                     .line("one")
                     .line("").comment(new Comment().text("comment"))
                     .line("two"));

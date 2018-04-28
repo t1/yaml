@@ -1,23 +1,23 @@
 package test;
 
 import com.github.t1.yaml.model.Document;
-import com.github.t1.yaml.model.ScalarNode;
-import com.github.t1.yaml.model.ScalarNode.Line;
-import com.github.t1.yaml.model.SequenceNode;
-import com.github.t1.yaml.model.SequenceNode.Item;
+import com.github.t1.yaml.model.Scalar;
+import com.github.t1.yaml.model.Scalar.Line;
+import com.github.t1.yaml.model.Sequence;
+import com.github.t1.yaml.model.Sequence.Item;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 
-import static com.github.t1.yaml.model.CollectionNode.Style.FLOW;
+import static com.github.t1.yaml.model.Collection.Style.FLOW;
 
 class SequenceTest extends AbstractYamlTest {
     @Nested class givenFlowSequenceOfSimpleScalars extends SingleDocument {
         @BeforeEach void setup() {
             input = "[one, two]";
-            expected = new Document().node(new SequenceNode()
+            expected = new Document().node(new Sequence()
                     .style(FLOW)
-                    .item(new ScalarNode().line("one"))
-                    .item(new ScalarNode().line("two"))
+                    .item(new Scalar().line("one"))
+                    .item(new Scalar().line("two"))
             );
         }
     }
@@ -26,9 +26,9 @@ class SequenceTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "- one\n" +
                     "- two";
-            expected = new Document().node(new SequenceNode()
-                    .item(new ScalarNode().line("one"))
-                    .item(new ScalarNode().line("two"))
+            expected = new Document().node(new Sequence()
+                    .item(new Scalar().line("one"))
+                    .item(new Scalar().line("two"))
             );
         }
     }
@@ -41,11 +41,11 @@ class SequenceTest extends AbstractYamlTest {
                     "  4\n" +
                     "    5\n" +
                     "  6";
-            expected = new Document().node(new SequenceNode()
-                    .item(new ScalarNode()
+            expected = new Document().node(new Sequence()
+                    .item(new Scalar()
                             .line(new Line().text("1"))
                             .line(new Line().text("2")))
-                    .item(new ScalarNode()
+                    .item(new Scalar()
                             .line(new Line().text("3"))
                             .line(new Line().text("4"))
                             .line(new Line().indent(2).text("5"))
@@ -63,11 +63,11 @@ class SequenceTest extends AbstractYamlTest {
                     "  3\n" +
                     "  4\n" +
                     "  5";
-            expected = new Document().node(new SequenceNode()
-                    .item(new Item().nl(true).node(new ScalarNode()
+            expected = new Document().node(new Sequence()
+                    .item(new Item().nl(true).node(new Scalar()
                             .line(new Line().text("1"))
                             .line(new Line().text("2"))))
-                    .item(new Item().nl(true).node(new ScalarNode()
+                    .item(new Item().nl(true).node(new Scalar()
                             .line(new Line().text("3"))
                             .line(new Line().text("4"))
                             .line(new Line().text("5"))))
@@ -84,14 +84,14 @@ class SequenceTest extends AbstractYamlTest {
                     "  - 3\n" +
                     "  - 4\n" +
                     "  - 5";
-            expected = new Document().node(new SequenceNode()
-                    .item(new Item().nl(true).node(new SequenceNode()
-                            .item(new ScalarNode().line("1"))
-                            .item(new ScalarNode().line("2"))))
-                    .item(new Item().nl(true).node(new SequenceNode()
-                            .item(new ScalarNode().line("3"))
-                            .item(new ScalarNode().line("4"))
-                            .item(new ScalarNode().line("5"))))
+            expected = new Document().node(new Sequence()
+                    .item(new Item().nl(true).node(new Sequence()
+                            .item(new Scalar().line("1"))
+                            .item(new Scalar().line("2"))))
+                    .item(new Item().nl(true).node(new Sequence()
+                            .item(new Scalar().line("3"))
+                            .item(new Scalar().line("4"))
+                            .item(new Scalar().line("5"))))
             );
         }
     }

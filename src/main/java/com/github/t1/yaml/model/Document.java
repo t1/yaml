@@ -44,7 +44,7 @@ public class Document {
             directives.add(Directive.YAML_VERSION);
         prefixComments.clear();
         if (node == null)
-            node = new ScalarNode();
+            node = new Scalar();
         node.canonicalize();
         suffixComment = null;
         return this;

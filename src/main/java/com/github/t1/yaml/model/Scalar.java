@@ -8,14 +8,14 @@ import lombok.RequiredArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.t1.yaml.model.ScalarNode.Style.DOUBLE_QUOTED;
-import static com.github.t1.yaml.model.ScalarNode.Style.PLAIN;
-import static com.github.t1.yaml.model.ScalarNode.Style.SINGLE_QUOTED;
+import static com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED;
+import static com.github.t1.yaml.model.Scalar.Style.PLAIN;
+import static com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED;
 import static java.util.stream.Collectors.joining;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ScalarNode extends Node {
+public class Scalar extends Node {
     @RequiredArgsConstructor
     public enum Style {
         PLAIN(""), SINGLE_QUOTED("\'"), DOUBLE_QUOTED("\"");
@@ -43,14 +43,14 @@ public class ScalarNode extends Node {
     private Style style = PLAIN;
     private final List<Line> lines = new ArrayList<>();
 
-    public ScalarNode line(String line) { return line(new Line().text(line)); }
+    public Scalar line(String line) { return line(new Line().text(line)); }
 
-    public ScalarNode line(Line line) {
+    public Scalar line(Line line) {
         lines.add(line);
         return this;
     }
 
-    public ScalarNode comment(Comment comment) {
+    public Scalar comment(Comment comment) {
         lastLine().comment(comment);
         return this;
     }
@@ -83,9 +83,9 @@ public class ScalarNode extends Node {
         lines.add(new Line().text(singleLine));
     }
 
-    public ScalarNode plain() { return style(PLAIN); }
+    public Scalar plain() { return style(PLAIN); }
 
-    public ScalarNode singleQuoted() { return style(SINGLE_QUOTED); }
+    public Scalar singleQuoted() { return style(SINGLE_QUOTED); }
 
-    public ScalarNode doubleQuoted() { return style(DOUBLE_QUOTED); }
+    public Scalar doubleQuoted() { return style(DOUBLE_QUOTED); }
 }

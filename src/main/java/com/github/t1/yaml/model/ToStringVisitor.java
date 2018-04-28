@@ -1,8 +1,8 @@
 package com.github.t1.yaml.model;
 
-import com.github.t1.yaml.model.MappingNode.Entry;
-import com.github.t1.yaml.model.ScalarNode.Line;
-import com.github.t1.yaml.model.SequenceNode.Item;
+import com.github.t1.yaml.model.Mapping.Entry;
+import com.github.t1.yaml.model.Scalar.Line;
+import com.github.t1.yaml.model.Sequence.Item;
 import lombok.RequiredArgsConstructor;
 
 import static com.github.t1.yaml.dump.Tools.spaces;
@@ -64,12 +64,12 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                 }
 
 
-                @Override public void visit(AliasNode alias) { out.append(alias); }
+                @Override public void visit(Alias alias) { out.append(alias); }
 
 
-                @Override public void visit(SequenceNode sequence) {}
+                @Override public void visit(Sequence sequence) {}
 
-                @Override public void enterSequenceItem(SequenceNode sequence, Item item) {
+                @Override public void enterSequenceItem(Sequence sequence, Item item) {
                     out.append(indent());
                     switch (sequence.style()) {
                         case FLOW:
@@ -82,7 +82,7 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                     }
                 }
 
-                @Override public void leaveSequenceItem(SequenceNode sequence, Item item) {
+                @Override public void leaveSequenceItem(Sequence sequence, Item item) {
                     switch (sequence.style()) {
                         case FLOW:
                             if (item == sequence.lastItem())
@@ -95,16 +95,16 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                     }
                 }
 
-                @Override public void leave(SequenceNode sequence) {}
+                @Override public void leave(Sequence sequence) {}
 
 
-                @Override public void visit(ScalarNode scalar) {
+                @Override public void visit(Scalar scalar) {
                     if (scalar.tag() != null)
                         out.append(scalar.tag()).append(' ');
                     out.append(scalar.style().quote);
                 }
 
-                @Override public void enterScalarLine(ScalarNode node, Line line) {}
+                @Override public void enterScalarLine(Scalar node, Line line) {}
 
                 @Override public void visit(Line line) {
                     out.append(indent()).append(spaces(line.indent));
@@ -113,17 +113,17 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                         append(line.comment);
                 }
 
-                @Override public void leaveScalarLine(ScalarNode node, Line line) {
+                @Override public void leaveScalarLine(Scalar node, Line line) {
                     if (line != node.lastLine())
                         nl();
                 }
 
-                @Override public void leave(ScalarNode scalar) { out.append(scalar.style().quote); }
+                @Override public void leave(Scalar scalar) { out.append(scalar.style().quote); }
 
 
-                @Override public void visit(MappingNode mapping) {}
+                @Override public void visit(Mapping mapping) {}
 
-                @Override public void enterMappingEntry(MappingNode node, Entry entry) {}
+                @Override public void enterMappingEntry(Mapping node, Entry entry) {}
 
                 @Override public void enterMappingKey(Entry entry, Node key) { out.append(entry.hasMarkedKey() ? "? " : ""); }
 
@@ -133,12 +133,12 @@ import static com.github.t1.yaml.dump.Tools.spaces;
 
                 @Override public void leaveMappingValue(Entry entry, Node key) {}
 
-                @Override public void leaveMappingEntry(MappingNode node, Entry entry) {
+                @Override public void leaveMappingEntry(Mapping node, Entry entry) {
                     if (entry != node.lastEntry())
                         nl();
                 }
 
-                @Override public void leave(MappingNode mapping) {}
+                @Override public void leave(Mapping mapping) {}
             });
             nl();
         }

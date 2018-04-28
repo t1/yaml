@@ -1,13 +1,13 @@
 package test;
 
-import com.github.t1.yaml.model.AliasNode;
-import com.github.t1.yaml.model.MappingNode;
-import com.github.t1.yaml.model.MappingNode.Entry;
+import com.github.t1.yaml.model.Alias;
+import com.github.t1.yaml.model.Mapping;
+import com.github.t1.yaml.model.Mapping.Entry;
 import com.github.t1.yaml.model.Node;
-import com.github.t1.yaml.model.ScalarNode;
-import com.github.t1.yaml.model.ScalarNode.Line;
-import com.github.t1.yaml.model.SequenceNode;
-import com.github.t1.yaml.model.SequenceNode.Item;
+import com.github.t1.yaml.model.Scalar;
+import com.github.t1.yaml.model.Scalar.Line;
+import com.github.t1.yaml.model.Sequence;
+import com.github.t1.yaml.model.Sequence.Item;
 import helpers.MockitoExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
     @Test void shouldVisitAliasNode() {
-        AliasNode node = new AliasNode();
+        Alias node = new Alias();
 
         node.guide(visitor);
 
@@ -37,13 +37,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
     @Test void shouldVisitSequenceNode() {
-        AliasNode alias = new AliasNode();
+        Alias alias = new Alias();
         Item item1 = new Item().node(alias);
         Line line1 = new Line().text("foo");
         Line line2 = new Line().text("bar");
-        ScalarNode scalar = new ScalarNode().plain().line(line1).line(line2);
+        Scalar scalar = new Scalar().plain().line(line1).line(line2);
         Item item2 = new Item().node(scalar);
-        SequenceNode node = new SequenceNode().item(item1).item(item2);
+        Sequence node = new Sequence().item(item1).item(item2);
 
         node.guide(visitor);
 
@@ -67,7 +67,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
     @Test void shouldVisitEmptySingleQuotedScalarNode() {
-        ScalarNode node = new ScalarNode().singleQuoted();
+        Scalar node = new Scalar().singleQuoted();
 
         node.guide(visitor);
 
@@ -78,7 +78,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
     @Test void shouldVisitDoubleQuotedScalarNode() {
         Line line = new Line().text("foo");
-        ScalarNode node = new ScalarNode().doubleQuoted().line(line);
+        Scalar node = new Scalar().doubleQuoted().line(line);
 
         node.guide(visitor);
 
@@ -93,7 +93,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
     @Test void shouldVisitPlainTwoLineScalarNode() {
         Line line1 = new Line().text("foo");
         Line line2 = new Line().text("bar");
-        ScalarNode node = new ScalarNode().plain().line(line1).line(line2);
+        Scalar node = new Scalar().plain().line(line1).line(line2);
 
         node.guide(visitor);
 
@@ -110,18 +110,18 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
     @Test void shouldVisitMappingNode() {
-        MappingNode node = new MappingNode();
+        Mapping node = new Mapping();
 
-        AliasNode key1 = new AliasNode();
+        Alias key1 = new Alias();
         Line value1line1 = new Line().text("foo");
         Line value1line2 = new Line().text("bar");
-        ScalarNode value1 = new ScalarNode().plain().line(value1line1).line(value1line2);
+        Scalar value1 = new Scalar().plain().line(value1line1).line(value1line2);
         node.entry(key1, value1);
 
         Line key2line1 = new Line().text("key2");
-        ScalarNode key2 = new ScalarNode().line(key2line1);
+        Scalar key2 = new Scalar().line(key2line1);
         Line value2line1 = new Line().text("value2");
-        ScalarNode value2 = new ScalarNode().line(value2line1);
+        Scalar value2 = new Scalar().line(value2line1);
         node.entry(key2, value2);
 
 

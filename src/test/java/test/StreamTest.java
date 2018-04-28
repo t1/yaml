@@ -3,7 +3,7 @@ package test;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
-import com.github.t1.yaml.model.ScalarNode;
+import com.github.t1.yaml.model.Scalar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 
@@ -21,7 +21,7 @@ class StreamTest extends AbstractYamlTest {
     @Nested class givenInvalidSecondDocument {
         @BeforeEach void setup() {
             input = "%YAML 1.2\n---\nvalid document\n...{";
-            expected = new Document().directive(Directive.YAML_VERSION).node(new ScalarNode().line("valid document")).hasDocumentEndMarker(true);
+            expected = new Document().directive(Directive.YAML_VERSION).node(new Scalar().line("valid document")).hasDocumentEndMarker(true);
         }
 
         @Nested class whenParseAll extends ParseAll implements ThenThrowsInvalid {}

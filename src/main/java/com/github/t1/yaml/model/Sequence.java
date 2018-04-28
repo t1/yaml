@@ -8,19 +8,19 @@ import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SequenceNode extends CollectionNode {
+public class Sequence extends Collection {
     @Data public static class Item {
         boolean nl;
         Node node;
     }
 
-    @Override public SequenceNode style(Style style) { super.style(style); return this; }
+    @Override public Sequence style(Style style) { super.style(style); return this; }
 
     private final List<Item> items = new ArrayList<>();
 
-    public SequenceNode item(Node node) { return item(new Item().node(node)); }
+    public Sequence item(Node node) { return item(new Item().node(node)); }
 
-    public SequenceNode item(Item item) {
+    public Sequence item(Item item) {
         items.add(item);
         return this;
     }

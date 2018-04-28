@@ -8,18 +8,18 @@ import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class MappingNode extends CollectionNode {
+public class Mapping extends Collection {
     private List<Entry> entries = new ArrayList<>();
 
-    public MappingNode entry(String key, String value) { return entry(new ScalarNode().line(key), value); }
+    public Mapping entry(String key, String value) { return entry(new Scalar().line(key), value); }
 
-    public MappingNode entry(ScalarNode key, String value) { return entry(key, new ScalarNode().line(value)); }
+    public Mapping entry(Scalar key, String value) { return entry(key, new Scalar().line(value)); }
 
-    public MappingNode entry(String key, ScalarNode value) { return entry(new ScalarNode().line(key), value); }
+    public Mapping entry(String key, Scalar value) { return entry(new Scalar().line(key), value); }
 
-    public MappingNode entry(Node key, Node value) { return entry(new Entry().key(key).value(value)); }
+    public Mapping entry(Node key, Node value) { return entry(new Entry().key(key).value(value)); }
 
-    public MappingNode entry(Entry entry) {
+    public Mapping entry(Entry entry) {
         entries.add(entry);
         return this;
     }
