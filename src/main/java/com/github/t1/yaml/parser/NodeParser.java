@@ -15,19 +15,19 @@ import static com.github.t1.yaml.dump.Tools.spaces;
 import static com.github.t1.yaml.model.Collection.Style.BLOCK;
 import static com.github.t1.yaml.model.Collection.Style.FLOW;
 import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
-import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_ENTRY;
+import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
-import static com.github.t1.yaml.parser.Symbol.CURLY_OPEN;
-import static com.github.t1.yaml.parser.Symbol.C_COLLECT_ENTRY;
-import static com.github.t1.yaml.parser.Symbol.C_COMMENT;
-import static com.github.t1.yaml.parser.Symbol.C_MAPPING_KEY;
-import static com.github.t1.yaml.parser.Symbol.C_MAPPING_VALUE;
-import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_END;
-import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_ENTRY;
-import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_START;
+import static com.github.t1.yaml.parser.Symbol.BLOCK_SEQUENCE_ENTRY;
+import static com.github.t1.yaml.parser.Symbol.FLOW_MAPPING_START;
+import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ENTRY;
+import static com.github.t1.yaml.parser.Symbol.COMMENT;
+import static com.github.t1.yaml.parser.Symbol.MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_END;
+import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ITEM_END;
+import static com.github.t1.yaml.parser.Symbol.MAPPING_KEY;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
@@ -77,15 +77,15 @@ public class NodeParser {
         return scalar();
     }
 
-    private boolean isFlowSequence() { return next.is(C_SEQUENCE_START); }
+    private boolean isFlowSequence() { return next.is(FLOW_SEQUENCE_START); }
 
     private Node flowSequence() {
-        next.expect(C_SEQUENCE_START);
+        next.expect(FLOW_SEQUENCE_START);
         Sequence sequence = new Sequence().style(FLOW);
         do
             sequence.item(flowSequenceItem());
-        while (more() && next.accept(C_COLLECT_ENTRY));
-        next.expect(C_SEQUENCE_END);
+        while (more() && next.accept(FLOW_SEQUENCE_ENTRY));
+        next.expect(FLOW_SEQUENCE_END);
         return sequence;
     }
 
@@ -96,7 +96,7 @@ public class NodeParser {
         return new Item().node(new Scalar().line(line));
     }
 
-    private boolean isBlockSequence() { return next.is(BLOCK_SEQUENCE_ENTRY); }
+    private boolean isBlockSequence() { return next.is(BLOCK_SEQUENCE_START); }
 
     private Sequence blockSequence() {
         Sequence sequence = new Sequence().style(BLOCK);
@@ -107,7 +107,7 @@ public class NodeParser {
     }
 
     private Item blockSequenceItem() {
-        next.expect(C_SEQUENCE_ENTRY);
+        next.expect(BLOCK_SEQUENCE_ENTRY);
         boolean nlItem = next.accept(NL);
         if (!nlItem) {
             next.expect(SPACE);
@@ -121,7 +121,7 @@ public class NodeParser {
     }
 
     private boolean isBlockMapping() {
-        if (next.is(C_MAPPING_KEY))
+        if (next.is(MAPPING_KEY))
             return true;
         String token = next.peekUntil(BLOCK_MAPPING_VALUE);
         return token != null && token.length() >= 1 && !token.contains("\n");
@@ -131,11 +131,11 @@ public class NodeParser {
         Mapping mapping = new Mapping();
         while (next.more()) {
             Mapping.Entry entry = new Mapping.Entry();
-            entry.hasMarkedKey(next.accept(C_MAPPING_KEY));
+            entry.hasMarkedKey(next.accept(MAPPING_KEY));
             if (entry.hasMarkedKey())
                 next.count(SPACE);
             entry.key(scalar(BLOCK_MAPPING_VALUE));
-            next.expect(C_MAPPING_VALUE);
+            next.expect(MAPPING_VALUE);
             if (next.accept(NL))
                 entry.hasNlAfterKey(true);
             else
@@ -152,7 +152,7 @@ public class NodeParser {
     }
 
     private boolean isFlowMapping() {
-        return next.is(CURLY_OPEN);
+        return next.is(FLOW_MAPPING_START);
     }
 
     private Mapping flowMapping() {
@@ -195,7 +195,7 @@ public class NodeParser {
                 );
     }
 
-    private boolean isComment() { return next.accept(C_COMMENT); }
+    private boolean isComment() { return next.accept(COMMENT); }
 
     private void comment(Scalar scalar, boolean lineContinue) {
         next.accept(SPACE);

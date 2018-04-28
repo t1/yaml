@@ -14,12 +14,11 @@ import java.util.Optional;
 
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
-import static com.github.t1.yaml.parser.Symbol.C_COMMENT;
+import static com.github.t1.yaml.parser.Symbol.COMMENT;
+import static com.github.t1.yaml.parser.Symbol.DIRECTIVE;
 import static com.github.t1.yaml.parser.Symbol.NL;
-import static com.github.t1.yaml.parser.Symbol.PERCENT;
 import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
-import static com.github.t1.yaml.parser.Symbol.WS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class DocumentParser {
@@ -49,7 +48,7 @@ public class DocumentParser {
     }
 
     private void directives() {
-        if (next.accept(PERCENT))
+        if (next.accept(DIRECTIVE))
             document.directive(directive());
 
         if (next.accept(DIRECTIVES_END_MARKER)) {
@@ -72,12 +71,12 @@ public class DocumentParser {
         String spaces = next.peekUntil(SCALAR_END);
         return spaces != null
                 && CodePoint.stream(spaces).allMatch(SPACE)
-                && next.peekAfter(spaces.length()).map(C_COMMENT::test).orElse(false);
+                && next.peekAfter(spaces.length()).map(COMMENT::test).orElse(false);
     }
 
     private Comment comment() {
-        return new Comment().indent(next.count(WS))
-                .text(next.expect(C_COMMENT).skip(SPACE).readLine());
+        return new Comment().indent(next.count(SPACE))
+                .text(next.expect(COMMENT).skip(SPACE).readLine());
     }
 
 
