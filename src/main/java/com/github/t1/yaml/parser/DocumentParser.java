@@ -82,7 +82,9 @@ public class DocumentParser {
 
 
     private void node() {
-        new NodeParser(next).node().ifPresent(document::node);
+        NodeParser parser = new NodeParser(next);
+        if (parser.more())
+            document.node(parser.node());
     }
 
     private void documentEnd() {

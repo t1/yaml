@@ -11,8 +11,6 @@ import com.github.t1.yaml.model.Sequence.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import java.util.Optional;
-
 import static com.github.t1.yaml.dump.Tools.spaces;
 import static com.github.t1.yaml.model.Collection.Style.BLOCK;
 import static com.github.t1.yaml.model.Collection.Style.FLOW;
@@ -66,11 +64,7 @@ public class NodeParser {
 
     @Override public String toString() { return "NodeParser " + next + " nesting: " + nesting; }
 
-    public Optional<Node> node() {
-        return more() ? Optional.of(node_()) : Optional.empty();
-    }
-
-    private Node node_() {
+    public Node node() {
         nesting.expect();
         if (isFlowSequence())
             return flowSequence();
@@ -121,7 +115,7 @@ public class NodeParser {
         }
         Item item = new Item().nl(nlItem);
         nesting.up();
-        item.node(node_());
+        item.node(node());
         nesting.down();
         return item;
     }
@@ -217,7 +211,7 @@ public class NodeParser {
         return line;
     }
 
-    private boolean more() {
+    boolean more() {
         return next.more()
                 && !next.is(DOCUMENT_END_MARKER)
                 && !next.is(DIRECTIVES_END_MARKER); // of next document
