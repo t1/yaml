@@ -14,16 +14,22 @@ import lombok.Setter;
 import java.util.Optional;
 
 import static com.github.t1.yaml.dump.Tools.spaces;
+import static com.github.t1.yaml.model.CollectionNode.Style.BLOCK;
+import static com.github.t1.yaml.model.CollectionNode.Style.FLOW;
 import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
 import static com.github.t1.yaml.parser.Symbol.CURLY_OPEN;
+import static com.github.t1.yaml.parser.Symbol.C_COLLECT_ENTRY;
 import static com.github.t1.yaml.parser.Symbol.C_COMMENT;
 import static com.github.t1.yaml.parser.Symbol.C_MAPPING_KEY;
 import static com.github.t1.yaml.parser.Symbol.C_MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_END;
 import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_ENTRY;
+import static com.github.t1.yaml.parser.Symbol.C_SEQUENCE_START;
+import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ITEM_END;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
@@ -66,6 +72,8 @@ public class NodeParser {
 
     private Node node_() {
         nesting.expect();
+        if (isFlowSequence())
+            return flowSequence();
         if (isBlockSequence())
             return blockSequence();
         if (isFlowMapping())
@@ -75,10 +83,29 @@ public class NodeParser {
         return scalar();
     }
 
+    private boolean isFlowSequence() { return next.is(C_SEQUENCE_START); }
+
+    private Node flowSequence() {
+        next.expect(C_SEQUENCE_START);
+        SequenceNode sequence = new SequenceNode().style(FLOW);
+        do
+            sequence.item(flowSequenceItem());
+        while (more() && next.accept(C_COLLECT_ENTRY));
+        next.expect(C_SEQUENCE_END);
+        return sequence;
+    }
+
+    private Item flowSequenceItem() {
+        next.skip(SPACE);
+        String line = next.readUntil(FLOW_SEQUENCE_ITEM_END); // TODO this must be a call to node()!
+        next.skip(SPACE);
+        return new Item().node(new ScalarNode().line(line));
+    }
+
     private boolean isBlockSequence() { return next.is(BLOCK_SEQUENCE_ENTRY); }
 
     private SequenceNode blockSequence() {
-        SequenceNode sequence = new SequenceNode();
+        SequenceNode sequence = new SequenceNode().style(BLOCK);
         do
             sequence.item(blockSequenceItem());
         while (more() && nesting.accept());
@@ -143,12 +170,14 @@ public class NodeParser {
         if (scalar.style() == Style.PLAIN) {
             boolean lineContinue = !next.accept(NL);
             while (more() && nesting.accept()) {
+                if (isFlowSequence())
+                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence " + next);
                 if (isBlockSequence())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence at " + next);
+                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence " + next);
                 if (isFlowMapping())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping at " + next);
+                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping " + next);
                 if (isBlockMapping())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping at " + next);
+                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping " + next);
                 if (isComment()) {
                     comment(scalar, lineContinue);
                     lineContinue = false;

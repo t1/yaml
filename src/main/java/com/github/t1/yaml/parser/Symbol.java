@@ -59,6 +59,9 @@ public enum Symbol implements Token, Predicate<CodePoint> {
     C_SEQUENCE_ENTRY('-'), // 4
     C_MAPPING_KEY('?'), // 5
     C_MAPPING_VALUE(':'), // 6
+    C_COLLECT_ENTRY(','), // 7
+    C_SEQUENCE_START('['), // 8
+    C_SEQUENCE_END(']'), // 9
 
     C_COMMENT('#'), // 12
 
@@ -66,7 +69,9 @@ public enum Symbol implements Token, Predicate<CodePoint> {
     NB_CHAR(C_PRINTABLE.minus(NL).minus(BOM)), // 27
     // same as NL/B_CHAR: B_BREAK(CR.or(LF)), // 28
 
+    ////////////////////////////////// compounds
     SCALAR_END(NL.or(C_COMMENT)),
+    FLOW_SEQUENCE_ITEM_END(C_COLLECT_ENTRY.or(C_SEQUENCE_END)),
 
     // WHITE(SPACE.or(TAB)),
     WS(Character::isWhitespace),

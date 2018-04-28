@@ -8,8 +8,21 @@ import com.github.t1.yaml.model.SequenceNode.Item;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 
+import static com.github.t1.yaml.model.CollectionNode.Style.FLOW;
+
 class SequenceTest extends AbstractYamlTest {
-    @Nested class givenSequence extends SingleDocument {
+    @Nested class givenFlowSequenceOfSimpleScalars extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "[one, two]";
+            expected = new Document().node(new SequenceNode()
+                    .style(FLOW)
+                    .item(new ScalarNode().line("one"))
+                    .item(new ScalarNode().line("two"))
+            );
+        }
+    }
+
+    @Nested class givenBlockSequenceOfSimpleScalars extends SingleDocument {
         @BeforeEach void setup() {
             input = "- one\n" +
                     "- two";
@@ -20,13 +33,14 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Nested class givenSequenceWithIndentedScalars extends SingleDocument {
+    @Nested class givenBlockSequenceOfIndentedScalars extends SingleDocument {
         @BeforeEach void setup() {
             input = "- 1\n" +
                     "  2\n" +
                     "- 3\n" +
                     "  4\n" +
-                    "  5";
+                    "    5\n" +
+                    "  6";
             expected = new Document().node(new SequenceNode()
                     .item(new ScalarNode()
                             .line(new Line().text("1"))
@@ -34,12 +48,13 @@ class SequenceTest extends AbstractYamlTest {
                     .item(new ScalarNode()
                             .line(new Line().text("3"))
                             .line(new Line().text("4"))
-                            .line(new Line().text("5")))
+                            .line(new Line().indent(2).text("5"))
+                            .line(new Line().text("6")))
             );
         }
     }
 
-    @Nested class givenSequenceWithIndentedScalarsInNewLines extends SingleDocument {
+    @Nested class givenBlockSequenceWithIndentedScalarsInNewLines extends SingleDocument {
         @BeforeEach void setup() {
             input = "-\n" +
                     "  1\n" +
@@ -60,7 +75,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Nested class givenSequenceOfSequence extends SingleDocument {
+    @Nested class givenBlockSequenceOfBlockSequences extends SingleDocument {
         @BeforeEach void setup() {
             input = "-\n" +
                     "  - 1\n" +

@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static test.Helpers.toStringWithoutTrailingNl;
 
 public class AbstractYamlTest {
@@ -41,7 +41,7 @@ public class AbstractYamlTest {
         thrown = null;
     }
 
-    static void rethrow() {
+    private static void rethrow() {
         if (thrown != null)
             throw thrown;
     }
@@ -50,7 +50,10 @@ public class AbstractYamlTest {
 
     private <T> T when(Function<String, T> function) {
         AtomicReference<T> result = new AtomicReference<>();
-        thrown = catchThrowableOfType(() -> result.set(function.apply(input)), YamlParseException.class);
+        Throwable e = catchThrowable(() -> result.set(function.apply(input)));
+        if (e != null && !(e instanceof YamlParseException))
+            throw new RuntimeException("expected YamlParseException but got a " + e.getClass().getName(), e);
+        thrown = (YamlParseException) e;
         return result.get();
     }
 

@@ -14,6 +14,8 @@ public class SequenceNode extends CollectionNode {
         Node node;
     }
 
+    @Override public SequenceNode style(Style style) { super.style(style); return this; }
+
     private final List<Item> items = new ArrayList<>();
 
     public SequenceNode item(Node node) { return item(new Item().node(node)); }
@@ -37,6 +39,8 @@ public class SequenceNode extends CollectionNode {
         for (Item item : items)
             item.node.canonicalize();
     }
+
+    public Item firstItem() { return items.get(0); }
 
     public Item lastItem() { return items.get(items.size() - 1); }
 }

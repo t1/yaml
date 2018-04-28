@@ -47,4 +47,22 @@ import static test.Helpers.parseAndCheck;
                         "  },\n" +
                         "}");
     }
+
+    @Disabled @Test void spec_5_4_Flow_Collection_Indicators() {
+        parseAndCheck("" +
+                        "sequence: [ one, two, ]\n" +
+                        "mapping: { sky: blue, sea: green }"
+                , "" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "!!map {\n" +
+                        "  ? !!str \"sequence\"\n" +
+                        "  : !!seq [ !!str \"one\", !!str \"two\" ],\n" +
+                        "  ? !!str \"mapping\"\n" +
+                        "  : !!map {\n" +
+                        "    ? !!str \"sky\" : !!str \"blue\",\n" +
+                        "    ? !!str \"sea\" : !!str \"green\",\n" +
+                        "  },\n" +
+                        "}");
+    }
 }

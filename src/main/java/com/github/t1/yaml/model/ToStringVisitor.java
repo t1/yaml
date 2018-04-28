@@ -71,15 +71,28 @@ import static com.github.t1.yaml.dump.Tools.spaces;
 
                 @Override public void enterSequenceItem(SequenceNode sequence, Item item) {
                     out.append(indent());
-                    skipNextIndent = !item.nl();
-                    indent++;
-                    out.append("-").append(item.nl() ? "\n" : " ");
+                    switch (sequence.style()) {
+                        case FLOW:
+                            out.append((item == sequence.firstItem()) ? "[" : ", ");
+                            break;
+                        case BLOCK:
+                            skipNextIndent = !item.nl();
+                            indent++;
+                            out.append("-").append(item.nl() ? "\n" : " ");
+                    }
                 }
 
                 @Override public void leaveSequenceItem(SequenceNode sequence, Item item) {
-                    if (item != sequence.lastItem())
-                        nl();
-                    indent--;
+                    switch (sequence.style()) {
+                        case FLOW:
+                            if (item == sequence.lastItem())
+                                out.append("]");
+                            break;
+                        case BLOCK:
+                            if (item != sequence.lastItem())
+                                nl();
+                            indent--;
+                    }
                 }
 
                 @Override public void leave(SequenceNode sequence) {}

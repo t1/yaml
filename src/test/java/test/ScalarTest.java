@@ -59,28 +59,97 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Test void expectScalarStartNotContinueWithBlockSequence() {
-        Throwable thrown = catchThrowable(() -> parse("scalar document\n- illegal sequence"));
+    @Test void expectScalarStartNotContinueWithFlowSequence() {
+        Throwable thrown = catchThrowable(() -> parse("" +
+                "scalar document\n" +
+                "[illegal sequence]"));
 
         assertThat(thrown)
                 .isInstanceOf(YamlParseException.class)
-                .hasMessage("Expected a scalar node to continue with scalar values but found block sequence at [-][HYPHEN-MINUS][0x2d] at line 2 char 1");
+                .hasMessage("Expected a scalar node to continue with scalar values but found " +
+                        "flow sequence [[][LEFT SQUARE BRACKET][0x5b] at line 2 char 1");
+    }
+
+    @Test void expectScalarStartNotContinueWithBlockSequence() {
+        Throwable thrown = catchThrowable(() -> parse("" +
+                "scalar document\n" +
+                "- illegal sequence"));
+
+        assertThat(thrown)
+                .isInstanceOf(YamlParseException.class)
+                .hasMessage("Expected a scalar node to continue with scalar values but found " +
+                        "block sequence [-][HYPHEN-MINUS][0x2d] at line 2 char 1");
     }
 
     @Test void expectScalarStartNotContinueWithBlockMapping() {
-        Throwable thrown = catchThrowable(() -> parse("scalar document\nkey: value"));
+        Throwable thrown = catchThrowable(() -> parse("" +
+                "scalar document\n" +
+                "key: value"));
 
         assertThat(thrown)
                 .isInstanceOf(YamlParseException.class)
-                .hasMessage("Expected a scalar node to continue with scalar values but found block mapping at [k][LATIN SMALL LETTER K][0x6b] at line 2 char 1");
+                .hasMessage("Expected a scalar node to continue with scalar values but found " +
+                        "block mapping [k][LATIN SMALL LETTER K][0x6b] at line 2 char 1");
     }
 
     @Test void expectScalarStartNotContinueWithFlowMapping() {
-        Throwable thrown = catchThrowable(() -> parse("scalar document\n{key: value}"));
+        Throwable thrown = catchThrowable(() -> parse("" +
+                "scalar document\n" +
+                "{key: value}"));
 
         assertThat(thrown)
                 .isInstanceOf(YamlParseException.class)
-                .hasMessage("Expected a scalar node to continue with scalar values but found flow mapping at [{][LEFT CURLY BRACKET][0x7b] at line 2 char 1");
+                .hasMessage("Expected a scalar node to continue with scalar values but found " +
+                        "flow mapping [{][LEFT CURLY BRACKET][0x7b] at line 2 char 1");
+    }
+
+
+    @Test void expectNestedScalarStartNotContinueWithFlowSequence() {
+        Throwable thrown = catchThrowable(() -> parse("" +
+                "- scalar" +
+                "  document\n" +
+                "  [illegal sequence]"));
+
+        assertThat(thrown)
+                .isInstanceOf(YamlParseException.class)
+                .hasMessage("Expected a scalar node to continue with scalar values but found " +
+                        "flow sequence [[][LEFT SQUARE BRACKET][0x5b] at line 2 char 3");
+    }
+
+    @Test void expectNestedScalarStartNotContinueWithBlockSequence() {
+        Throwable thrown = catchThrowable(() -> parse("" +
+                "- scalar" +
+                "  document\n" +
+                "  - illegal sequence"));
+
+        assertThat(thrown)
+                .isInstanceOf(YamlParseException.class)
+                .hasMessage("Expected a scalar node to continue with scalar values but found " +
+                        "block sequence [-][HYPHEN-MINUS][0x2d] at line 2 char 3");
+    }
+
+    @Test void expectNestedScalarStartNotContinueWithBlockMapping() {
+        Throwable thrown = catchThrowable(() -> parse("" +
+                "- scalar" +
+                "  document\n" +
+                "  key: value"));
+
+        assertThat(thrown)
+                .isInstanceOf(YamlParseException.class)
+                .hasMessage("Expected a scalar node to continue with scalar values but found " +
+                        "block mapping [k][LATIN SMALL LETTER K][0x6b] at line 2 char 3");
+    }
+
+    @Test void expectNestedScalarStartNotContinueWithFlowMapping() {
+        Throwable thrown = catchThrowable(() -> parse("" +
+                "- scalar" +
+                "  document\n" +
+                "  {key: value}"));
+
+        assertThat(thrown)
+                .isInstanceOf(YamlParseException.class)
+                .hasMessage("Expected a scalar node to continue with scalar values but found " +
+                        "flow mapping [{][LEFT CURLY BRACKET][0x7b] at line 2 char 3");
     }
 
 
