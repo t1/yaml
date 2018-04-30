@@ -48,7 +48,7 @@ class SequenceTest extends AbstractYamlTest {
                     .item(new Scalar()
                             .line(new Line().text("3"))
                             .line(new Line().text("4"))
-                            .line(new Line().indent(2).text("5"))
+                            .line(new Line().text("5").indent(2))
                             .line(new Line().text("6")))
             );
         }
@@ -61,7 +61,7 @@ class SequenceTest extends AbstractYamlTest {
                     "  2\n" +
                     "-\n" +
                     "  3\n" +
-                    "  4\n" +
+                    "          4\n" +
                     "  5";
             expected = new Document().node(new Sequence()
                     .item(new Item().nl(true).node(new Scalar()
@@ -69,7 +69,7 @@ class SequenceTest extends AbstractYamlTest {
                             .line(new Line().text("2"))))
                     .item(new Item().nl(true).node(new Scalar()
                             .line(new Line().text("3"))
-                            .line(new Line().text("4"))
+                            .line(new Line().text("4").indent(8))
                             .line(new Line().text("5"))))
             );
         }
@@ -82,13 +82,31 @@ class SequenceTest extends AbstractYamlTest {
                     "  - 2\n" +
                     "-\n" +
                     "  - 3\n" +
-                    "  - 4\n" +
+                    "  -     4\n" +
                     "  - 5";
             expected = new Document().node(new Sequence()
                     .item(new Item().nl(true).node(new Sequence()
                             .item(new Scalar().line("1"))
                             .item(new Scalar().line("2"))))
                     .item(new Item().nl(true).node(new Sequence()
+                            .item(new Scalar().line("3"))
+                            .item(new Scalar().line(new Line().text("4").indent(4)))
+                            .item(new Scalar().line("5"))))
+            );
+        }
+    }
+
+    @Nested class givenBlockSequenceOfFlowSequences extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "- [1, 2]\n" +
+                    "- [3, 4, 5]";
+            expected = new Document().node(new Sequence()
+                    .item(new Item().node(new Sequence()
+                            .style(FLOW)
+                            .item(new Scalar().line("1"))
+                            .item(new Scalar().line("2"))))
+                    .item(new Item().node(new Sequence()
+                            .style(FLOW)
                             .item(new Scalar().line("3"))
                             .item(new Scalar().line("4"))
                             .item(new Scalar().line("5"))))

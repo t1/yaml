@@ -53,9 +53,12 @@ import static com.github.t1.yaml.dump.Tools.spaces;
         if (document.node() != null) {
             document.node().guide(new Node.Visitor() {
                 boolean skipNextIndent;
+                boolean skipIndent;
                 int indent = 0;
 
                 private String indent() {
+                    if (skipIndent)
+                        return "";
                     if (skipNextIndent) {
                         skipNextIndent = false;
                         return "";
@@ -70,12 +73,13 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                 @Override public void visit(Sequence sequence) {}
 
                 @Override public void enterSequenceItem(Sequence sequence, Item item) {
-                    out.append(indent());
                     switch (sequence.style()) {
                         case FLOW:
+                            skipIndent = true;
                             out.append((item == sequence.firstItem()) ? "[" : ", ");
                             break;
                         case BLOCK:
+                            out.append(indent());
                             skipNextIndent = !item.nl();
                             indent++;
                             out.append("-").append(item.nl() ? "\n" : " ");
@@ -87,6 +91,7 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                         case FLOW:
                             if (item == sequence.lastItem())
                                 out.append("]");
+                            skipIndent = false;
                             break;
                         case BLOCK:
                             if (item != sequence.lastItem())

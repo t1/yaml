@@ -20,17 +20,18 @@ import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
 import static com.github.t1.yaml.parser.Symbol.BLOCK_SEQUENCE_ENTRY;
-import static com.github.t1.yaml.parser.Symbol.FLOW_MAPPING_START;
-import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Symbol.COMMENT;
-import static com.github.t1.yaml.parser.Symbol.MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Symbol.FLOW_MAPPING_START;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_END;
-import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START;
+import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ITEM_END;
+import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START;
 import static com.github.t1.yaml.parser.Symbol.MAPPING_KEY;
+import static com.github.t1.yaml.parser.Symbol.MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
+import static com.github.t1.yaml.parser.Symbol.WS;
 
 @RequiredArgsConstructor
 public class NodeParser {
@@ -86,6 +87,7 @@ public class NodeParser {
             sequence.item(flowSequenceItem());
         while (more() && next.accept(FLOW_SEQUENCE_ENTRY));
         next.expect(FLOW_SEQUENCE_END);
+        next.skip(WS);
         return sequence;
     }
 
