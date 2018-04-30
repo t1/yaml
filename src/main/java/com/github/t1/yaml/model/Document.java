@@ -6,10 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.stream.Collectors.joining;
-
-@Data
-public class Document {
+public @Data class Document {
     private List<Directive> directives = new ArrayList<>();
     private boolean hasDirectivesEndMarker;
 
@@ -36,8 +33,6 @@ public class Document {
         this.node = Objects.requireNonNull(node);
         return this;
     }
-
-    @Override public String toString() { return new ToStringVisitor(this).toString(); }
 
     public Document canonicalize() {
         if (directives.stream().noneMatch(Directive.YAML_VERSION::matchName))

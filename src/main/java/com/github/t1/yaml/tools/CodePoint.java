@@ -1,4 +1,4 @@
-package com.github.t1.yaml.dump;
+package com.github.t1.yaml.tools;
 
 import lombok.Value;
 

@@ -1,6 +1,6 @@
 package com.github.t1.yaml.parser;
 
-import com.github.t1.yaml.dump.CodePoint;
+import com.github.t1.yaml.tools.CodePoint;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -9,8 +9,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-@RequiredArgsConstructor
-class CodePointReader {
+@RequiredArgsConstructor class CodePointReader {
     private final Reader reader;
 
     Mark mark(int readAheadLimit) { return new Mark(readAheadLimit); }

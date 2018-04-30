@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static test.Helpers.toStringWithoutTrailingNl;
+import static test.Helpers.withoutTrailingNl;
 
 public class AbstractYamlTest {
     ///////////////////////////////////// inputs
@@ -113,7 +113,7 @@ public class AbstractYamlTest {
     interface ThenDocumentToStringIsSameAsInput {
         @Test default void thenDocumentToStringIsSameAsInput() {
             rethrow();
-            assertThat(toStringWithoutTrailingNl(document)).isEqualTo(input);
+            assertThat(withoutTrailingNl(document, Yaml::present)).isEqualTo(input);
         }
 
     }
@@ -121,7 +121,7 @@ public class AbstractYamlTest {
     interface ThenStreamToStringIsSameAsInput {
         @Test default void thenStreamToStringIsSameAsInput() {
             rethrow();
-            assertThat(toStringWithoutTrailingNl(stream)).isEqualTo(input);
+            assertThat(withoutTrailingNl(stream, Yaml::present)).isEqualTo(input);
         }
     }
 

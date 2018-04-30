@@ -1,19 +1,27 @@
-package com.github.t1.yaml.model;
+package com.github.t1.yaml.dump;
 
+import com.github.t1.yaml.model.Alias;
+import com.github.t1.yaml.model.Comment;
+import com.github.t1.yaml.model.Directive;
+import com.github.t1.yaml.model.Document;
+import com.github.t1.yaml.model.Mapping;
 import com.github.t1.yaml.model.Mapping.Entry;
+import com.github.t1.yaml.model.Node;
+import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
+import com.github.t1.yaml.model.Sequence;
 import com.github.t1.yaml.model.Sequence.Item;
 import lombok.RequiredArgsConstructor;
 
-import static com.github.t1.yaml.dump.Tools.spaces;
+import static com.github.t1.yaml.tools.Tools.spaces;
 
-@RequiredArgsConstructor class ToStringVisitor {
+@RequiredArgsConstructor public class Presenter {
     private static final char NL = '\n';
 
     private final Document document;
     private final StringBuilder out = new StringBuilder();
 
-    @Override public String toString() {
+    public String present() {
         directives();
         prefixComments();
         node();
@@ -106,16 +114,16 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                 @Override public void visit(Scalar scalar) {
                     if (scalar.tag() != null)
                         out.append(scalar.tag()).append(' ');
-                    out.append(scalar.style().quote);
+                    out.append(scalar.style().quote());
                 }
 
                 @Override public void enterScalarLine(Scalar node, Line line) {}
 
                 @Override public void visit(Line line) {
-                    out.append(indent()).append(spaces(line.indent));
-                    out.append(line.text);
-                    if (line.comment != null)
-                        append(line.comment);
+                    out.append(indent()).append(spaces(line.indent()));
+                    out.append(line.text());
+                    if (line.comment() != null)
+                        append(line.comment());
                 }
 
                 @Override public void leaveScalarLine(Scalar node, Line line) {
@@ -123,7 +131,7 @@ import static com.github.t1.yaml.dump.Tools.spaces;
                         nl();
                 }
 
-                @Override public void leave(Scalar scalar) { out.append(scalar.style().quote); }
+                @Override public void leave(Scalar scalar) { out.append(scalar.style().quote()); }
 
 
                 @Override public void visit(Mapping mapping) {}

@@ -3,10 +3,10 @@ package test;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.Mapping;
 import com.github.t1.yaml.model.Scalar;
+import com.github.t1.yaml.model.Scalar.Line;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class MappingTest extends AbstractYamlTest {
     @Nested class givenBlockMapping extends SingleDocument {
@@ -125,6 +125,64 @@ class MappingTest extends AbstractYamlTest {
             expected = new Document().node(new Mapping()
                     .entry(new Mapping.Entry().hasNlAfterKey(false).key(new Scalar().line("sky")).value(new Scalar().line("blue")))
                     .entry(new Mapping.Entry().hasNlAfterKey(true).key(new Scalar().line("sea")).value(new Scalar().line("green")))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithIndentedKeys extends SingleDocument {
+        @BeforeEach void setup() {
+            input = " sky: blue\n   sea: green";
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry()
+                            .key(new Scalar().line(new Line().indent(1).text("sky")))
+                            .value(new Scalar().line("blue")))
+                    .entry(new Mapping.Entry()
+                            .key(new Scalar().line(new Line().indent(3).text("sea")))
+                            .value(new Scalar().line("green")))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithIndentedValues extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky:   blue\nsea:     green";
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry()
+                            .key(new Scalar().line("sky"))
+                            .value(new Scalar().line(new Line().indent(2).text("blue"))))
+                    .entry(new Mapping.Entry()
+                            .key(new Scalar().line("sea"))
+                            .value(new Scalar().line(new Line().indent(4).text("green"))))
+            );
+        }
+    }
+
+    @Disabled @Nested class givenBlockMappingWithIndentedKeysAndValues extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky:   blue\n  sea:     green";
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry()
+                            .key(new Scalar().line(new Line().indent(1).text("sky")))
+                            .value(new Scalar().line(new Line().indent(2).text("blue"))))
+                    .entry(new Mapping.Entry()
+                            .key(new Scalar().line(new Line().indent(3).text("sea")))
+                            .value(new Scalar().line(new Line().indent(4).text("green"))))
+            );
+        }
+    }
+
+    @Disabled @Nested class givenBlockMappingWithIndentedMarkedKeysAndValues extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "?  sky:   blue\n?    sea:     green";
+            expected = new Document().node(new Mapping()
+                    .entry(new Mapping.Entry()
+                            .hasMarkedKey(true)
+                            .key(new Scalar().line(new Line().indent(1).text("sky")))
+                            .value(new Scalar().line(new Line().indent(2).text("blue"))))
+                    .entry(new Mapping.Entry()
+                            .hasMarkedKey(true)
+                            .key(new Scalar().line(new Line().indent(3).text("sea")))
+                            .value(new Scalar().line(new Line().indent(4).text("green"))))
             );
         }
     }

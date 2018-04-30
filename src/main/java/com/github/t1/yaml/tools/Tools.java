@@ -1,4 +1,4 @@
-package com.github.t1.yaml.dump;
+package com.github.t1.yaml.tools;
 
 public class Tools {
     // 1000 should be enough

@@ -1,8 +1,9 @@
 package com.github.t1.yaml.model;
 
-import com.github.t1.yaml.dump.CodePoint;
+import com.github.t1.yaml.tools.CodePoint;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public class Scalar extends Node {
     public enum Style {
         PLAIN(""), SINGLE_QUOTED("\'"), DOUBLE_QUOTED("\"");
 
-        final String quote;
+        @Getter final String quote;
     }
 
     @Data

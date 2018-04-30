@@ -11,7 +11,6 @@ import com.github.t1.yaml.model.Sequence.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import static com.github.t1.yaml.dump.Tools.spaces;
 import static com.github.t1.yaml.model.Collection.Style.BLOCK;
 import static com.github.t1.yaml.model.Collection.Style.FLOW;
 import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
@@ -32,6 +31,7 @@ import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
+import static com.github.t1.yaml.tools.Tools.spaces;
 
 @RequiredArgsConstructor
 public class NodeParser {

@@ -1,9 +1,9 @@
 package com.github.t1.yaml.parser;
 
-import com.github.t1.yaml.dump.CodePoint;
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
+import com.github.t1.yaml.tools.CodePoint;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
