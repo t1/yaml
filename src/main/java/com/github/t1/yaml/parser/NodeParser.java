@@ -18,16 +18,16 @@ import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Quotes.PLAIN;
-import static com.github.t1.yaml.parser.Symbol.BLOCK_SEQUENCE_ENTRY;
+import static com.github.t1.yaml.parser.Symbol.COLON;
 import static com.github.t1.yaml.parser.Symbol.COMMENT;
 import static com.github.t1.yaml.parser.Symbol.FLOW_MAPPING_START;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_END;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ITEM_END;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START;
-import static com.github.t1.yaml.parser.Symbol.MAPPING_KEY;
-import static com.github.t1.yaml.parser.Symbol.MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Symbol.MINUS;
 import static com.github.t1.yaml.parser.Symbol.NL;
+import static com.github.t1.yaml.parser.Symbol.QUESTION_MARK;
 import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
@@ -109,7 +109,7 @@ public class NodeParser {
     }
 
     private Item blockSequenceItem() {
-        next.expect(BLOCK_SEQUENCE_ENTRY);
+        next.expect(MINUS);
         boolean nlItem = next.accept(NL);
         if (!nlItem) {
             next.expect(SPACE);
@@ -123,7 +123,7 @@ public class NodeParser {
     }
 
     private boolean isBlockMapping() {
-        if (next.is(MAPPING_KEY))
+        if (next.is(QUESTION_MARK))
             return true;
         String token = next.peekUntil(BLOCK_MAPPING_VALUE);
         return token != null && token.length() >= 1 && !token.contains("\n");
@@ -134,12 +134,12 @@ public class NodeParser {
         while (next.more()) {
             Mapping.Entry entry = new Mapping.Entry();
 
-            entry.hasMarkedKey(next.accept(MAPPING_KEY));
+            entry.hasMarkedKey(next.accept(QUESTION_MARK));
             if (entry.hasMarkedKey())
                 next.expect(SPACE);
             entry.key(scalar(BLOCK_MAPPING_VALUE));
 
-            next.expect(MAPPING_VALUE);
+            next.expect(COLON);
             entry.hasNlAfterKey(next.accept(NL));
             if (!entry.hasNlAfterKey())
                 next.expect(SPACE);

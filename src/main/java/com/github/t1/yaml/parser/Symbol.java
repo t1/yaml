@@ -16,9 +16,9 @@ import static java.util.Collections.singletonList;
 @RequiredArgsConstructor
 public enum Symbol implements Token, Predicate<CodePoint> {
     BOM('\uFEFF'),             // 3 c-byte-order-mark
-    BLOCK_SEQUENCE_ENTRY('-'), // 4 c-sequence-entry
-    MAPPING_KEY('?'),          // 5 c-mapping-key
-    MAPPING_VALUE(':'),        // 6 c-mapping-value
+    MINUS('-'),                // 4 c-sequence-entry
+    QUESTION_MARK('?'),        // 5 c-mapping-key
+    COLON(':'),                // 6 c-mapping-value
     FLOW_SEQUENCE_ENTRY(','),  // 7 c-collect-entry
     FLOW_SEQUENCE_START('['),  // 8 c-sequence-start
     FLOW_SEQUENCE_END(']'),    // 9 c-sequence-end
@@ -38,22 +38,11 @@ public enum Symbol implements Token, Predicate<CodePoint> {
     SINGLE_QUOTE('\''),        // 18 c-single-quote
     DOUBLE_QUOTE('\"'),        // 19 c-double-quote
 
-    /////////////////////////// compounds
-    SCALAR_END(NL.or(COMMENT)),
-    FLOW_SEQUENCE_ITEM_END(FLOW_SEQUENCE_ENTRY.or(FLOW_SEQUENCE_END)),
-
-    ///////////////////////////// same symbol, other semantics
-    MINUS('-'),
+    /////////////////////////// not in spec
     DOT('.'),
-
-    /////////////////////////// experiments
     WS(Character::isWhitespace),
-    // ALPHA(Character::isAlphabetic),
-    // NUMBER(Character::isDigit),
-    // INDICATOR(c -> CodePoint.of(c).matchAny("-?:,[]{}#&*!|>'\"%@`”")),
-
-    ///////////////////////////////////////////////////////////
-    ;
+    SCALAR_END(NL.or(COMMENT)),
+    FLOW_SEQUENCE_ITEM_END(FLOW_SEQUENCE_ENTRY.or(FLOW_SEQUENCE_END));
 
     private P or(Symbol that) { return or(that.predicate); }
 
