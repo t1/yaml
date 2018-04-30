@@ -133,17 +133,19 @@ public class NodeParser {
         Mapping mapping = new Mapping();
         while (next.more()) {
             Mapping.Entry entry = new Mapping.Entry();
+
             entry.hasMarkedKey(next.accept(MAPPING_KEY));
             if (entry.hasMarkedKey())
-                next.count(SPACE);
+                next.expect(SPACE);
             entry.key(scalar(BLOCK_MAPPING_VALUE));
+
             next.expect(MAPPING_VALUE);
-            if (next.accept(NL))
-                entry.hasNlAfterKey(true);
-            else
+            entry.hasNlAfterKey(next.accept(NL));
+            if (!entry.hasNlAfterKey())
                 next.expect(SPACE);
             Scalar value = scalar(SCALAR_END);
             entry.value(value);
+
             if (isComment())
                 comment(value, true);
             else if (next.more())

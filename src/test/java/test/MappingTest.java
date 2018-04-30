@@ -5,7 +5,6 @@ import com.github.t1.yaml.model.Mapping;
 import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 
 class MappingTest extends AbstractYamlTest {
@@ -65,6 +64,46 @@ class MappingTest extends AbstractYamlTest {
             expected = new Document().node(new Mapping()
                     .entry(new Scalar().doubleQuoted().line("sky"), new Scalar().doubleQuoted().line("blue"))
                     .entry(new Scalar().doubleQuoted().line("sea"), new Scalar().doubleQuoted().line("green"))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithSingleQuotedKey extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "'sky': blue\n'sea': green";
+            expected = new Document().node(new Mapping()
+                    .entry(new Scalar().singleQuoted().line("sky"), "blue")
+                    .entry(new Scalar().singleQuoted().line("sea"), "green")
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithSingleQuotedValue extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky: 'blue'\nsea: 'green'";
+            expected = new Document().node(new Mapping()
+                    .entry("sky", new Scalar().singleQuoted().line("blue"))
+                    .entry("sea", new Scalar().singleQuoted().line("green"))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithSingleQuotedKeyAndValue extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "'sky': 'blue'\n'sea': 'green'";
+            expected = new Document().node(new Mapping()
+                    .entry(new Scalar().singleQuoted().line("sky"), new Scalar().singleQuoted().line("blue"))
+                    .entry(new Scalar().singleQuoted().line("sea"), new Scalar().singleQuoted().line("green"))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingWithSpacesInSingleQuotedKeyAndValue extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "' sky high ': ' light blue '\n' sea deep ': ' dark green '";
+            expected = new Document().node(new Mapping()
+                    .entry(new Scalar().singleQuoted().line(" sky high "), new Scalar().singleQuoted().line(" light blue "))
+                    .entry(new Scalar().singleQuoted().line(" sea deep "), new Scalar().singleQuoted().line(" dark green "))
             );
         }
     }
@@ -157,9 +196,9 @@ class MappingTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled @Nested class givenBlockMappingWithIndentedKeysAndValues extends SingleDocument {
+    @Nested class givenBlockMappingWithIndentedKeysAndValues extends SingleDocument {
         @BeforeEach void setup() {
-            input = "sky:   blue\n  sea:     green";
+            input = " sky:   blue\n   sea:     green";
             expected = new Document().node(new Mapping()
                     .entry(new Mapping.Entry()
                             .key(new Scalar().line(new Line().indent(1).text("sky")))
@@ -171,7 +210,7 @@ class MappingTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled @Nested class givenBlockMappingWithIndentedMarkedKeysAndValues extends SingleDocument {
+    @Nested class givenBlockMappingWithIndentedMarkedKeysAndValues extends SingleDocument {
         @BeforeEach void setup() {
             input = "?  sky:   blue\n?    sea:     green";
             expected = new Document().node(new Mapping()
