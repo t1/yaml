@@ -96,6 +96,33 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
+    @Nested class givenBlockSequenceOfBlockSequencesOfBlockSequences extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "-\n" +
+                    "  -\n" +
+                    "    - 1\n" +
+                    "    - 2\n" +
+                    "-\n" +
+                    "  -\n" +
+                    "    - 3\n" +
+                    "    -     4\n" +
+                    "    - 5";
+            expected = new Document().node(new Sequence()
+                    .item(new Item().nl(true).node(new Sequence()
+                            .item(new Item().nl(true).node(new Sequence()
+                                    .item(new Scalar().line("1"))
+                                    .item(new Scalar().line("2"))
+                            ))))
+                    .item(new Item().nl(true).node(new Sequence()
+                            .item(new Item().nl(true).node(new Sequence()
+                                    .item(new Scalar().line("3"))
+                                    .item(new Scalar().line(new Line().text("4").indent(4)))
+                                    .item(new Scalar().line("5"))
+                            ))))
+            );
+        }
+    }
+
     @Nested class givenBlockSequenceOfFlowSequences extends SingleDocument {
         @BeforeEach void setup() {
             input = "- [1, 2]\n" +

@@ -1,6 +1,5 @@
 package test;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +32,7 @@ import static test.Helpers.parseAndCheck;
                         "? !!str \"rbi\": !!str \"147\"\n");
     }
 
-    @Disabled @Test void spec_2_3_Mapping_Scalars_to_Sequences() {
+    @Test void spec_2_3_Mapping_Scalars_to_Sequences() {
         parseAndCheck("" +
                         "american:\n" +
                         "  - Boston Red Sox\n" +
@@ -44,6 +43,15 @@ import static test.Helpers.parseAndCheck;
                         "  - Chicago Cubs\n" +
                         "  - Atlanta Braves"
                 , "" +
-                        "");
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "? !!str \"american\":\n" +
+                        "  - !!str \"Boston Red Sox\"\n" +
+                        "  - !!str \"Detroit Tigers\"\n" +
+                        "  - !!str \"New York Yankees\"\n" +
+                        "? !!str \"national\":\n" +
+                        "  - !!str \"New York Mets\"\n" +
+                        "  - !!str \"Chicago Cubs\"\n" +
+                        "  - !!str \"Atlanta Braves\"\n");
     }
 }

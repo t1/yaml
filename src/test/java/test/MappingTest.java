@@ -5,6 +5,8 @@ import com.github.t1.yaml.model.Mapping;
 import com.github.t1.yaml.model.Mapping.Entry;
 import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
+import com.github.t1.yaml.model.Sequence;
+import com.github.t1.yaml.model.Sequence.Item;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 
@@ -290,6 +292,89 @@ class MappingTest extends AbstractYamlTest {
                             .value(new Mapping()
                                     .entry("color", "blue")
                                     .entry("depth", "high")
+                            ))
+                    .entry(new Entry()
+                            .key(new Scalar().line("sea"))
+                            .hasNlAfterKey(true)
+                            .value(new Mapping()
+                                    .entry("color", "green")
+                                    .entry("depth", "deep")
+                            ))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingToBlockMappingToBlockMapping extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky:\n" +
+                    "  properties:\n" +
+                    "    color: blue\n" +
+                    "    depth: high\n" +
+                    "  size:\n" +
+                    "    width: 100%\n" +
+                    "sea:\n" +
+                    "  properties:\n" +
+                    "    color: green\n" +
+                    "    depth: deep";
+            expected = new Document().node(new Mapping()
+                    .entry(new Entry()
+                            .key(new Scalar().line("sky"))
+                            .hasNlAfterKey(true)
+                            .value(new Mapping()
+                                    .entry(new Entry()
+                                            .key(new Scalar().line("properties"))
+                                            .hasNlAfterKey(true)
+                                            .value(new Mapping()
+                                                    .entry("color", "blue")
+                                                    .entry("depth", "high")))
+                                    .entry(new Entry()
+                                            .key(new Scalar().line("size"))
+                                            .hasNlAfterKey(true)
+                                            .value(new Mapping()
+                                                    .entry("width", "100%")
+                                            )
+                                    )
+                            ))
+                    .entry(new Entry()
+                            .key(new Scalar().line("sea"))
+                            .hasNlAfterKey(true)
+                            .value(new Mapping()
+                                    .entry(new Entry()
+                                            .key(new Scalar().line("properties"))
+                                            .hasNlAfterKey(true)
+                                            .value(new Mapping()
+                                                    .entry("color", "green")
+                                                    .entry("depth", "deep")))
+                            ))
+            );
+        }
+    }
+
+    @Nested class givenBlockMappingToSequenceOfBlockMapping extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "sky:\n" +
+                    "  -\n" +
+                    "    color: blue\n" +
+                    "    depth: high\n" +
+                    "  -\n" +
+                    "    foo: bar\n" +
+                    "sea:\n" +
+                    "  color: green\n" +
+                    "  depth: deep";
+            expected = new Document().node(new Mapping()
+                    .entry(new Entry()
+                            .key(new Scalar().line("sky"))
+                            .hasNlAfterKey(true)
+                            .value(new Sequence()
+                                    .item(new Item()
+                                            .nl(true)
+                                            .node(new Mapping()
+                                                    .entry("color", "blue")
+                                                    .entry("depth", "high")))
+                                    .item(new Item()
+                                            .nl(true)
+                                            .node(new Mapping()
+                                                    .entry("foo", "bar")))
                             ))
                     .entry(new Entry()
                             .key(new Scalar().line("sea"))
