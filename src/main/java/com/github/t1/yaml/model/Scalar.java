@@ -14,9 +14,8 @@ import static com.github.t1.yaml.model.Scalar.Style.PLAIN;
 import static com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED;
 import static java.util.stream.Collectors.joining;
 
-@Data
 @EqualsAndHashCode(callSuper = true)
-public class Scalar extends Node {
+public @Data class Scalar extends Node {
     @RequiredArgsConstructor
     public enum Style {
         PLAIN(""), SINGLE_QUOTED("\'"), DOUBLE_QUOTED("\"");
@@ -24,8 +23,7 @@ public class Scalar extends Node {
         @Getter final String quote;
     }
 
-    @Data
-    public static class Line {
+    public static @Data class Line {
         int indent = 0;
         String text = "";
         Comment comment;

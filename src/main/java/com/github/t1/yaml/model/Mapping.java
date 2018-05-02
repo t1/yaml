@@ -6,9 +6,8 @@ import lombok.EqualsAndHashCode;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 @EqualsAndHashCode(callSuper = true)
-public class Mapping extends Collection {
+public @Data class Mapping extends Collection {
     private List<Entry> entries = new ArrayList<>();
 
     public Mapping entry(String key, String value) { return entry(new Scalar().line(key), value); }
@@ -16,6 +15,8 @@ public class Mapping extends Collection {
     public Mapping entry(Scalar key, String value) { return entry(key, new Scalar().line(value)); }
 
     public Mapping entry(String key, Scalar value) { return entry(new Scalar().line(key), value); }
+
+    public Mapping entry(String key, Node value) { return entry(new Scalar().line(key), value); }
 
     public Mapping entry(Node key, Node value) { return entry(new Entry().key(key).value(value)); }
 
@@ -40,8 +41,7 @@ public class Mapping extends Collection {
 
     public Entry lastEntry() { return entries.get(entries.size() - 1); }
 
-    @Data
-    public static class Entry {
+    public static @Data class Entry {
         private boolean hasMarkedKey = false;
         private boolean hasNlAfterKey = false;
         private Node key;

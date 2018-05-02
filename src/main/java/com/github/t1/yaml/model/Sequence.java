@@ -6,10 +6,9 @@ import lombok.EqualsAndHashCode;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 @EqualsAndHashCode(callSuper = true)
-public class Sequence extends Collection {
-    @Data public static class Item {
+public @Data class Sequence extends Collection {
+    public static @Data class Item {
         boolean nl;
         Node node;
     }
