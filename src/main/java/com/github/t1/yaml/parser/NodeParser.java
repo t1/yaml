@@ -131,27 +131,31 @@ public class NodeParser {
 
     private Mapping blockMapping() {
         Mapping mapping = new Mapping();
-        while (next.more()) {
+        do
+        {
             Mapping.Entry entry = new Mapping.Entry();
 
             entry.hasMarkedKey(next.accept(QUESTION_MARK));
             if (entry.hasMarkedKey())
                 next.expect(SPACE);
-            entry.key(scalar(BLOCK_MAPPING_VALUE));
+            entry.key(scalar(BLOCK_MAPPING_VALUE)); // TODO key node()
 
             next.expect(COLON);
             entry.hasNlAfterKey(next.accept(NL));
-            if (!entry.hasNlAfterKey())
+            if (!entry.hasNlAfterKey()) {
                 next.expect(SPACE);
-            Scalar value = scalar(SCALAR_END);
+                nesting.skipNext(true);
+            }
+            nesting.up();
+            Node value = node();
+            nesting.down();
             entry.value(value);
 
-            if (isComment())
-                comment(value, true);
-            else if (next.more())
-                next.expect(NL);
+            if (value instanceof Scalar && isComment()) // TODO comments for non-scalars
+                comment((Scalar) value, true);
             mapping.entry(entry);
         }
+        while (next.more() && nesting.accept());
         return mapping;
     }
 
@@ -165,8 +169,8 @@ public class NodeParser {
 
     private Scalar scalar() {
         Scalar scalar = scalar(SCALAR_END);
+        boolean lineContinue = !next.accept(NL);
         if (scalar.style() == Style.PLAIN) {
-            boolean lineContinue = !next.accept(NL);
             while (more() && nesting.accept()) {
                 if (isFlowSequence())
                     throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence " + next);

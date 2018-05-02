@@ -106,7 +106,13 @@ import static com.github.t1.yaml.tools.Tools.spaces;
 
         @Override public void enterMappingKey(Entry entry, Node key) { out.append(entry.hasMarkedKey() ? "? " : ""); }
 
-        @Override public void enterMappingValue(Entry entry, Node key) { out.append(":").append(entry.hasNlAfterKey() ? NL : ' '); }
+        @Override public void enterMappingValue(Entry entry, Node key) {
+            indent++;
+            skipNextIndent = !entry.hasNlAfterKey();
+            out.append(":").append(entry.hasNlAfterKey() ? NL : ' ');
+        }
+
+        @Override public void leaveMappingValue(Entry entry, Node key) { indent--; }
 
         @Override public void leaveMappingEntry(Mapping node, Entry entry) {
             if (entry != node.lastEntry())
