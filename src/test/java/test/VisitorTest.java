@@ -3,11 +3,11 @@ package test;
 import com.github.t1.yaml.model.Alias;
 import com.github.t1.yaml.model.Mapping;
 import com.github.t1.yaml.model.Mapping.Entry;
-import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
 import com.github.t1.yaml.model.Sequence;
 import com.github.t1.yaml.model.Sequence.Item;
+import com.github.t1.yaml.model.Visitor;
 import helpers.MockitoExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class) class VisitorTest {
-    @Mock private Node.Visitor visitor;
+    @Mock private Visitor visitor;
 
     @AfterEach void tearDown() {
         verifyNoMoreInteractions(visitor);

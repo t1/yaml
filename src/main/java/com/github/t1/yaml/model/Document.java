@@ -48,4 +48,43 @@ public @Data class Document {
     public boolean isEmpty() { return node == null && !hasDirectivesEndMarker; }
 
     public boolean hasDirectives() { return !directives.isEmpty(); }
+
+
+    public void guide(Visitor visitor) {
+        visitor.visit(this);
+
+        if (!directives.isEmpty() || hasDirectivesEndMarker)
+            guideToDirectives(visitor);
+
+        for (Comment prefixComment : prefixComments)
+            visitor.visitPrefixComment(prefixComment);
+
+        if (node != null)
+            guideToBody(visitor);
+
+        if (hasDocumentEndMarker)
+            guideToDocumentEnd(visitor);
+
+        visitor.leave(this);
+    }
+
+    private void guideToDirectives(Visitor visitor) {
+        visitor.enterDirectives(this);
+        for (Directive directive : directives)
+            visitor.visit(directive);
+        visitor.leaveDirectives(this);
+    }
+
+    private void guideToBody(Visitor visitor) {
+        visitor.enterBody(node);
+        node.guide(visitor);
+        visitor.leaveBody(node);
+    }
+
+    private void guideToDocumentEnd(Visitor visitor) {
+        visitor.enterDocumentEnd();
+        if (suffixComment != null)
+            visitor.visitSuffixCommend(suffixComment);
+        visitor.leaveDocumentEnd();
+    }
 }
