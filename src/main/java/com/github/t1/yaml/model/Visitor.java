@@ -2,6 +2,11 @@ package com.github.t1.yaml.model;
 
 @SuppressWarnings("unused")
 public interface Visitor {
+    default void visit(Stream stream) {}
+
+    default void leave(Stream stream) {}
+
+
     default void visit(Document document) {}
 
     default void visitPrefixComment(Comment prefixComment) {}

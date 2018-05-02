@@ -9,5 +9,5 @@ public class Directive {
     private String name;
     private String parameters;
 
-    boolean matchName(Directive that) { return name.equals(that.name); }
+    public boolean matchName(Directive that) { return name.equals(that.name); }
 }

@@ -1,5 +1,6 @@
 package com.github.t1.yaml;
 
+import com.github.t1.yaml.dump.Canonicalizer;
 import com.github.t1.yaml.dump.Presenter;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.Stream;
@@ -9,8 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.io.Reader;
-
-import static java.util.stream.Collectors.joining;
 
 public class Yaml {
     public static Document parseFirst(InputStream inputStream) { return parseFirst(new DocumentParser(inputStream)); }
@@ -54,7 +53,7 @@ public class Yaml {
     }
 
 
-    public static String present(Document document) { return new Presenter(document).present(); }
+    public static String present(Stream stream) { return new Presenter().present(stream); }
 
-    public static String present(Stream stream) { return stream.documents().stream().map(Yaml::present).collect(joining()); }
+    public static void canonicalize(Stream stream) { stream.guide(new Canonicalizer()); }
 }

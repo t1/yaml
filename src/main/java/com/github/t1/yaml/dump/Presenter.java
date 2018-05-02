@@ -11,6 +11,7 @@ import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
 import com.github.t1.yaml.model.Sequence;
 import com.github.t1.yaml.model.Sequence.Item;
+import com.github.t1.yaml.model.Stream;
 import com.github.t1.yaml.model.Visitor;
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +20,6 @@ import static com.github.t1.yaml.tools.Tools.spaces;
 @RequiredArgsConstructor public class Presenter {
     private static final char NL = '\n';
 
-    private final Document document;
     private final StringBuilder out = new StringBuilder();
     private Visitor visitor = new Visitor() {
         boolean skipNextIndent;
@@ -122,12 +122,12 @@ import static com.github.t1.yaml.tools.Tools.spaces;
         private StringBuilder append(Comment comment) {
             return out.append(spaces(comment.indent())).append("# ").append(comment.text());
         }
+
+        private void nl() { out.append(NL); }
     };
 
-    public String present() {
-        document.guide(visitor);
+    public String present(Stream stream) {
+        stream.guide(visitor);
         return out.toString();
     }
-
-    private void nl() { out.append(NL); }
 }

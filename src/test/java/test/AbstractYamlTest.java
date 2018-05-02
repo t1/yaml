@@ -1,6 +1,7 @@
 package test;
 
 import com.github.t1.yaml.Yaml;
+import com.github.t1.yaml.dump.Canonicalizer;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.Stream;
 import com.github.t1.yaml.parser.YamlParseException;
@@ -23,9 +24,16 @@ public class AbstractYamlTest {
 
     private static Stream expectedStream() { return new Stream().document(expected); }
 
-    private static Stream expectedCanonicalStream() { return expectedStream().canonicalize(); }
+    private static Stream expectedCanonicalStream() {
+        Stream stream = expectedStream();
+        Yaml.canonicalize(stream);
+        return stream;
+    }
 
-    private static Document expectedCanonicalDocument() { return expected.canonicalize(); }
+    private static Document expectedCanonicalDocument() {
+        expected.guide(new Canonicalizer());
+        return expected;
+    }
 
     ///////////////////////////////////// outputs
     private static Stream stream;
@@ -90,7 +98,8 @@ public class AbstractYamlTest {
         @Test default void thenCanonicalStreamIsExpected() {
             if (thrown != null)
                 throw thrown;
-            assertThat(stream.canonicalize()).isEqualTo(expectedCanonicalStream());
+            Yaml.canonicalize(stream);
+            assertThat(stream).isEqualTo(expectedCanonicalStream());
         }
     }
 
@@ -106,22 +115,22 @@ public class AbstractYamlTest {
     interface ThenIsExpectedCanonicalDocument {
         @Test default void thenCanonicalDocumentIsExpected() {
             rethrow();
-            assertThat(document.canonicalize()).isEqualTo(expectedCanonicalDocument());
+            document.guide(new Canonicalizer());
+            assertThat(document).isEqualTo(expectedCanonicalDocument());
         }
     }
 
     interface ThenDocumentToStringIsSameAsInput {
         @Test default void thenDocumentToStringIsSameAsInput() {
             rethrow();
-            assertThat(withoutTrailingNl(document, Yaml::present)).isEqualTo(input);
+            assertThat(withoutTrailingNl(new Stream().document(document))).isEqualTo(input);
         }
-
     }
 
     interface ThenStreamToStringIsSameAsInput {
         @Test default void thenStreamToStringIsSameAsInput() {
             rethrow();
-            assertThat(withoutTrailingNl(stream, Yaml::present)).isEqualTo(input);
+            assertThat(withoutTrailingNl(stream)).isEqualTo(input);
         }
     }
 

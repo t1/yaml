@@ -2,6 +2,7 @@ package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Mapping;
+import com.github.t1.yaml.model.Mapping.Entry;
 import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
@@ -132,31 +133,40 @@ public class NodeParser {
     private Mapping blockMapping() {
         Mapping mapping = new Mapping();
         do
-        {
-            Mapping.Entry entry = new Mapping.Entry();
-
-            entry.hasMarkedKey(next.accept(QUESTION_MARK));
-            if (entry.hasMarkedKey())
-                next.expect(SPACE);
-            entry.key(scalar(BLOCK_MAPPING_VALUE)); // TODO key node()
-
-            next.expect(COLON);
-            entry.hasNlAfterKey(next.accept(NL));
-            if (!entry.hasNlAfterKey()) {
-                next.expect(SPACE);
-                nesting.skipNext(true);
-            }
-            nesting.up();
-            Node value = node();
-            nesting.down();
-            entry.value(value);
-
-            if (value instanceof Scalar && isComment()) // TODO comments for non-scalars
-                comment((Scalar) value, true);
-            mapping.entry(entry);
-        }
+            mapping.entry(blockMappingEntry());
         while (more() && nesting.accept());
         return mapping;
+    }
+
+    private Entry blockMappingEntry() {
+        Entry entry = new Entry();
+        blockMappingKey(entry);
+        blockMappingValue(entry);
+        return entry;
+    }
+
+    private void blockMappingKey(Entry entry) {
+        entry.hasMarkedKey(next.accept(QUESTION_MARK));
+        if (entry.hasMarkedKey())
+            next.expect(SPACE);
+        entry.key(scalar(BLOCK_MAPPING_VALUE)); // TODO key node()
+    }
+
+    private void blockMappingValue(Entry entry) {
+        next.expect(COLON);
+        entry.hasNlAfterKey(next.accept(NL));
+        if (!entry.hasNlAfterKey()) {
+            next.expect(SPACE);
+            nesting.skipNext(true);
+        }
+
+        nesting.up();
+        Node value = node();
+        nesting.down();
+        entry.value(value);
+
+        if (value instanceof Scalar && isComment()) // TODO comments for non-scalars
+            comment((Scalar) value, true);
     }
 
     private boolean isFlowMapping() {

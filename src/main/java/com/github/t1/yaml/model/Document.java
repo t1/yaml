@@ -34,17 +34,6 @@ public @Data class Document {
         return this;
     }
 
-    public Document canonicalize() {
-        if (directives.stream().noneMatch(Directive.YAML_VERSION::matchName))
-            directives.add(Directive.YAML_VERSION);
-        prefixComments.clear();
-        if (node == null)
-            node = new Scalar();
-        node.canonicalize();
-        suffixComment = null;
-        return this;
-    }
-
     public boolean isEmpty() { return node == null && !hasDirectivesEndMarker; }
 
     public boolean hasDirectives() { return !directives.isEmpty(); }

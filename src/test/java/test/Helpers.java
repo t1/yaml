@@ -4,8 +4,6 @@ import com.github.t1.yaml.Yaml;
 import com.github.t1.yaml.model.Stream;
 import lombok.experimental.UtilityClass;
 
-import java.util.function.Function;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @UtilityClass final class Helpers {
@@ -27,16 +25,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
     static void parseAndCheck(String input, String expectedCanonical) {
         Stream stream = parse(input);
-        assertThat(withoutTrailingNl(stream, Yaml::present)).describedAs("stream presentation")
+        assertThat(withoutTrailingNl(stream)).describedAs("stream presentation")
                 .isEqualTo(removeMagic(input));
-        assertThat(Yaml.present(stream.canonicalize())).describedAs("canonicalized stream presentation")
+        Yaml.canonicalize(stream);
+        assertThat(Yaml.present(stream)).describedAs("canonicalized stream presentation")
                 .isEqualTo(expectedCanonical);
     }
 
-    static <T> String withoutTrailingNl(T object, Function<T, String> presenter) {
-        if (object == null)
+    static String withoutTrailingNl(Stream stream) {
+        if (stream == null)
             return null;
-        String string = presenter.apply(object);
+        String string = Yaml.present(stream);
         if (!string.isEmpty() && string.charAt(string.length() - 1) == '\n')
             string = string.substring(0, string.length() - 1);
         return string;

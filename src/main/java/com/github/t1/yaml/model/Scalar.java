@@ -54,6 +54,8 @@ public @Data class Scalar extends Node {
         return this;
     }
 
+    public boolean isEmpty() { return lines.isEmpty(); }
+
     public Line lastLine() {
         if (lines.isEmpty())
             line("");
@@ -68,18 +70,6 @@ public @Data class Scalar extends Node {
             visitor.leaveScalarLine(this, line);
         }
         visitor.leave(this);
-    }
-
-    @Override public void canonicalize() {
-        doubleQuoted();
-        if (!lines.isEmpty())
-            replaceWith(lines.stream().map(Line::text).collect(joining(" ")));
-        this.tag((lines.isEmpty()) ? "!!null" : "!!str");
-    }
-
-    private void replaceWith(String singleLine) {
-        lines.clear();
-        lines.add(new Line().text(singleLine));
     }
 
     public Scalar plain() { return style(PLAIN); }

@@ -34,11 +34,6 @@ public @Data class Sequence extends Collection {
         visitor.leave(this);
     }
 
-    @Override public void canonicalize() {
-        for (Item item : items)
-            item.node.canonicalize();
-    }
-
     public Item firstItem() { return items.get(0); }
 
     public Item lastItem() { return items.get(items.size() - 1); }

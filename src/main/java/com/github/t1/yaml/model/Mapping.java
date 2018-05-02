@@ -35,10 +35,6 @@ public @Data class Mapping extends Collection {
         visitor.leave(this);
     }
 
-    public void canonicalize() {
-        entries.forEach(Entry::canonicalize);
-    }
-
     public Entry lastEntry() { return entries.get(entries.size() - 1); }
 
     public static @Data class Entry {
@@ -54,13 +50,6 @@ public @Data class Mapping extends Collection {
             visitor.enterMappingValue(this, value);
             value.guide(visitor);
             visitor.leaveMappingValue(this, value);
-        }
-
-        void canonicalize() {
-            hasMarkedKey(true);
-            // hasNlAfterKey(true);
-            key.canonicalize();
-            value.canonicalize();
         }
     }
 }

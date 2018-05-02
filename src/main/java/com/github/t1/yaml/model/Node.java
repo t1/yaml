@@ -7,7 +7,5 @@ public abstract @Data class Node {
     private String spacing;
     private String lineWrapping;
 
-    public void guide(Visitor visitor) {}
-
-    public void canonicalize() {}
+    abstract void guide(Visitor visitor);
 }
