@@ -129,8 +129,7 @@ import static test.Helpers.parseAndCheck;
                         "- !!str \"St Louis Cardinals\"\n");
     }
 
-    // TODO colon in value
-    @Disabled @Test void spec_2_8_Play_by_Play_Feed_from_a_Game() {
+    @Test void spec_2_8_Play_by_Play_Feed_from_a_Game() {
         parseAndCheck("" +
                         "---\n" +
                         "time: 20:03:20\n" +
@@ -143,7 +142,17 @@ import static test.Helpers.parseAndCheck;
                         "action: grand slam\n" +
                         "..."
                 , "" +
-                        "");
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "? !!str \"time\": !!str \"20:03:20\"\n" +
+                        "? !!str \"player\": !!str \"Sammy Sosa\"\n" +
+                        "? !!str \"action\": !!str \"strike (miss)\"\n" +
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "? !!str \"time\": !!str \"20:03:47\"\n" +
+                        "? !!str \"player\": !!str \"Sammy Sosa\"\n" +
+                        "? !!str \"action\": !!str \"grand slam\"\n");
     }
 
     @Test void spec_2_9_Single_Document_with_Two_Comments() {
@@ -523,13 +532,17 @@ import static test.Helpers.parseAndCheck;
                         "? !!str \"User\": !!str \"ed\"\n" +
                         "? !!str \"Warning\":\n" +
                         "!!str \"  This is an error message for the log file\"\n" + // TODO indent is not part of line
-                        "? !!str \"---\n" + // TODO end of document
-                        "Time\": !!str \"2001-11-23 15:02:31 -5\"\n" + // TODO recognize timestamp (tag)
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "? !!str \"Time\": !!str \"2001-11-23 15:02:31 -5\"\n" + // TODO recognize timestamp (tag)
                         "? !!str \"User\": !!str \"ed\"\n" +
                         "? !!str \"Warning\":\n" +
                         "!!str \"  A slightly different error message.\"\n" + // TODO indent is not part of line
-                        "? !!str \"---\n" + // TODO end of document
-                        "Date\": !!str \"2001-11-23 15:03:17 -5\"\n" + // TODO recognize timestamp (tag)
+                        "...\n" +
+                        "%YAML 1.2\n" +
+                        "---\n" +
+                        "? !!str \"Date\": !!str \"2001-11-23 15:03:17 -5\"\n" + // TODO recognize timestamp (tag)
                         "? !!str \"User\": !!str \"ed\"\n" +
                         "? !!str \"Fatal\":\n" +
                         "!!str \"  Unknown variable \"bar\"\"\n" + // TODO indent is not part of line

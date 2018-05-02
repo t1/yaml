@@ -155,7 +155,7 @@ public class NodeParser {
                 comment((Scalar) value, true);
             mapping.entry(entry);
         }
-        while (next.more() && nesting.accept());
+        while (more() && nesting.accept());
         return mapping;
     }
 
