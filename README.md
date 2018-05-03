@@ -1,8 +1,8 @@
-# About Yaml
+# About
 
 I _love_ [YAML](http://yaml.org). It's more compact than JSON and more powerful than XML... and that's saying a lot!
 
-This project tries to add some missing features to YAML:
+I started this project to extend my programming skills by writing a complex parser, and by the way add some missing features to YAML:
 
 1. A **DOM** (document object model) so a document can be manipulated in a generic manner
 
@@ -34,6 +34,7 @@ Comments are preserved, before documents, in documents, and after the document-e
 * Removes comments
 * Adds tags
 * Removes documents without a node
+* Concatenates multi-line literals
 
 # Normalization
 
