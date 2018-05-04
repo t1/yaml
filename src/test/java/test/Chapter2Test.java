@@ -305,8 +305,7 @@ import static test.Helpers.parseAndCheck;
                         "hex esc: \"\\x0d\\x0a is \\r\\n\"\n" +
                         // "\n" + // TODO allow empty line
                         "single: '\"Howdy!\" he cried.'\n" +
-                        "quoted: ' # Not a comment.'\n" + // TODO escape single quotes by doubling
-                        // "quoted: ' # Not a ''comment''.'\n" +
+                        "quoted: ' # Not a ''comment''.'\n" +
                         "tie-fighter: '|\\-*-/|'"
                 , "" +
                         "%YAML 1.2\n" +
@@ -315,7 +314,7 @@ import static test.Helpers.parseAndCheck;
                         "? !!str \"control\": !!str \"\\b1998\\t1999\\t2000\\n\"\n" +
                         "? !!str \"hex esc\": !!str \"\\x0d\\x0a is \\r\\n\"\n" +
                         "? !!str \"single\": !!str \"\"Howdy!\" he cried.\"\n" +
-                        "? !!str \"quoted\": !!str \" # Not a comment.\"\n" +
+                        "? !!str \"quoted\": !!str \" # Not a 'comment'.\"\n" +
                         "? !!str \"tie-fighter\": !!str \"|\\-*-/|\"\n");
     }
 

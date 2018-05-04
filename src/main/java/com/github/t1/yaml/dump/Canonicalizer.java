@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import static com.github.t1.yaml.model.Directive.YAML_VERSION;
+import static com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED;
 import static java.util.stream.Collectors.joining;
 
 @RequiredArgsConstructor
@@ -30,13 +31,15 @@ public class Canonicalizer implements Visitor {
     }
 
     @Override public void visit(Scalar scalar) {
-        scalar.doubleQuoted();
         List<Line> lines = scalar.lines();
         if (!lines.isEmpty()) {
             String singleLine = lines.stream().map(Line::text).collect(joining(" "));
+            if (scalar.style() == SINGLE_QUOTED)
+                singleLine = singleLine.replace("''", "'");
             lines.clear();
             lines.add(new Line().text(singleLine));
         }
+        scalar.doubleQuoted();
     }
 
     @Override public void leave(Scalar scalar) {

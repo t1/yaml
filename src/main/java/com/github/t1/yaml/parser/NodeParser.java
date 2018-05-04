@@ -205,12 +205,8 @@ public class NodeParser {
     private Scalar scalar(Token end) {
         int indent = next.count(SPACE);
         Quotes quotes = Quotes.recognize(next);
-        return new Scalar()
-                .style(quotes.style)
-                .line(new Line()
-                        .indent(indent)
-                        .text((quotes == PLAIN) ? next.readUntil(end) : quotes.scan(next))
-                );
+        return new Scalar().style(quotes.style)
+                .line(new Line().indent(indent).text(quotes.scan(next, end)));
     }
 
     private boolean isComment() { return next.accept(COMMENT); }
