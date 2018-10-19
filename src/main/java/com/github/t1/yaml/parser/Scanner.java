@@ -15,7 +15,7 @@ import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.WS;
 import static java.util.Collections.singletonList;
 
-@RequiredArgsConstructor class Scanner {
+@RequiredArgsConstructor public class Scanner {
     /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832 */
     private static final int MAX_LOOK_AHEAD = 1024;
 
@@ -23,14 +23,14 @@ import static java.util.Collections.singletonList;
     private int position = 1;
     private int lineNumber = 1;
 
-    Scanner(Reader reader) { this(new CodePointReader(reader)); }
+    public Scanner(Reader reader) { this(new CodePointReader(reader)); }
 
-    Scanner(String text) { this(new StringReader(text)); }
+    public Scanner(String text) { this(new StringReader(text)); }
 
 
-    Scanner expect(String string) { return expect(new StringToken(string)); }
+    public Scanner expect(String string) { return expect(new StringToken(string)); }
 
-    Scanner expect(Token token) {
+    public Scanner expect(Token token) {
         for (Predicate<CodePoint> predicate : token.predicates()) {
             String info = this.toString();
             if (!predicate.test(read()))
@@ -39,13 +39,13 @@ import static java.util.Collections.singletonList;
         return this;
     }
 
-    boolean is(CodePoint codePoint) { return codePoint.equals(peek()); }
+    public boolean is(CodePoint codePoint) { return codePoint.equals(peek()); }
 
-    boolean is(String string) {
+    public boolean is(String string) {
         return is(new StringToken(string));
     }
 
-    boolean is(Token token) {
+    public boolean is(Token token) {
         List<Predicate<CodePoint>> predicates = token.predicates();
         List<CodePoint> codePoints = peek(predicates.size());
         assert predicates.size() == codePoints.size();
@@ -55,25 +55,25 @@ import static java.util.Collections.singletonList;
         return true;
     }
 
-    boolean accept(String string) { return accept(new StringToken(string)); }
+    public boolean accept(String string) { return accept(new StringToken(string)); }
 
-    boolean accept(Token token) {
+    public boolean accept(Token token) {
         if (!is(token))
             return false;
         expect(token);
         return true;
     }
 
-    boolean end() { return peek().isEof(); }
+    public boolean end() { return peek().isEof(); }
 
-    boolean more() { return !end(); }
+    public boolean more() { return !end(); }
 
-    void acceptBom() {
+    public void acceptBom() {
         if (is(BOM))
             reader.read();
     }
 
-    CodePoint peek() { return peek(1).get(0); }
+    public CodePoint peek() { return peek(1).get(0); }
 
     private List<CodePoint> peek(int count) {
         try (Mark mark = reader.mark(count)) {
@@ -81,7 +81,7 @@ import static java.util.Collections.singletonList;
         }
     }
 
-    String peekUntil(Token token) {
+    public String peekUntil(Token token) {
         List<Predicate<CodePoint>> predicates = token.predicates();
         try (Mark mark = reader.mark(MAX_LOOK_AHEAD)) {
             StringBuilder out = new StringBuilder();
@@ -101,12 +101,12 @@ import static java.util.Collections.singletonList;
         }
     }
 
-    Optional<CodePoint> peekAfter(int count) {
+    public Optional<CodePoint> peekAfter(int count) {
         List<CodePoint> peek = peek(count + 1);
         return (peek.size() < count + 1) ? Optional.empty() : Optional.of(peek.get(peek.size() - 1));
     }
 
-    CodePoint read() {
+    public CodePoint read() {
         CodePoint codePoint = reader.read();
         if (BOM.test(codePoint))
             throw new YamlParseException("A BOM must not appear inside a document");
@@ -119,49 +119,49 @@ import static java.util.Collections.singletonList;
         return codePoint;
     }
 
-    String read(int count) {
+    public String read(int count) {
         StringBuilder out = new StringBuilder();
         for (int i = 0; i < count; i++)
             out.appendCodePoint(read().value);
         return out.toString();
     }
 
-    String readWord() { return readUntilAndSkip(WS); }
+    public String readWord() { return readUntilAndSkip(WS); }
 
-    String readLine() { return readUntilAndSkip(NL); }
+    public String readLine() { return readUntilAndSkip(NL); }
 
-    Integer readInteger() { return Integer.decode(readWhile(() -> singletonList(codePoint -> codePoint.is(Character::isDigit)))); }
+    public Integer readInteger() { return Integer.decode(readWhile(() -> singletonList(codePoint -> codePoint.is(Character::isDigit)))); }
 
-    String readUntil(String end) { return readUntil(new StringToken(end)); }
+    public String readUntil(String end) { return readUntil(new StringToken(end)); }
 
-    String readUntil(Token end) {
+    public String readUntil(Token end) {
         StringBuilder builder = new StringBuilder();
         while (more() && !is(end))
             builder.appendCodePoint(read().value);
         return builder.toString();
     }
 
-    String readUntilAndSkip(String end) { return readUntilAndSkip(new StringToken(end)); }
+    public String readUntilAndSkip(String end) { return readUntilAndSkip(new StringToken(end)); }
 
-    String readUntilAndSkip(Token end) {
+    public String readUntilAndSkip(Token end) {
         String result = readUntil(end);
         if (more())
             expect(end);
         return result;
     }
 
-    Scanner skip(String token) { return skip(new StringToken(token)); }
+    public Scanner skip(String token) { return skip(new StringToken(token)); }
 
-    Scanner skip(Token token) {
+    public Scanner skip(Token token) {
         accept(token);
         return this;
     }
 
-    int count(String token) { return count(new StringToken(token)); }
+    public int count(String token) { return count(new StringToken(token)); }
 
-    int count(Token token) { return readWhile(token).length(); }
+    public int count(Token token) { return readWhile(token).length(); }
 
-    String readWhile(Token token) {
+    public String readWhile(Token token) {
         StringBuilder out = new StringBuilder();
         while (is(token))
             out.appendCodePoint(read().value);
