@@ -1,8 +1,8 @@
 package spec.generator
 
-import com.github.t1.yaml.parser.Scanner
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePoint.EOF
+import com.github.t1.yaml.tools.Scanner
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
@@ -84,7 +84,7 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
         assert(more())
         assert(node() is TextNode)
         if (nextText == null)
-            nextText = Scanner((node() as TextNode).text().trim { it <= ' ' })
+            nextText = Scanner(256, (node() as TextNode).text().trim { it <= ' ' })
         val result = runnable()
         if (nextText!!.end())
             next()

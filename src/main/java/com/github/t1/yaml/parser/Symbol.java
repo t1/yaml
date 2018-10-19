@@ -1,6 +1,7 @@
 package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.tools.CodePoint;
+import com.github.t1.yaml.tools.Token;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;

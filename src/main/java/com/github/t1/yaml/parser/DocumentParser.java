@@ -4,6 +4,7 @@ import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.tools.CodePoint;
+import com.github.t1.yaml.tools.Scanner;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -22,6 +23,9 @@ import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class DocumentParser {
+    /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832 */
+    private static final int MAX_LOOK_AHEAD = 1024;
+
     private final Scanner next;
     private Document document;
 
@@ -29,7 +33,7 @@ public class DocumentParser {
 
     public DocumentParser(InputStream inputStream) { this(new BufferedReader(new InputStreamReader(inputStream, UTF_8))); }
 
-    public DocumentParser(Reader reader) { this.next = new Scanner(reader); }
+    public DocumentParser(Reader reader) { this.next = new Scanner(MAX_LOOK_AHEAD, reader); }
 
     public Optional<Document> document() {
         this.document = new Document();
@@ -70,13 +74,13 @@ public class DocumentParser {
     private boolean isIndentedComment() {
         String spaces = next.peekUntil(NL_OR_COMMENT);
         return spaces != null
-                && CodePoint.stream(spaces).allMatch(SPACE)
-                && next.peekAfter(spaces.length()).map(COMMENT::test).orElse(false);
+            && CodePoint.stream(spaces).allMatch(SPACE)
+            && next.peekAfter(spaces.length()).map(COMMENT::test).orElse(false);
     }
 
     private Comment comment() {
         return new Comment().indent(next.count(SPACE))
-                .text(next.expect(COMMENT).skip(SPACE).readLine());
+            .text(next.expect(COMMENT).skip(SPACE).readLine());
     }
 
 

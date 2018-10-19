@@ -15,6 +15,7 @@ public class Tools {
             "                                                                                                    ";
 
     public static String spaces(int indent) {
+        //noinspection ConstantConditions
         assert SPACES.length() == 1000 : "actually " + SPACES.length();
         assert indent <= SPACES.length();
         return SPACES.substring(0, indent);

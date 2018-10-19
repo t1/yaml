@@ -8,6 +8,7 @@ import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
 import com.github.t1.yaml.model.Sequence;
 import com.github.t1.yaml.model.Sequence.Item;
+import com.github.t1.yaml.tools.Scanner;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
@@ -65,11 +66,11 @@ public class NodeParser {
 
     public Node node() {
         nesting.expect();
-        if (isFlowSequence())
+        if (next.is(FLOW_SEQUENCE_START))
             return flowSequence();
-        if (isBlockSequence())
+        if (next.is(BLOCK_SEQUENCE_START))
             return blockSequence();
-        if (isFlowMapping())
+        if (next.is(FLOW_MAPPING_START))
             return flowMapping();
         if (isBlockMapping())
             return blockMapping();
@@ -95,8 +96,6 @@ public class NodeParser {
         next.skip(SPACE);
         return new Item().node(new Scalar().line(line));
     }
-
-    private boolean isBlockSequence() { return next.is(BLOCK_SEQUENCE_START); }
 
     private Sequence blockSequence() {
         Sequence sequence = new Sequence().style(BLOCK);
@@ -162,12 +161,8 @@ public class NodeParser {
         nesting.down();
         entry.value(value);
 
-        if (value instanceof Scalar && isComment()) // TODO comments for non-scalars
+        if (value instanceof Scalar && next.accept(COMMENT)) // TODO comments for non-scalars
             comment((Scalar) value);
-    }
-
-    private boolean isFlowMapping() {
-        return next.is(FLOW_MAPPING_START);
     }
 
     private Mapping flowMapping() {
@@ -177,8 +172,6 @@ public class NodeParser {
     private Scalar scalar() {
         return ScalarParser.of(next, nesting).scalar();
     }
-
-    private boolean isComment() { return next.accept(COMMENT); }
 
     private void comment(Scalar scalar) {
         next.accept(SPACE);

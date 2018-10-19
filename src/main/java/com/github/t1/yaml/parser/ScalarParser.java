@@ -3,7 +3,11 @@ package com.github.t1.yaml.parser;
 import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
 import com.github.t1.yaml.parser.NodeParser.Nesting;
+import com.github.t1.yaml.tools.Scanner;
 
+import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START;
+import static com.github.t1.yaml.parser.Symbol.FLOW_MAPPING_START;
+import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 
@@ -32,19 +36,18 @@ class ScalarParser {
 
     public Scalar scalar() {
         String text = quotes.scanLine(next);
-        Scalar scalar = new Scalar().style(quotes.style)
-            .line(new Line().indent(indent).text(text));
+        scalar.line(new Line().indent(indent).text(text));
         boolean lineContinue = next.accept(NL);
         while (lineContinue && next.more() && nesting.accept()) {
-            // if (isFlowSequence())
-            //     throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence " + next);
-            // if (isBlockSequence())
-            //     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence " + next);
-            // if (isFlowMapping())
-            //     throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping " + next);
+            if (next.is(FLOW_SEQUENCE_START))
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence " + next);
+            if (next.is(BLOCK_SEQUENCE_START))
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence " + next);
+            if (next.is(FLOW_MAPPING_START))
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping " + next);
             // if (isBlockMapping())
             //     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping " + next);
-            // if (isComment()) {
+            // if (next.accept(COMMENT)) {
             //     scalar.line(new Line().text(""));
             //     comment(scalar);
             // } else {

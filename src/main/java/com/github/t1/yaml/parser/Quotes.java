@@ -1,6 +1,7 @@
 package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.model.Scalar.Style;
+import com.github.t1.yaml.tools.Scanner;
 import lombok.RequiredArgsConstructor;
 
 import static com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED;

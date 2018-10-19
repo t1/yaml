@@ -1,7 +1,7 @@
-package com.github.t1.yaml.parser;
+package com.github.t1.yaml.tools;
 
-import com.github.t1.yaml.parser.CodePointReader.Mark;
-import com.github.t1.yaml.tools.CodePoint;
+import com.github.t1.yaml.parser.YamlParseException;
+import com.github.t1.yaml.tools.CodePointReader.Mark;
 import lombok.RequiredArgsConstructor;
 
 import java.io.Reader;
@@ -16,16 +16,15 @@ import static com.github.t1.yaml.parser.Symbol.WS;
 import static java.util.Collections.singletonList;
 
 @RequiredArgsConstructor public class Scanner {
-    /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832 */
-    private static final int MAX_LOOK_AHEAD = 1024;
-
+    private final int lookAheadLimit;
     private final CodePointReader reader;
+
     private int position = 1;
     private int lineNumber = 1;
 
-    public Scanner(Reader reader) { this(new CodePointReader(reader)); }
+    public Scanner(int lookAheadLimit, Reader reader) { this(lookAheadLimit, new CodePointReader(reader)); }
 
-    public Scanner(String text) { this(new StringReader(text)); }
+    public Scanner(int lookAheadLimit, String text) { this(lookAheadLimit, new StringReader(text)); }
 
 
     public Scanner expect(String string) { return expect(new StringToken(string)); }
@@ -83,7 +82,7 @@ import static java.util.Collections.singletonList;
 
     public String peekUntil(Token token) {
         List<Predicate<CodePoint>> predicates = token.predicates();
-        try (Mark mark = reader.mark(MAX_LOOK_AHEAD)) {
+        try (Mark mark = reader.mark(lookAheadLimit)) {
             StringBuilder out = new StringBuilder();
             int matchLength = 0;
             while (true) {
