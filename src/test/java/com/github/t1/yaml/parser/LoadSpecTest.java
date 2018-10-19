@@ -1,6 +1,6 @@
 package com.github.t1.yaml.parser;
 
-import com.github.t1.yaml.parser.ParserGenerator.Production;
+import com.github.t1.yaml.parser.Spec.Production;
 import org.assertj.core.api.SoftAssertions;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
@@ -11,36 +11,36 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
 
-class ParserGeneratorLoadSpecTest {
+class LoadSpecTest {
     @Test void shouldParseFullSpec() {
-        ParserGenerator generator = new ParserGenerator().loadSpec();
+        Spec spec = new SpecLoader().load();
 
         StringBuilder actual = new StringBuilder();
-        for (Production production : generator.productions)
+        for (Production production : spec.productions)
             actual.append(production).append("\n\n");
 
         // not softly, so we get a diff from AssertJ
-        assertThat(actual.toString()).isEqualTo(contentOf(ParserGeneratorLoadSpecTest.class.getResource("expected.txt")));
+        assertThat(actual.toString()).isEqualTo(contentOf(LoadSpecTest.class.getResource("expected.txt")));
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(generator.get("c-printable")).isEqualTo(generator.productions.get(0));
-            softly.assertThat(generator.get("c-sequence-end")).isEqualTo(generator.productions.get(8));
-            softly.assertThat(generator.get("s-indent(<n)")).isEqualTo(generator.productions.get(63));
-            softly.assertThat(generator.get("ns-flow-node(n,c)")).isEqualTo(generator.productions.get(160));
+            softly.assertThat(spec.get("c-printable")).isEqualTo(spec.productions.get(0));
+            softly.assertThat(spec.get("c-sequence-end")).isEqualTo(spec.productions.get(8));
+            softly.assertThat(spec.get("s-indent(<n)")).isEqualTo(spec.productions.get(63));
+            softly.assertThat(spec.get("ns-flow-node(n,c)")).isEqualTo(spec.productions.get(160));
 
-            softly.assertThat(generator.get("c-printable").references()).isEmpty();
-            Map<String, Production> b_char_refs = generator.get("b-char").references();
+            softly.assertThat(spec.get("c-printable").references()).isEmpty();
+            Map<String, Production> b_char_refs = spec.get("b-char").references();
             softly.assertThat(b_char_refs.keySet()).containsOnly("b-line-feed", "b-carriage-return");
             softly.assertThat(b_char_refs.values()).containsOnly(
-                    generator.get("b-line-feed"),
-                    generator.get("b-carriage-return")
+                    spec.get("b-line-feed"),
+                    spec.get("b-carriage-return")
             );
-            Map<String, Production> l_empty_refs = generator.get("l-empty(n,c)").references();
+            Map<String, Production> l_empty_refs = spec.get("l-empty(n,c)").references();
             softly.assertThat(l_empty_refs.keySet()).containsOnly("s-line-prefix(n,c)", "s-indent(n)", "b-as-line-feed");
             softly.assertThat(l_empty_refs.values()).containsOnly(
-                    generator.get("s-line-prefix(n,c)"),
-                    generator.get("s-indent(n)"),
-                    generator.get("b-as-line-feed")
+                    spec.get("s-line-prefix(n,c)"),
+                    spec.get("s-indent(n)"),
+                    spec.get("b-as-line-feed")
             );
         });
     }
@@ -56,7 +56,7 @@ class ParserGeneratorLoadSpecTest {
                 "</table>" +
                 "</body></html>").selectFirst("tr");
 
-        return new ParserGenerator().parse(element);
+        return new SpecLoader().parse(element);
     }
 
     @Test

@@ -6,7 +6,8 @@ import com.github.t1.yaml.parser.Expression.CodePointExpression;
 import com.github.t1.yaml.parser.Expression.LiteralExpression;
 import com.github.t1.yaml.parser.Expression.MinusExpression;
 import com.github.t1.yaml.parser.Expression.ReferenceExpression;
-import com.github.t1.yaml.parser.ParserGenerator.Production;
+import com.github.t1.yaml.parser.Spec.Production;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringWriter;
@@ -18,8 +19,8 @@ class ParserGeneratorJavaTest {
     private String generate(Production... productions) {
         StringWriter writer = new StringWriter();
 
-        ParserGenerator generator = new ParserGenerator();
-        generator.productions.addAll(asList(productions));
+        Spec spec = new Spec(asList(productions));
+        ParserGenerator generator = new ParserGenerator(spec);
         generator.generateJavaCode("FooParser", writer);
 
         return writer.toString();
@@ -247,6 +248,7 @@ class ParserGeneratorJavaTest {
                 "    }\n"));
     }
 
+    @Disabled("not yet implemented")
     @Test void shouldGenerateMinusRefProduction() {
         String written = generate(new Production(27, "nb-char", null,
                 new MinusExpression(new ReferenceExpression("c-printable"))
