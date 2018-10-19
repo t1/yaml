@@ -14,7 +14,7 @@ import static com.github.t1.yaml.parser.Symbol.SINGLE_QUOTE;
 @RequiredArgsConstructor
 public enum Quotes {
     PLAIN(NL_OR_COMMENT, Style.PLAIN) {
-        @Override public String scan(Scanner next) {
+        @Override public String scanLine(Scanner next) {
             StringBuilder builder = new StringBuilder();
             while (next.more() && !next.is(NL_OR_COMMENT) && !next.is(BLOCK_MAPPING_VALUE))
                 builder.appendCodePoint(next.read().value);
@@ -23,7 +23,7 @@ public enum Quotes {
     },
 
     SINGLE(SINGLE_QUOTE, SINGLE_QUOTED) {
-        @Override public String scan(Scanner next) {
+        @Override public String scanLine(Scanner next) {
             StringBuilder out = new StringBuilder();
             while (next.more() && !next.is(NL) && !next.accept(SINGLE_QUOTE))
                 if (next.accept("''"))
@@ -35,7 +35,7 @@ public enum Quotes {
     },
 
     DOUBLE(DOUBLE_QUOTE, DOUBLE_QUOTED) {
-        @Override public String scan(Scanner next) {
+        @Override public String scanLine(Scanner next) {
             StringBuilder out = new StringBuilder();
             while (next.more() && !next.is(DOUBLE_QUOTE)) {
                 if (next.accept("\\"))
@@ -59,5 +59,5 @@ public enum Quotes {
     public final Symbol symbol;
     public final Style style;
 
-    public abstract String scan(Scanner scanner);
+    public abstract String scanLine(Scanner scanner);
 }

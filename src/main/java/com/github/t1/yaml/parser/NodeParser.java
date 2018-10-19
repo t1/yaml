@@ -36,7 +36,7 @@ public class NodeParser {
     private final Scanner next;
     private final Nesting nesting = new Nesting();
 
-    private class Nesting {
+    class Nesting {
         private int level;
         @Setter private boolean skipNext;
 
@@ -175,30 +175,7 @@ public class NodeParser {
     }
 
     private Scalar scalar() {
-        int indent = next.count(SPACE);
-        Quotes quotes = Quotes.recognize(next);
-        String text = quotes.scan(next);
-        Scalar scalar = new Scalar().style(quotes.style)
-            .line(new Line().indent(indent).text(text));
-        boolean lineContinue = next.accept(NL);
-        while (lineContinue && more() && nesting.accept()) {
-            if (isFlowSequence())
-                throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence " + next);
-            if (isBlockSequence())
-                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence " + next);
-            if (isFlowMapping())
-                throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping " + next);
-            if (isBlockMapping())
-                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping " + next);
-            if (isComment()) {
-                scalar.line(new Line().text(""));
-                comment(scalar);
-            } else {
-                scalar.line(new Line().indent(next.count(SPACE)).text(quotes.scan(next)));
-            }
-            lineContinue = !next.accept(NL);
-        }
-        return scalar;
+        return ScalarParser.of(next, nesting).scalar();
     }
 
     private boolean isComment() { return next.accept(COMMENT); }

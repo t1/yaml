@@ -5,6 +5,7 @@ import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.model.Scalar;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 
 class StreamTest extends AbstractYamlTest {
@@ -18,6 +19,7 @@ class StreamTest extends AbstractYamlTest {
         @Nested class whenParseSingle extends ParseSingle implements ThenThrowsExpectedExactlyOneDocumentButFoundNone {}
     }
 
+    @Disabled
     @Nested class givenInvalidSecondDocument {
         @BeforeEach void setup() {
             input = "%YAML 1.2\n---\nvalid document\n...{";

@@ -6,6 +6,7 @@ import com.github.t1.yaml.model.Scalar.Line;
 import com.github.t1.yaml.model.Sequence;
 import com.github.t1.yaml.model.Sequence.Item;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 
 import static com.github.t1.yaml.model.Collection.Style.FLOW;
@@ -33,6 +34,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
+    @Disabled
     @Nested class givenBlockSequenceOfIndentedScalars extends SingleDocument {
         @BeforeEach void setup() {
             input = "- 1\n" +
@@ -54,6 +56,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
+    @Disabled
     @Nested class givenBlockSequenceWithIndentedScalarsInNewLines extends SingleDocument {
         @BeforeEach void setup() {
             input = "-\n" +
