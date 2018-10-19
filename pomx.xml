@@ -6,11 +6,54 @@
     <war>com.github.t1:yaml:1.0.0-SNAPSHOT</war>
     <name>Yaml</name>
 
+    <properties>
+        <kotlin.version>1.2.71</kotlin.version>
+    </properties>
+
     <profile>com.github.t1:profile-t1:1.0.0-SNAPSHOT</profile>
 
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
+            <plugin id="org.jetbrains.kotlin:kotlin-maven-plugin:${kotlin.version}">
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jvmTarget>1.8</jvmTarget>
+                </configuration>
+            </plugin>
+            <plugin id="org.apache.maven.plugins:maven-compiler-plugin">
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>testCompile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin id="org.apache.maven.plugins:maven-jar-plugin:3.0.2">
                 <configuration>
                     <archive>
@@ -25,7 +68,11 @@
     </build>
 
     <dependencies>
+        <compile>
+            <jar>org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlin.version}</jar>
+        </compile>
         <test>
+            <jar>org.jetbrains.kotlin:kotlin-test:${kotlin.version}</jar>
             <jar>org.jsoup:jsoup:1.11.3</jar>
         </test>
     </dependencies>
