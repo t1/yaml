@@ -119,6 +119,13 @@ import static java.util.Collections.singletonList;
         return codePoint;
     }
 
+    String read(int count) {
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < count; i++)
+            out.appendCodePoint(read().value);
+        return out.toString();
+    }
+
     String readWord() { return readUntilAndSkip(WS); }
 
     String readLine() { return readUntilAndSkip(NL); }

@@ -3,33 +3,50 @@ package com.github.t1.yaml.parser;
 import com.github.t1.yaml.model.Scalar.Style;
 import lombok.RequiredArgsConstructor;
 
+import static com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED;
+import static com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED;
+import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Symbol.DOUBLE_QUOTE;
-import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
+import static com.github.t1.yaml.parser.Symbol.NL;
+import static com.github.t1.yaml.parser.Symbol.NL_OR_COMMENT;
 import static com.github.t1.yaml.parser.Symbol.SINGLE_QUOTE;
 
 @RequiredArgsConstructor
 public enum Quotes {
-    PLAIN(SCALAR_END, Style.PLAIN) {
-        @Override public String scan(Scanner scanner, Token end) {
-            return scanner.readUntil(end);
+    PLAIN(NL_OR_COMMENT, Style.PLAIN) {
+        @Override public String scan(Scanner next) {
+            StringBuilder builder = new StringBuilder();
+            while (next.more() && !next.is(NL_OR_COMMENT) && !next.is(BLOCK_MAPPING_VALUE))
+                builder.appendCodePoint(next.read().value);
+            return builder.toString();
         }
     },
 
-    SINGLE(SINGLE_QUOTE, Style.SINGLE_QUOTED) {
-        @Override public String scan(Scanner scanner, Token end) {
+    SINGLE(SINGLE_QUOTE, SINGLE_QUOTED) {
+        @Override public String scan(Scanner next) {
             StringBuilder out = new StringBuilder();
-            while (true) {
-                out.append(super.scan(scanner, end));
-                if (scanner.accept(symbol))
-                    out.append("''");
+            while (next.more() && !next.is(NL) && !next.accept(SINGLE_QUOTE))
+                if (next.accept("''"))
+                    out.append(SINGLE_QUOTE);
                 else
-                    break;
-            }
+                    out.appendCodePoint(next.read().value);
             return out.toString();
         }
     },
 
-    DOUBLE(DOUBLE_QUOTE, Style.DOUBLE_QUOTED);
+    DOUBLE(DOUBLE_QUOTE, DOUBLE_QUOTED) {
+        @Override public String scan(Scanner next) {
+            StringBuilder out = new StringBuilder();
+            while (next.more() && !next.is(DOUBLE_QUOTE)) {
+                if (next.accept("\\"))
+                    out.append("\\");
+                out.appendCodePoint(next.read().value);
+            }
+            if (next.more())
+                next.expect(DOUBLE_QUOTE);
+            return out.toString();
+        }
+    };
 
     public static Quotes recognize(Scanner scanner) {
         if (scanner.accept(SINGLE_QUOTE))
@@ -42,10 +59,5 @@ public enum Quotes {
     public final Symbol symbol;
     public final Style style;
 
-    public String scan(Scanner scanner, Token end) {
-        String string = scanner.readUntilAndSkip(symbol);
-        if (string == null)
-            throw new YamlParseException("expected " + style + " string to end with " + symbol + " but found " + scanner);
-        return string;
-    }
+    public abstract String scan(Scanner scanner);
 }

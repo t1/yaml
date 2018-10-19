@@ -1,9 +1,9 @@
-package test;
+package spec;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static test.Helpers.parseAndCheck;
+import static helpers.Helpers.parseAndCheck;
 
 @Tag("spec") class Chapter9Test {
     @Test void spec_9_1_Document_Prefix() {

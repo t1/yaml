@@ -19,4 +19,8 @@ public class Tools {
         assert indent <= SPACES.length();
         return SPACES.substring(0, indent);
     }
+
+    public static String decodeHex(String text) {
+        return new String(new int[]{Integer.decode("0x" + text)}, 0, 1);
+    }
 }

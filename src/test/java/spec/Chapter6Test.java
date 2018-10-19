@@ -1,10 +1,10 @@
-package test;
+package spec;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static test.Helpers.parseAndCheck;
+import static helpers.Helpers.parseAndCheck;
 
 @Tag("spec") class Chapter6Test {
     @Disabled @Test void spec_6_1_Indentation_Spaces() {

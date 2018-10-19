@@ -1,10 +1,10 @@
-package test;
+package spec;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static test.Helpers.parseAndCheck;
+import static helpers.Helpers.parseAndCheck;
 
 @Tag("spec") class Chapter2Test {
     @Test void spec_2_1_Sequence_of_Scalars() {
@@ -325,7 +325,7 @@ import static test.Helpers.parseAndCheck;
                         "  spans many lines.\n" +
                         "\n" +
                         "quoted: \"So does this\n" +
-                        "  quoted scalar.\\n\""
+                        "  quoted scalar.\"" // TODO escaped NL `\n`
                 , "" +
                         "%YAML 1.2\n" +
                         "---\n" +
@@ -333,7 +333,7 @@ import static test.Helpers.parseAndCheck;
                         "!!str \"  This unquoted scalar spans many lines.\"\n" + // TODO indent not part of string
                         "? !!str \"\n" +
                         "quoted\": !!str \"So does this\n" +
-                        "  quoted scalar.\\n\"\n");
+                        "  quoted scalar.\"\n"); // TODO escaped NL `\n`
     }
 
     @Test void spec_2_19_Integers() {
@@ -544,11 +544,11 @@ import static test.Helpers.parseAndCheck;
                         "? !!str \"Date\": !!str \"2001-11-23 15:03:17 -5\"\n" + // TODO recognize timestamp (tag)
                         "? !!str \"User\": !!str \"ed\"\n" +
                         "? !!str \"Fatal\":\n" +
-                        "!!str \"  Unknown variable \"bar\"\"\n" + // TODO indent is not part of line
+                        "!!str \"  Unknown variable \\\"bar\\\"\"\n" + // TODO indent is not part of line
                         "? !!str \"Stack\":\n" +
                         "  - ? !!str \"file\": !!str \"TopClass.py\"\n" +
                         "? !!str \"    line\": !!str \"23\"\n" + // TODO indent && recognize int
-                        "? !!str \"    code\": !!str \"| x = MoreObject(\"345\\n\")\"\n" + // TODO literal scalar
+                        "? !!str \"    code\": !!str \"| x = MoreObject(\\\"345\\n\\\")\"\n" + // TODO literal scalar
                         "  - ? !!str \"file\": !!str \"MoreClass.py\"\n" +
                         "? !!str \"    line\": !!str \"58\"\n" +
                         "? !!str \"    code\": !!str \"|- foo = bar\"\n"); // TODO literal scalar

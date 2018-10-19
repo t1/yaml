@@ -38,6 +38,8 @@ Comments are preserved, before documents, in documents, and after the document-e
 
 # Normalization
 
-Do as few normalizations as possible, but some are:
+We do as few normalizations as possible, but some are:
 
-* A document always ends with a newline character
+* A document always ends with a newline character.
+* New lines of scalars are indented at least as much as the appropriate for the current nesting,
+  i.e. the second and subsequent lines of a scalar value in a block mapping is indented by two.

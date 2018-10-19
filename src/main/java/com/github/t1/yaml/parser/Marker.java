@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.github.t1.yaml.parser.Symbol.MINUS;
-import static com.github.t1.yaml.parser.Symbol.DOT;
 import static com.github.t1.yaml.parser.Symbol.COLON;
+import static com.github.t1.yaml.parser.Symbol.DOT;
+import static com.github.t1.yaml.parser.Symbol.MINUS;
 import static com.github.t1.yaml.parser.Symbol.WS;
 import static java.util.Arrays.asList;
 

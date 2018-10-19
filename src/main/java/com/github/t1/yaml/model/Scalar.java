@@ -12,7 +12,6 @@ import java.util.List;
 import static com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED;
 import static com.github.t1.yaml.model.Scalar.Style.PLAIN;
 import static com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED;
-import static java.util.stream.Collectors.joining;
 
 @EqualsAndHashCode(callSuper = true)
 public @Data class Scalar extends Node {

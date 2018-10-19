@@ -89,7 +89,7 @@ import static com.github.t1.yaml.tools.Tools.spaces;
             out.append(scalar.style().quote());
         }
 
-        @Override public void visit(Line line) {
+        @Override public void enterScalarLine(Scalar node, Line line) {
             out.append(indent()).append(spaces(line.indent()));
             out.append(line.text());
             if (line.comment() != null)

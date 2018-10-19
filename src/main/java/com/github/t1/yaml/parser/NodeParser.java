@@ -6,7 +6,6 @@ import com.github.t1.yaml.model.Mapping.Entry;
 import com.github.t1.yaml.model.Node;
 import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
-import com.github.t1.yaml.model.Scalar.Style;
 import com.github.t1.yaml.model.Sequence;
 import com.github.t1.yaml.model.Sequence.Item;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,6 @@ import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
 import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
-import static com.github.t1.yaml.parser.Quotes.PLAIN;
 import static com.github.t1.yaml.parser.Symbol.COLON;
 import static com.github.t1.yaml.parser.Symbol.COMMENT;
 import static com.github.t1.yaml.parser.Symbol.FLOW_MAPPING_START;
@@ -29,7 +27,6 @@ import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START;
 import static com.github.t1.yaml.parser.Symbol.MINUS;
 import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.QUESTION_MARK;
-import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
 import static com.github.t1.yaml.tools.Tools.spaces;
@@ -149,7 +146,7 @@ public class NodeParser {
         entry.hasMarkedKey(next.accept(QUESTION_MARK));
         if (entry.hasMarkedKey())
             next.expect(SPACE);
-        entry.key(scalar(BLOCK_MAPPING_VALUE)); // TODO key node()
+        entry.key(scalar()); // TODO key node()
     }
 
     private void blockMappingValue(Entry entry) {
@@ -166,7 +163,7 @@ public class NodeParser {
         entry.value(value);
 
         if (value instanceof Scalar && isComment()) // TODO comments for non-scalars
-            comment((Scalar) value, true);
+            comment((Scalar) value);
     }
 
     private boolean isFlowMapping() {
@@ -178,56 +175,43 @@ public class NodeParser {
     }
 
     private Scalar scalar() {
-        Scalar scalar = scalar(SCALAR_END);
-        boolean lineContinue = !next.accept(NL);
-        if (scalar.style() == Style.PLAIN) {
-            while (more() && nesting.accept()) {
-                if (isFlowSequence())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence " + next);
-                if (isBlockSequence())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence " + next);
-                if (isFlowMapping())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping " + next);
-                if (isBlockMapping())
-                    throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping " + next);
-                if (isComment()) {
-                    comment(scalar, lineContinue);
-                    lineContinue = false;
-                } else {
-                    scalar.line(new Line().indent(next.count(SPACE)).text(next.readUntil(SCALAR_END)));
-                    lineContinue = !next.accept(NL);
-                }
+        int indent = next.count(SPACE);
+        Quotes quotes = Quotes.recognize(next);
+        String text = quotes.scan(next);
+        Scalar scalar = new Scalar().style(quotes.style)
+            .line(new Line().indent(indent).text(text));
+        boolean lineContinue = next.accept(NL);
+        while (lineContinue && more() && nesting.accept()) {
+            if (isFlowSequence())
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence " + next);
+            if (isBlockSequence())
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence " + next);
+            if (isFlowMapping())
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping " + next);
+            if (isBlockMapping())
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping " + next);
+            if (isComment()) {
+                scalar.line(new Line().text(""));
+                comment(scalar);
+            } else {
+                scalar.line(new Line().indent(next.count(SPACE)).text(quotes.scan(next)));
             }
+            lineContinue = !next.accept(NL);
         }
         return scalar;
     }
 
-    private Scalar scalar(Token end) {
-        int indent = next.count(SPACE);
-        Quotes quotes = Quotes.recognize(next);
-        return new Scalar().style(quotes.style)
-                .line(new Line().indent(indent).text(quotes.scan(next, end)));
-    }
-
     private boolean isComment() { return next.accept(COMMENT); }
 
-    private void comment(Scalar scalar, boolean lineContinue) {
+    private void comment(Scalar scalar) {
         next.accept(SPACE);
-        Line line = line(scalar, lineContinue);
+        Line line = scalar.lastLine();
         line.comment(new Comment().indent(line.rtrim()).text(next.readLine()));
-    }
-
-    private Line line(Scalar scalar, boolean lineContinue) {
-        if (lineContinue)
-            return scalar.lastLine();
-        Line line = new Line();
-        scalar.line(line);
-        return line;
     }
 
     boolean more() {
         return next.more()
-                && !next.is(DOCUMENT_END_MARKER)
-                && !next.is(DIRECTIVES_END_MARKER); // of next document
+            && !next.is(DOCUMENT_END_MARKER)
+            && !next.is(DIRECTIVES_END_MARKER); // of next document
     }
 }

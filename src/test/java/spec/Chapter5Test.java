@@ -1,13 +1,13 @@
-package test;
+package spec;
 
 import com.github.t1.yaml.parser.YamlParseException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static helpers.Helpers.parse;
+import static helpers.Helpers.parseAndCheck;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static test.Helpers.parse;
-import static test.Helpers.parseAndCheck;
 
 @Tag("spec") class Chapter5Test {
     @Test void spec_5_1_Byte_Order_Mark() {
@@ -142,12 +142,12 @@ import static test.Helpers.parseAndCheck;
         parseAndCheck("" +
                         "|\n" +
                         "  Line break (no glyph)\n" +
-                        "  Line break (glyphed)↓"
+                        "  Line break (glyphed)↓\n"
                 , "" +
                         "%YAML 1.2\n" +
                         "---\n" +
                         "!!str \"line break (no glyph)\\n\\\n" +
-                        "      line break (glyphed)\\n\"");
+                        "      line break (glyphed)\\n\"\n");
     }
 
     @Disabled @Test void spec_5_12_Tabs_and_Spaces() {
@@ -181,7 +181,7 @@ import static test.Helpers.parseAndCheck;
                 , "" +
                         "%YAML 1.2\n" +
                         "---\n" +
-                        "\"Fun with \\x5C\n" +
+                        "!!str \"Fun with \\x5C\n" +
                         "\\x22 \\x07 \\x08 \\x1B \\x0C\n" +
                         "\\x0A \\x0D \\x09 \\x0B \\x00\n" +
                         "\\x20 \\xA0 \\x85 \\u2028 \\u2029\n" +

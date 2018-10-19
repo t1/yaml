@@ -26,22 +26,27 @@ public enum Symbol implements Token, Predicate<CodePoint> {
     // FLOW_MAPPING_END('}'),     // 11 c-mapping-end
     COMMENT('#'),              // 12 c-comment
 
-    DIRECTIVE('%'),            // 20 c-directive
+    SINGLE_QUOTE('\''),        // 18 c-single-quote
+    DOUBLE_QUOTE('\"'),        // 19 c-double-quote
+    PERCENT('%'),            // 20 c-directive
 
     LF('\n'),                  // 24 b-line-feed
     CR('\r'),                  // 25 b-carriage-return
     NL(LF.or(CR)),             // 26 b-char
 
     SPACE(' '),                // 31 s-space
-    // TAB('\t'),                 // 32 s-tab
+    TAB('\t'),                 // 32 s-tab
     // WHITE(SPACE.or(TAB)),      // 33 s-white
-    SINGLE_QUOTE('\''),        // 18 c-single-quote
-    DOUBLE_QUOTE('\"'),        // 19 c-double-quote
+
+    // DEC(between('0', '9')),  // 35 ns-dec-digit
+    // HEX(DEC.or(between('A', 'F')).or(between('a', 'f'))), // 36 ns-hex-digit
+
+    // BACKSLASH('\\'),           // 41 c-escape
 
     /////////////////////////// not in spec
     DOT('.'),
     WS(Character::isWhitespace),
-    SCALAR_END(NL.or(COMMENT)),
+    NL_OR_COMMENT(NL.or(COMMENT)),
     FLOW_SEQUENCE_ITEM_END(FLOW_SEQUENCE_ENTRY.or(FLOW_SEQUENCE_END));
 
     private P or(Symbol that) { return or(that.predicate); }

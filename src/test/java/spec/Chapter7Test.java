@@ -1,10 +1,10 @@
-package test;
+package spec;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static test.Helpers.parseAndCheck;
+import static helpers.Helpers.parseAndCheck;
 
 @Tag("spec") class Chapter7Test {
     @Disabled @Test void spec_7_1_Alias_Nodes() {
@@ -89,7 +89,7 @@ import static test.Helpers.parseAndCheck;
                         "---\n" +
                         "!!str \"folded to a space,\\n\\\n" +
                         "      to a line feed, \\\n" +
-                        "      or \\t \\tnon-content\"");
+                        "      or \\t \\tnon-content\"\n");
     }
 
     @Disabled @Test void spec_7_6_Double_Quoted_Lines() {
@@ -103,7 +103,7 @@ import static test.Helpers.parseAndCheck;
                         "---\n" +
                         "!!str \" 1st non-empty\\n\\\n" +
                         "      2nd non-empty \\\n" +
-                        "      3rd non-empty \"");
+                        "      3rd non-empty \"\n");
     }
 
     @Disabled @Test void spec_7_7_Single_Quoted_Characters() {

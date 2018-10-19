@@ -15,9 +15,9 @@ import java.util.Optional;
 import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
 import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Symbol.COMMENT;
-import static com.github.t1.yaml.parser.Symbol.DIRECTIVE;
 import static com.github.t1.yaml.parser.Symbol.NL;
-import static com.github.t1.yaml.parser.Symbol.SCALAR_END;
+import static com.github.t1.yaml.parser.Symbol.NL_OR_COMMENT;
+import static com.github.t1.yaml.parser.Symbol.PERCENT;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -48,7 +48,7 @@ public class DocumentParser {
     }
 
     private void directives() {
-        if (next.accept(DIRECTIVE))
+        if (next.accept(PERCENT))
             document.directive(directive());
 
         if (next.accept(DIRECTIVES_END_MARKER)) {
@@ -68,7 +68,7 @@ public class DocumentParser {
     }
 
     private boolean isIndentedComment() {
-        String spaces = next.peekUntil(SCALAR_END);
+        String spaces = next.peekUntil(NL_OR_COMMENT);
         return spaces != null
                 && CodePoint.stream(spaces).allMatch(SPACE)
                 && next.peekAfter(spaces.length()).map(COMMENT::test).orElse(false);

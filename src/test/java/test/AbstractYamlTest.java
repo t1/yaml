@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
+import static helpers.Helpers.withoutTrailingNl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static test.Helpers.withoutTrailingNl;
 
 public class AbstractYamlTest {
     ///////////////////////////////////// inputs

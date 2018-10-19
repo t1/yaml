@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static helpers.Helpers.parse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static test.Helpers.parse;
 
 class ScalarTest extends AbstractYamlTest {
     @Nested class givenPlainScalar extends SingleDocument {
@@ -47,7 +47,7 @@ class ScalarTest extends AbstractYamlTest {
         @BeforeEach void setup() {
             input = "'dummy\n" +
                     "string'";
-            expected = new Document().node(new Scalar().singleQuoted().line("dummy\nstring"));
+            expected = new Document().node(new Scalar().singleQuoted().line("dummy").line("string"));
         }
     }
 
@@ -56,6 +56,28 @@ class ScalarTest extends AbstractYamlTest {
             input = "\"dummy\n" +
                     "string\"";
             expected = new Document().node(new Scalar().doubleQuoted().line("dummy\nstring"));
+        }
+    }
+
+    @Nested class givenIndentedTwoLinePlainScalar extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "dummy\n" +
+                    "  string";
+            expected = new Document().node(new Scalar()
+                    .plain()
+                    .line("dummy")
+                    .line(new Line().indent(2).text("string")));
+        }
+    }
+
+    @Nested class givenIndentedTwoLineSingleQuotedScalar extends SingleDocument {
+        @BeforeEach void setup() {
+            input = "'dummy\n" +
+                    "  string'";
+            expected = new Document().node(new Scalar()
+                    .singleQuoted()
+                    .line("dummy")
+                    .line(new Line().indent(2).text("string")));
         }
     }
 
@@ -106,8 +128,7 @@ class ScalarTest extends AbstractYamlTest {
 
     @Test void expectNestedScalarStartNotContinueWithFlowSequence() {
         Throwable thrown = catchThrowable(() -> parse("" +
-                "- scalar" +
-                "  document\n" +
+                "- scalar document\n" +
                 "  [illegal sequence]"));
 
         assertThat(thrown)
@@ -118,8 +139,7 @@ class ScalarTest extends AbstractYamlTest {
 
     @Test void expectNestedScalarStartNotContinueWithBlockSequence() {
         Throwable thrown = catchThrowable(() -> parse("" +
-                "- scalar" +
-                "  document\n" +
+                "- scalar document\n" +
                 "  - illegal sequence"));
 
         assertThat(thrown)
@@ -130,8 +150,7 @@ class ScalarTest extends AbstractYamlTest {
 
     @Test void expectNestedScalarStartNotContinueWithBlockMapping() {
         Throwable thrown = catchThrowable(() -> parse("" +
-                "- scalar" +
-                "  document\n" +
+                "- scalar document\n" +
                 "  key: value"));
 
         assertThat(thrown)
@@ -142,8 +161,7 @@ class ScalarTest extends AbstractYamlTest {
 
     @Test void expectNestedScalarStartNotContinueWithFlowMapping() {
         Throwable thrown = catchThrowable(() -> parse("" +
-                "- scalar" +
-                "  document\n" +
+                "- scalar document\n" +
                 "  {key: value}"));
 
         assertThat(thrown)
