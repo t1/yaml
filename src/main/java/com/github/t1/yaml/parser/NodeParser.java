@@ -8,19 +8,11 @@ import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
 import com.github.t1.yaml.model.Sequence;
 import com.github.t1.yaml.model.Sequence.Item;
-import com.github.t1.yaml.tools.Scanner;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
 import static com.github.t1.yaml.model.Collection.Style.BLOCK;
 import static com.github.t1.yaml.model.Collection.Style.FLOW;
-import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
-import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START;
-import static com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER;
-import static com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER;
 import static com.github.t1.yaml.parser.Symbol.COLON;
 import static com.github.t1.yaml.parser.Symbol.COMMENT;
-import static com.github.t1.yaml.parser.Symbol.FLOW_MAPPING_START;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_END;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ENTRY;
 import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ITEM_END;
@@ -30,61 +22,37 @@ import static com.github.t1.yaml.parser.Symbol.NL;
 import static com.github.t1.yaml.parser.Symbol.QUESTION_MARK;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
-import static com.github.t1.yaml.tools.Tools.spaces;
 
-@RequiredArgsConstructor
 public class NodeParser {
-    private final Scanner next;
-    private final Nesting nesting = new Nesting();
+    private final YamlScanner next;
+    private final Nesting nesting;
 
-    class Nesting {
-        private int level;
-        @Setter private boolean skipNext;
-
-        @Override public String toString() { return "Nesting:" + level + (skipNext ? " skip next" : ""); }
-
-        void up() { level++; }
-
-        void down() { level--; }
-
-        void expect() {
-            next.expect(indent());
-            skipNext = false;
-        }
-
-        boolean accept() {
-            boolean accepted = next.accept(indent());
-            if (accepted)
-                skipNext = false;
-            return accepted;
-        }
-
-        private String indent() { return skipNext ? "" : spaces(level * 2); }
+    NodeParser(YamlScanner next) {
+        this.next = next;
+        nesting = new Nesting(this.next);
     }
 
     @Override public String toString() { return "NodeParser " + next + " nesting: " + nesting; }
 
     public Node node() {
         nesting.expect();
-        if (next.is(FLOW_SEQUENCE_START))
+        if (next.isFlowSequence())
             return flowSequence();
-        if (next.is(BLOCK_SEQUENCE_START))
+        if (next.isBlockSequence())
             return blockSequence();
-        if (next.is(FLOW_MAPPING_START))
+        if (next.isFlowMapping())
             return flowMapping();
-        if (isBlockMapping())
+        if (next.isBlockMapping())
             return blockMapping();
         return scalar();
     }
-
-    private boolean isFlowSequence() { return next.is(FLOW_SEQUENCE_START); }
 
     private Node flowSequence() {
         next.expect(FLOW_SEQUENCE_START);
         Sequence sequence = new Sequence().style(FLOW);
         do
             sequence.item(flowSequenceItem());
-        while (more() && next.accept(FLOW_SEQUENCE_ENTRY));
+        while (next.more() && next.accept(FLOW_SEQUENCE_ENTRY));
         next.expect(FLOW_SEQUENCE_END);
         next.skip(WS);
         return sequence;
@@ -101,7 +69,7 @@ public class NodeParser {
         Sequence sequence = new Sequence().style(BLOCK);
         do
             sequence.item(blockSequenceItem());
-        while (more() && nesting.accept());
+        while (next.more() && nesting.accept());
         return sequence;
     }
 
@@ -119,18 +87,11 @@ public class NodeParser {
         return item;
     }
 
-    private boolean isBlockMapping() {
-        if (next.is(QUESTION_MARK))
-            return true;
-        String token = next.peekUntil(BLOCK_MAPPING_VALUE);
-        return token != null && token.length() >= 1 && !token.contains("\n");
-    }
-
     private Mapping blockMapping() {
         Mapping mapping = new Mapping();
         do
             mapping.entry(blockMappingEntry());
-        while (more() && nesting.accept());
+        while (next.more() && nesting.accept());
         return mapping;
     }
 
@@ -177,11 +138,5 @@ public class NodeParser {
         next.accept(SPACE);
         Line line = scalar.lastLine();
         line.comment(new Comment().indent(line.rtrim()).text(next.readLine()));
-    }
-
-    boolean more() {
-        return next.more()
-            && !next.is(DOCUMENT_END_MARKER)
-            && !next.is(DIRECTIVES_END_MARKER); // of next document
     }
 }

@@ -19,8 +19,7 @@ class StreamTest extends AbstractYamlTest {
         @Nested class whenParseSingle extends ParseSingle implements ThenThrowsExpectedExactlyOneDocumentButFoundNone {}
     }
 
-    @Disabled
-    @Nested class givenInvalidSecondDocument {
+    @Disabled @Nested class givenInvalidSecondDocument {
         @BeforeEach void setup() {
             input = "%YAML 1.2\n---\nvalid document\n...{";
             expected = new Document().directive(Directive.YAML_VERSION).node(new Scalar().line("valid document")).hasDocumentEndMarker(true);

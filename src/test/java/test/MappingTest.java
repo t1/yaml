@@ -85,8 +85,7 @@ class MappingTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenBlockMappingWithTwoLineSingleQuotedValue extends SingleDocument {
+    @Disabled @Nested class givenBlockMappingWithTwoLineSingleQuotedValue extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky: 'high\n" +
                 "blue'\n" +
@@ -352,8 +351,7 @@ class MappingTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenBlockMappingToSequenceOfBlockMapping extends SingleDocument {
+    @Disabled @Nested class givenBlockMappingToSequenceOfBlockMapping extends SingleDocument {
         @BeforeEach void setup() {
             input = "sky:\n" +
                 "  -\n" +

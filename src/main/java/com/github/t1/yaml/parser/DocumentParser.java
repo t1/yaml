@@ -4,7 +4,6 @@ import com.github.t1.yaml.model.Comment;
 import com.github.t1.yaml.model.Directive;
 import com.github.t1.yaml.model.Document;
 import com.github.t1.yaml.tools.CodePoint;
-import com.github.t1.yaml.tools.Scanner;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -26,14 +25,14 @@ public class DocumentParser {
     /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832 */
     private static final int MAX_LOOK_AHEAD = 1024;
 
-    private final Scanner next;
+    private final YamlScanner next;
     private Document document;
 
     public DocumentParser(String yaml) { this(new StringReader(yaml)); }
 
     public DocumentParser(InputStream inputStream) { this(new BufferedReader(new InputStreamReader(inputStream, UTF_8))); }
 
-    public DocumentParser(Reader reader) { this.next = new Scanner(MAX_LOOK_AHEAD, reader); }
+    public DocumentParser(Reader reader) { this.next = new YamlScanner(MAX_LOOK_AHEAD, reader); }
 
     public Optional<Document> document() {
         this.document = new Document();
@@ -86,7 +85,7 @@ public class DocumentParser {
 
     private void node() {
         NodeParser parser = new NodeParser(next);
-        if (parser.more())
+        if (next.more())
             document.node(parser.node());
     }
 

@@ -34,8 +34,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenBlockSequenceOfIndentedScalars extends SingleDocument {
+    @Disabled @Nested class givenBlockSequenceOfIndentedScalars extends SingleDocument {
         @BeforeEach void setup() {
             input = "- 1\n" +
                     "  2\n" +
@@ -56,8 +55,7 @@ class SequenceTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenBlockSequenceWithIndentedScalarsInNewLines extends SingleDocument {
+    @Disabled @Nested class givenBlockSequenceWithIndentedScalarsInNewLines extends SingleDocument {
         @BeforeEach void setup() {
             input = "-\n" +
                     "  1\n" +

@@ -2,7 +2,6 @@ package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
-import com.github.t1.yaml.parser.NodeParser.Nesting;
 import com.github.t1.yaml.tools.Scanner;
 
 import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START;

@@ -18,8 +18,7 @@ import static helpers.Helpers.parseAndCheck;
                         "!!str \"Document\"\n");
     }
 
-    @Disabled
-    @Test void spec_9_2_Document_Markers() {
+    @Disabled @Test void spec_9_2_Document_Markers() {
         parseAndCheck("" +
                         "%YAML 1.2\n" +
                         "---\n" +
@@ -51,8 +50,7 @@ import static helpers.Helpers.parseAndCheck;
         );
     }
 
-    @Disabled
-    @Test void spec_9_4_Explicit_Documents() {
+    @Disabled @Test void spec_9_4_Explicit_Documents() {
         parseAndCheck("" +
                         "---\n" +
                         // "{ matches\n" +
@@ -75,8 +73,7 @@ import static helpers.Helpers.parseAndCheck;
                         "!!null \"\"\n");
     }
 
-    @Disabled
-    @Test void spec_9_5_Directives_Documents() {
+    @Disabled @Test void spec_9_5_Directives_Documents() {
         parseAndCheck("" +
                         "%YAML 1.2\n" +
                         "---\n" + // TODO '|'
@@ -96,8 +93,7 @@ import static helpers.Helpers.parseAndCheck;
                         "!!null \"\"\n");
     }
 
-    @Disabled
-    @Test void spec_9_6_Stream() {
+    @Disabled @Test void spec_9_6_Stream() {
         parseAndCheck("" +
                         "Document\n" +
                         "---\n" +

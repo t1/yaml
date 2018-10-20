@@ -82,8 +82,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Test void expectScalarStartNotContinueWithFlowSequence() {
+    @Disabled @Test void expectScalarStartNotContinueWithFlowSequence() {
         Throwable thrown = catchThrowable(() -> parse("" +
                 "scalar document\n" +
                 "[illegal sequence]"));
@@ -94,8 +93,7 @@ class ScalarTest extends AbstractYamlTest {
                         "flow sequence [[][LEFT SQUARE BRACKET][0x5b] at line 2 char 1");
     }
 
-    @Disabled
-    @Test void expectScalarStartNotContinueWithBlockSequence() {
+    @Disabled @Test void expectScalarStartNotContinueWithBlockSequence() {
         Throwable thrown = catchThrowable(() -> parse("" +
                 "scalar document\n" +
                 "- illegal sequence"));
@@ -106,8 +104,7 @@ class ScalarTest extends AbstractYamlTest {
                         "block sequence [-][HYPHEN-MINUS][0x2d] at line 2 char 1");
     }
 
-    @Disabled
-    @Test void expectScalarStartNotContinueWithBlockMapping() {
+    @Disabled @Test void expectScalarStartNotContinueWithBlockMapping() {
         Throwable thrown = catchThrowable(() -> parse("" +
                 "scalar document\n" +
                 "key: value"));
@@ -118,8 +115,7 @@ class ScalarTest extends AbstractYamlTest {
                         "block mapping [k][LATIN SMALL LETTER K][0x6b] at line 2 char 1");
     }
 
-    @Disabled
-    @Test void expectScalarStartNotContinueWithFlowMapping() {
+    @Disabled @Test void expectScalarStartNotContinueWithFlowMapping() {
         Throwable thrown = catchThrowable(() -> parse("" +
                 "scalar document\n" +
                 "{key: value}"));
@@ -131,8 +127,7 @@ class ScalarTest extends AbstractYamlTest {
     }
 
 
-    @Disabled
-    @Test void expectNestedScalarStartNotContinueWithFlowSequence() {
+    @Disabled @Test void expectNestedScalarStartNotContinueWithFlowSequence() {
         Throwable thrown = catchThrowable(() -> parse("" +
                 "- scalar document\n" +
                 "  [illegal sequence]"));
@@ -143,8 +138,7 @@ class ScalarTest extends AbstractYamlTest {
                         "flow sequence [[][LEFT SQUARE BRACKET][0x5b] at line 2 char 3");
     }
 
-    @Disabled
-    @Test void expectNestedScalarStartNotContinueWithBlockSequence() {
+    @Disabled @Test void expectNestedScalarStartNotContinueWithBlockSequence() {
         Throwable thrown = catchThrowable(() -> parse("" +
                 "- scalar document\n" +
                 "  - illegal sequence"));
@@ -155,8 +149,7 @@ class ScalarTest extends AbstractYamlTest {
                         "block sequence [-][HYPHEN-MINUS][0x2d] at line 2 char 3");
     }
 
-    @Disabled
-    @Test void expectNestedScalarStartNotContinueWithBlockMapping() {
+    @Disabled @Test void expectNestedScalarStartNotContinueWithBlockMapping() {
         Throwable thrown = catchThrowable(() -> parse("" +
                 "- scalar document\n" +
                 "  key: value"));
@@ -167,8 +160,7 @@ class ScalarTest extends AbstractYamlTest {
                         "block mapping [k][LATIN SMALL LETTER K][0x6b] at line 2 char 3");
     }
 
-    @Disabled
-    @Test void expectNestedScalarStartNotContinueWithFlowMapping() {
+    @Disabled @Test void expectNestedScalarStartNotContinueWithFlowMapping() {
         Throwable thrown = catchThrowable(() -> parse("" +
                 "- scalar document\n" +
                 "  {key: value}"));
@@ -219,8 +211,7 @@ class ScalarTest extends AbstractYamlTest {
     }
 
 
-    @Disabled
-    @Nested class givenScalarWithComment extends SingleDocument {
+    @Disabled @Nested class givenScalarWithComment extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string # dummy-comment";
             expected = new Document().node(new Scalar().line("dummy-string")
@@ -228,8 +219,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenScalarWithIndentedComment extends SingleDocument {
+    @Disabled @Nested class givenScalarWithIndentedComment extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string    # dummy-comment";
             expected = new Document().node(new Scalar().line("dummy-string")
@@ -237,8 +227,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenScalarWithCommentWithLeadingSpaces extends SingleDocument {
+    @Disabled @Nested class givenScalarWithCommentWithLeadingSpaces extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string #     dummy-comment";
             expected = new Document().node(new Scalar().line("dummy-string")
@@ -256,8 +245,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenScalarWithCommentAfter extends SingleDocument {
+    @Disabled @Nested class givenScalarWithCommentAfter extends SingleDocument {
         @BeforeEach void setup() {
             input = "dummy-string\n" +
                     "# dummy-comment";
@@ -267,8 +255,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenScalarWithCommentBeforeAndAfter extends SingleDocument {
+    @Disabled @Nested class givenScalarWithCommentBeforeAndAfter extends SingleDocument {
         @BeforeEach void setup() {
             input = "# before\n" +
                     "dummy-string\n" +
@@ -280,8 +267,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenScalarWithIndentedCommentBeforeAndAfter extends SingleDocument {
+    @Disabled @Nested class givenScalarWithIndentedCommentBeforeAndAfter extends SingleDocument {
         @BeforeEach void setup() {
             input = "    # before\n" +
                     "dummy-string\n" +
@@ -295,8 +281,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenIndentedScalarWithIndentedComment extends SingleDocument {
+    @Disabled @Nested class givenIndentedScalarWithIndentedComment extends SingleDocument {
         @BeforeEach void setup() {
             input = "    dummy-string  # dummy-comment";
             expected = new Document().node(new Scalar()
@@ -305,8 +290,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenTwoLineScalarWithCommentInside extends SingleDocument {
+    @Disabled @Nested class givenTwoLineScalarWithCommentInside extends SingleDocument {
         @BeforeEach void setup() {
             input = "before # inside\n" +
                     "after";
@@ -316,8 +300,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenTwoLineScalarWithCommentAfterSecond extends SingleDocument {
+    @Disabled @Nested class givenTwoLineScalarWithCommentAfterSecond extends SingleDocument {
         @BeforeEach void setup() {
             input = "one\n" +
                     "two # comment";
@@ -327,8 +310,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenTwoLineScalarWithTwoComments extends SingleDocument {
+    @Disabled @Nested class givenTwoLineScalarWithTwoComments extends SingleDocument {
         @BeforeEach void setup() {
             input = "one # first\n" +
                     "two # second";
@@ -338,8 +320,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenTwoLineScalarWithTwoIndentedComments extends SingleDocument {
+    @Disabled @Nested class givenTwoLineScalarWithTwoIndentedComments extends SingleDocument {
         @BeforeEach void setup() {
             input = "one      # first\n" +
                     "long-two # second";
@@ -349,8 +330,7 @@ class ScalarTest extends AbstractYamlTest {
         }
     }
 
-    @Disabled
-    @Nested class givenTwoLineScalarWithCommentBetween extends SingleDocument {
+    @Disabled @Nested class givenTwoLineScalarWithCommentBetween extends SingleDocument {
         @BeforeEach void setup() {
             input = "one\n" +
                     "# comment\n" +
