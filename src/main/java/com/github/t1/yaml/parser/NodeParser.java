@@ -23,7 +23,7 @@ import static com.github.t1.yaml.parser.Symbol.QUESTION_MARK;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 import static com.github.t1.yaml.parser.Symbol.WS;
 
-public class NodeParser {
+class NodeParser {
     private final YamlScanner next;
     private final Nesting nesting;
 
@@ -34,7 +34,7 @@ public class NodeParser {
 
     @Override public String toString() { return "NodeParser " + next + " nesting: " + nesting; }
 
-    public Node node() {
+    Node node() {
         nesting.expect();
         if (next.isFlowSequence())
             return flowSequence();

@@ -16,10 +16,12 @@ class YamlScanner extends Scanner {
     YamlScanner(int lookAheadLimit, Reader reader) { super(lookAheadLimit, reader); }
 
     @Override public boolean more() {
-        return super.more()
+        return anyMore()
             && !is(DOCUMENT_END_MARKER)
             && !is(DIRECTIVES_END_MARKER); // of next document
     }
+
+    boolean anyMore() { return super.more(); }
 
     boolean isFlowSequence() { return is(FLOW_SEQUENCE_START); }
 

@@ -99,7 +99,7 @@ public class DocumentParser {
         }
     }
 
-    public boolean more() { return next.more(); }
+    public boolean more() { return next.anyMore(); }
 
     @Override public String toString() { return next.toString(); }
 }

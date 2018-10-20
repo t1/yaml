@@ -2,58 +2,109 @@ package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.model.Scalar;
 import com.github.t1.yaml.model.Scalar.Line;
-import com.github.t1.yaml.tools.Scanner;
+import com.github.t1.yaml.model.Scalar.Style;
 
-import static com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START;
-import static com.github.t1.yaml.parser.Symbol.FLOW_MAPPING_START;
-import static com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START;
+import static com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED;
+import static com.github.t1.yaml.model.Scalar.Style.PLAIN;
+import static com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED;
+import static com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE;
+import static com.github.t1.yaml.parser.Symbol.DOUBLE_QUOTE;
 import static com.github.t1.yaml.parser.Symbol.NL;
+import static com.github.t1.yaml.parser.Symbol.NL_OR_COMMENT;
+import static com.github.t1.yaml.parser.Symbol.SINGLE_QUOTE;
 import static com.github.t1.yaml.parser.Symbol.SPACE;
 
 class ScalarParser {
-    public static ScalarParser of(Scanner next, Nesting nesting) {
+    public static ScalarParser of(YamlScanner next, Nesting nesting) {
         int indent = next.count(SPACE);
-        Quotes quotes = Quotes.recognize(next);
-        return new ScalarParser(quotes, indent, next, nesting);
+        Style style = recognize(next);
+        return new ScalarParser(indent, next, nesting, style);
     }
 
-    private final Quotes quotes;
+    private static Style recognize(YamlScanner scanner) {
+        if (scanner.accept(SINGLE_QUOTE))
+            return SINGLE_QUOTED;
+        if (scanner.accept(DOUBLE_QUOTE))
+            return DOUBLE_QUOTED;
+        return PLAIN;
+    }
+
     private final int indent;
-    private final Scanner next;
+    private final YamlScanner next;
     private final Nesting nesting;
 
     private final Scalar scalar;
 
-    private ScalarParser(Quotes quotes, int indent, Scanner next, Nesting nesting) {
-        this.quotes = quotes;
+    private ScalarParser(int indent, YamlScanner next, Nesting nesting, Style style) {
         this.indent = indent;
         this.next = next;
-
-        this.scalar = new Scalar().style(quotes.style);
         this.nesting = nesting;
+
+        this.scalar = new Scalar().style(style);
     }
 
     public Scalar scalar() {
-        String text = quotes.scanLine(next);
+        String text = scanLine();
         scalar.line(new Line().indent(indent).text(text));
         boolean lineContinue = next.accept(NL);
         while (lineContinue && next.more() && nesting.accept()) {
-            if (next.is(FLOW_SEQUENCE_START))
+            if (next.isFlowSequence())
                 throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence " + next);
-            if (next.is(BLOCK_SEQUENCE_START))
+            if (next.isBlockSequence())
                 throw new YamlParseException("Expected a scalar node to continue with scalar values but found block sequence " + next);
-            if (next.is(FLOW_MAPPING_START))
+            if (next.isFlowMapping())
                 throw new YamlParseException("Expected a scalar node to continue with scalar values but found flow mapping " + next);
-            // if (isBlockMapping())
-            //     throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping " + next);
+            if (next.isBlockMapping())
+                throw new YamlParseException("Expected a scalar node to continue with scalar values but found block mapping " + next);
             // if (next.accept(COMMENT)) {
             //     scalar.line(new Line().text(""));
             //     comment(scalar);
             // } else {
-            scalar.line(new Line().indent(next.count(SPACE)).text(quotes.scanLine(next)));
+            scalar.line(new Line().indent(next.count(SPACE)).text(scanLine()));
             // }
             lineContinue = !next.accept(NL);
         }
         return scalar;
+    }
+
+    private String scanLine() {
+        switch (scalar.style()) {
+            case PLAIN:
+                return scanPlain();
+            case SINGLE_QUOTED:
+                return scanSingleQuoted();
+            case DOUBLE_QUOTED:
+                return scanDoubleQuoted();
+        }
+        throw new UnsupportedOperationException("unreachable");
+    }
+
+    private String scanPlain() {
+        StringBuilder builder = new StringBuilder();
+        while (next.more() && !next.is(NL_OR_COMMENT) && !next.is(BLOCK_MAPPING_VALUE))
+            builder.appendCodePoint(next.read().value);
+        return builder.toString();
+    }
+
+    private String scanSingleQuoted() {
+        StringBuilder out = new StringBuilder();
+        while (next.more() && !next.is(NL) && !next.accept(SINGLE_QUOTE))
+            if (next.accept("''"))
+                out.append(SINGLE_QUOTE);
+            else
+                out.appendCodePoint(next.read().value);
+        return out.toString();
+    }
+
+    private String scanDoubleQuoted() {
+        StringBuilder out = new StringBuilder();
+        while (next.more() && !next.is(DOUBLE_QUOTE)) {
+            if (next.accept("\\"))
+                out.append("\\");
+            out.appendCodePoint(next.read().value);
+        }
+        if (next.more())
+            next.expect(DOUBLE_QUOTE);
+        return out.toString();
     }
 }
