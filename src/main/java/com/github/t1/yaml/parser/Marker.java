@@ -2,8 +2,7 @@ package com.github.t1.yaml.parser;
 
 import com.github.t1.yaml.tools.CodePoint;
 import com.github.t1.yaml.tools.Token;
-import lombok.Getter;
-import lombok.experimental.Accessors;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -22,13 +21,15 @@ public enum Marker implements Token {
     DIRECTIVES_END_MARKER(MINUS, MINUS, MINUS),
     DOCUMENT_END_MARKER(DOT, DOT, DOT);
 
-    @Getter final List<Symbol> symbols;
-    @Getter @Accessors(fluent = true) final List<Predicate<CodePoint>> predicates;
+    final List<Symbol> symbols;
+    final List<Predicate<CodePoint>> predicates;
 
     Marker(Symbol... symbols) {
         this.symbols = asList(symbols);
         this.predicates = this.symbols.stream()
-                .flatMap(symbol -> symbol.predicates().stream())
-                .collect(Collectors.toList());
+            .flatMap(symbol -> symbol.getPredicates().stream())
+            .collect(Collectors.toList());
     }
+
+    @NotNull public List<Predicate<CodePoint>> getPredicates() {return this.predicates;}
 }

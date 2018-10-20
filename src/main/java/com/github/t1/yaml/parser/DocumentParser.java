@@ -73,7 +73,7 @@ public class DocumentParser {
     private boolean isIndentedComment() {
         String spaces = next.peekUntil(NL_OR_COMMENT);
         return spaces != null
-            && CodePoint.stream(spaces).allMatch(SPACE)
+            && CodePoint.Companion.stream(spaces).allMatch(SPACE)
             && next.peekAfter(spaces.length()).map(COMMENT::test).orElse(false);
     }
 

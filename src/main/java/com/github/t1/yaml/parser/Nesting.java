@@ -3,7 +3,7 @@ package com.github.t1.yaml.parser;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import static com.github.t1.yaml.tools.Tools.spaces;
+import static com.github.t1.yaml.tools.ToolsKt.spaces;
 
 @RequiredArgsConstructor class Nesting {
     private final YamlScanner next;

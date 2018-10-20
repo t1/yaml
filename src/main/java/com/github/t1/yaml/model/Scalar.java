@@ -29,8 +29,8 @@ public @Data class Scalar extends Node {
 
         public int rtrim() {
             int spaces = 0;
-            int count = CodePoint.count(text);
-            while (spaces < count && CodePoint.at(count - spaces - 1, text).is(Character::isSpaceChar))
+            int count = CodePoint.Companion.count(text);
+            while (spaces < count && CodePoint.Companion.at(count - spaces - 1, text).is(Character::isSpaceChar))
                 spaces++;
             this.text = text.substring(0, count - spaces);
             return spaces;

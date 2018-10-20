@@ -15,7 +15,7 @@ import com.github.t1.yaml.model.Stream;
 import com.github.t1.yaml.model.Visitor;
 import lombok.RequiredArgsConstructor;
 
-import static com.github.t1.yaml.tools.Tools.spaces;
+import static com.github.t1.yaml.tools.ToolsKt.spaces;
 
 @RequiredArgsConstructor public class Presenter {
     private static final char NL = '\n';

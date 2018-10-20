@@ -82,7 +82,7 @@ class ScalarParser {
     private String scanPlain() {
         StringBuilder builder = new StringBuilder();
         while (next.more() && !next.is(NL_OR_COMMENT) && !next.is(BLOCK_MAPPING_VALUE))
-            builder.appendCodePoint(next.read().value);
+            builder.appendCodePoint(next.read().getValue());
         return builder.toString();
     }
 
@@ -92,7 +92,7 @@ class ScalarParser {
             if (next.accept("''"))
                 out.append(SINGLE_QUOTE);
             else
-                out.appendCodePoint(next.read().value);
+                out.appendCodePoint(next.read().getValue());
         return out.toString();
     }
 
@@ -101,7 +101,7 @@ class ScalarParser {
         while (next.more() && !next.is(DOUBLE_QUOTE)) {
             if (next.accept("\\"))
                 out.append("\\");
-            out.appendCodePoint(next.read().value);
+            out.appendCodePoint(next.read().getValue());
         }
         if (next.more())
             next.expect(DOUBLE_QUOTE);

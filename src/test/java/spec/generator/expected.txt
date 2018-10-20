@@ -4,13 +4,13 @@
    <[\r][CARRIAGE RETURN (CR)][0xd]> ||
    [<[ ][SPACE][0x20]>-<[~][TILDE][0x7e]>] ||
    <[][NEXT LINE (NEL)][0x85]> ||
-   [<[ ][NO-BREAK SPACE][0xa0]>-<[퟿][null][0xd7ff]>] ||
+   [<[ ][NO-BREAK SPACE][0xa0]>-<[퟿][?][0xd7ff]>] ||
    [<[][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] ||
-   [<[𐀀][LINEAR B SYLLABLE B008 A][0x10000]>-<[􏿿][null][0x10ffff]>]]
+   [<[𐀀][LINEAR B SYLLABLE B008 A][0x10000]>-<[􏿿][?][0x10ffff]>]]
 
 [2] : nb-json:
   [<[\t][CHARACTER TABULATION][0x9]> ||
-   [<[ ][SPACE][0x20]>-<[􏿿][null][0x10ffff]>]]
+   [<[ ][SPACE][0x20]>-<[􏿿][?][0x10ffff]>]]
 
 [3] : c-byte-order-mark:
   <[﻿][ZERO WIDTH NO-BREAK SPACE][0xfeff]>

@@ -34,12 +34,12 @@ import lombok.RequiredArgsConstructor;
 
     public static Escape of(CodePoint codePoint) {
         for (Escape escape : values())
-            if (codePoint.value == escape.hex)
+            if (codePoint.getValue() == escape.hex)
                 return escape;
         return null;
     }
 
-    public String raw() { return CodePoint.of(hex).toString(); }
+    public String raw() { return CodePoint.Companion.of(hex).toString(); }
 
     public String hexString() { return Integer.toHexString(hex); }
 }

@@ -70,9 +70,9 @@ class LoadSpecTest {
             "   <[\\r][CARRIAGE RETURN (CR)][0xd]> ||\n" +
             "   [<[ ][SPACE][0x20]>-<[~][TILDE][0x7e]>] ||\n" +
             "   <[\u0085][NEXT LINE (NEL)][0x85]> ||\n" +
-            "   [<[ ][NO-BREAK SPACE][0xa0]>-<[\uD7FF][null][0xd7ff]>] ||\n" +
+            "   [<[ ][NO-BREAK SPACE][0xa0]>-<[\uD7FF][?][0xd7ff]>] ||\n" +
             "   [<[\uE000][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] ||\n" +
-            "   [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][null][0x10ffff]>]]")
+            "   [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]")
     }
 
     @Test fun shouldParseHex() {

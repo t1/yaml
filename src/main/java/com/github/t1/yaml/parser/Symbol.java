@@ -64,9 +64,9 @@ public enum Symbol implements Token, Predicate<CodePoint> {
 
     Symbol(Predicate<Integer> predicate) { this(new P(predicate)); }
 
-    @Override public boolean test(CodePoint codePoint) { return predicate.test(codePoint.value); }
+    @Override public boolean test(CodePoint codePoint) { return predicate.test(codePoint.getValue()); }
 
-    @Override public List<Predicate<CodePoint>> predicates() { return singletonList(this); }
+    @Override public List<Predicate<CodePoint>> getPredicates() { return singletonList(this); }
 
     @RequiredArgsConstructor
     static class P {
