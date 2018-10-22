@@ -1,9 +1,15 @@
 package com.github.t1.yaml.model
 
+import com.github.t1.yaml.model.Collection.Companion.DEFAULT_STYLE
+import com.github.t1.yaml.model.Collection.Style
+
 data class Sequence(
-    override var style: Style = Style.BLOCK,
+    override var anchor: String? = null,
+    override var spacing: String? = null,
+    override var lineWrapping: String? = null,
+    override var style: Style = DEFAULT_STYLE,
     val items: MutableList<Item> = mutableListOf()
-) : Collection(style) {
+) : Collection {
 
     data class Item(
         var node: Node,

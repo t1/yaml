@@ -45,6 +45,4 @@ fun withoutTrailingNl(stream: Stream?): String? {
     return string
 }
 
-fun parse(yaml: String): Stream {
-    return Yaml.parseAll(resolveMagic(yaml))
-}
+fun parse(yaml: String): Stream = Yaml.parseAll(resolveMagic(yaml))

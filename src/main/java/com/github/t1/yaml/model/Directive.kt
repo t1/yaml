@@ -1,7 +1,7 @@
 package com.github.t1.yaml.model
 
 data class Directive(
-    val name: String? = null,
+    val name: String,
     val parameters: String? = null
 ) {
 

@@ -7,10 +7,13 @@ import com.github.t1.yaml.tools.CodePoint
 import java.util.function.Predicate
 
 data class Scalar(
+    override var anchor: String? = null,
+    override var spacing: String? = null,
+    override var lineWrapping: String? = null,
     var tag: String? = null,
     var style: Style = PLAIN,
     val lines: MutableList<Line> = mutableListOf()
-) : Node() {
+) : Node {
 
     val isEmpty: Boolean
         get() = lines.isEmpty()

@@ -1,8 +1,15 @@
 package com.github.t1.yaml.model
 
+import com.github.t1.yaml.model.Collection.Companion.DEFAULT_STYLE
+import com.github.t1.yaml.model.Collection.Style
+
 data class Mapping(
+    override var anchor: String? = null,
+    override var spacing: String? = null,
+    override var lineWrapping: String? = null,
+    override var style: Style = DEFAULT_STYLE,
     val entries: MutableList<Entry> = mutableListOf()
-) : Collection() {
+) : Collection {
 
     fun entry(key: String, value: String): Mapping = entry(Scalar().line(key), value)
 

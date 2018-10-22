@@ -1,3 +1,6 @@
 package com.github.t1.yaml.model
 
-class NonSpecificTag : Tag()
+data class NonSpecificTag(
+    override val name: String,
+    override val kind: String
+) : Tag

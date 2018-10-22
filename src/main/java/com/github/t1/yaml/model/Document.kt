@@ -6,13 +6,13 @@ data class Document(
     val directives: MutableList<Directive> = mutableListOf(),
     var hasDirectivesEndMarker: Boolean = false,
 
-    val prefixComments :MutableList<Comment> = mutableListOf(),
+    val prefixComments: MutableList<Comment> = mutableListOf(),
 
     var node: Node? = null,
 
     var hasDocumentEndMarker: Boolean = false,
     var suffixComment: Comment? = null
-){
+) {
     val isEmpty: Boolean
         get() = node == null && !hasDirectivesEndMarker
 

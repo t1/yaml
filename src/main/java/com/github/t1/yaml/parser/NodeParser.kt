@@ -1,6 +1,5 @@
 package com.github.t1.yaml.parser
 
-import com.github.t1.yaml.model.Collection.Style.BLOCK
 import com.github.t1.yaml.model.Collection.Style.FLOW
 import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Mapping
@@ -56,7 +55,7 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun blockSequence(): Sequence {
-        val sequence = Sequence(style = BLOCK)
+        val sequence = Sequence()
         do
             sequence.item(blockSequenceItem())
         while (next.more() && nesting.accept())

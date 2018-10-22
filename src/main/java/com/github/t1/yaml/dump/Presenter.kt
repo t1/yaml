@@ -1,7 +1,8 @@
 package com.github.t1.yaml.dump
 
 import com.github.t1.yaml.model.Alias
-import com.github.t1.yaml.model.Collection
+import com.github.t1.yaml.model.Collection.Style.BLOCK
+import com.github.t1.yaml.model.Collection.Style.FLOW
 import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Directive
 import com.github.t1.yaml.model.Document
@@ -69,11 +70,11 @@ class Presenter {
 
         override fun enterSequenceItem(sequence: Sequence, item: Item) {
             when (sequence.style) {
-                Collection.Style.FLOW -> {
+                FLOW -> {
                     skipIndent = true
                     out.append(if (item === sequence.firstItem()) "[" else ", ")
                 }
-                Collection.Style.BLOCK -> {
+                BLOCK -> {
                     out.append(indent())
                     skipNextIndent = !item.nl
                     indent++
@@ -84,12 +85,12 @@ class Presenter {
 
         override fun leaveSequenceItem(sequence: Sequence, item: Item) {
             when (sequence.style) {
-                Collection.Style.FLOW -> {
+                FLOW -> {
                     if (item === sequence.lastItem())
                         out.append("]")
                     skipIndent = false
                 }
-                Collection.Style.BLOCK -> {
+                BLOCK -> {
                     if (item !== sequence.lastItem())
                         nl()
                     indent--
