@@ -86,6 +86,7 @@
     <dependencies>
         <compile>
             <jar>org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlin.version}</jar>
+            <jar>com.nhaarman:mockito-kotlin:1.6.0</jar>
         </compile>
         <test>
             <jar>org.jetbrains.kotlin:kotlin-test:${kotlin.version}</jar>

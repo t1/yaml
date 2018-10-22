@@ -42,7 +42,6 @@ class ParserGeneratorJavaTest {
             "import static java.nio.charset.StandardCharsets.UTF_8;\n" +
             "\n" +
             "@Generated(\"" + ParserGenerator::class.java.name + "\")\n" +
-            "@lombok.Generated\n" +
             "public class FooParser {\n" +
             "    private final Scanner next;\n" +
             "    private Document document;\n" +

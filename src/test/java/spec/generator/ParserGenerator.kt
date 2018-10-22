@@ -53,7 +53,6 @@ class ParserGenerator(private val spec: Spec) {
                 "import static java.nio.charset.StandardCharsets.UTF_8;\n" +
                 "\n" +
                 "@Generated(\"").append(ParserGenerator::class.java.name).append("\")\n" +
-                "@lombok.Generated\n" +
                 "public class ").append(className).append(" {\n" +
                 "    private final Scanner next;\n" +
                 "    private Document document;\n" +
