@@ -1,11 +1,12 @@
 package com.github.t1.yaml.parser
 
-import com.github.t1.yaml.parser.Symbol.COLON
-import com.github.t1.yaml.parser.Symbol.DOT
-import com.github.t1.yaml.parser.Symbol.MINUS
-import com.github.t1.yaml.parser.Symbol.WS
+import com.github.t1.yaml.parser.YamlSymbol.COLON
+import com.github.t1.yaml.parser.YamlSymbol.DOT
+import com.github.t1.yaml.parser.YamlSymbol.MINUS
 import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.yaml.tools.Symbol
 import com.github.t1.yaml.tools.Token
+import com.github.t1.yaml.tools.WS
 import java.util.Arrays.asList
 import java.util.function.Predicate
 import java.util.stream.Collectors

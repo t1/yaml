@@ -8,17 +8,17 @@ import com.github.t1.yaml.model.Node
 import com.github.t1.yaml.model.Scalar
 import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
-import com.github.t1.yaml.parser.Symbol.COLON
-import com.github.t1.yaml.parser.Symbol.COMMENT
-import com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_END
-import com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ENTRY
-import com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ITEM_END
-import com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START
-import com.github.t1.yaml.parser.Symbol.MINUS
-import com.github.t1.yaml.parser.Symbol.NL
-import com.github.t1.yaml.parser.Symbol.QUESTION_MARK
-import com.github.t1.yaml.parser.Symbol.SPACE
-import com.github.t1.yaml.parser.Symbol.WS
+import com.github.t1.yaml.parser.YamlSymbol.COLON
+import com.github.t1.yaml.parser.YamlSymbol.COMMENT
+import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_END
+import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_ENTRY
+import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_ITEM_END
+import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_START
+import com.github.t1.yaml.parser.YamlSymbol.MINUS
+import com.github.t1.yaml.parser.YamlSymbol.QUESTION_MARK
+import com.github.t1.yaml.parser.YamlSymbol.SPACE
+import com.github.t1.yaml.tools.NL
+import com.github.t1.yaml.tools.WS
 
 internal class NodeParser(private val next: YamlScanner) {
     private val nesting = Nesting(this.next)
@@ -123,7 +123,7 @@ internal class NodeParser(private val next: YamlScanner) {
 
     private fun comment(scalar: Scalar) {
         next.accept(SPACE)
-        val line = scalar.lastLine()
+        val line = scalar.lastLine
         line.comment(Comment(indent = line.rtrim(), text = next.readLine()))
     }
 }

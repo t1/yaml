@@ -13,6 +13,7 @@ data class CodePoint(val value: Int) {
             || value >= 'a'.toInt() && value <= 'f'.toInt()
 
     val isEof: Boolean get() = value < 0
+    val isNl: Boolean get() = value == '\n'.toInt() || value == '\r'.toInt()
 
     override fun toString(): String = if (value < 0) "" else String(toChars())
 

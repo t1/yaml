@@ -5,12 +5,11 @@ import com.github.t1.yaml.model.Directive
 import com.github.t1.yaml.model.Document
 import com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER
 import com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER
-import com.github.t1.yaml.parser.Symbol.COMMENT
-import com.github.t1.yaml.parser.Symbol.NL
-import com.github.t1.yaml.parser.Symbol.NL_OR_COMMENT
-import com.github.t1.yaml.parser.Symbol.PERCENT
-import com.github.t1.yaml.parser.Symbol.SPACE
-import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.yaml.parser.YamlSymbol.BOM
+import com.github.t1.yaml.parser.YamlSymbol.COMMENT
+import com.github.t1.yaml.parser.YamlSymbol.PERCENT
+import com.github.t1.yaml.parser.YamlSymbol.SPACE
+import com.github.t1.yaml.tools.NL
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -24,14 +23,6 @@ class DocumentParser(reader: Reader) {
     private val next: YamlScanner
     private var document: Document? = null
 
-    private val isIndentedComment: Boolean
-        get() {
-            val spaces = next.peekUntil(NL_OR_COMMENT)
-            return (spaces != null
-                && CodePoint.stream(spaces).allMatch(SPACE)
-                && next.peekAfter(spaces.length).map { COMMENT.test(it) }.orElse(false))
-        }
-
     constructor(yaml: String) : this(StringReader(yaml))
 
     constructor(inputStream: InputStream) : this(BufferedReader(InputStreamReader(inputStream, UTF_8)))
@@ -43,7 +34,7 @@ class DocumentParser(reader: Reader) {
     fun document(): Optional<Document> {
         this.document = Document()
 
-        next.acceptBom()
+        next.accept(BOM)
 
         if (next.end())
             return Optional.empty()
@@ -72,7 +63,7 @@ class DocumentParser(reader: Reader) {
 
 
     private fun prefixComments() {
-        while (isIndentedComment)
+        while (next.isIndentedComment)
             document!!.prefixComment(comment())
     }
 

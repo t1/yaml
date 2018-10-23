@@ -1,15 +1,13 @@
 package com.github.t1.yaml.tools
 
-import com.github.t1.yaml.parser.Symbol.BOM
-import com.github.t1.yaml.parser.Symbol.NL
-import com.github.t1.yaml.parser.Symbol.WS
-import com.github.t1.yaml.parser.YamlParseException
 import java.io.Reader
 import java.io.StringReader
 import java.util.Optional
 
-open class Scanner @java.beans.ConstructorProperties("lookAheadLimit", "reader") constructor(private val lookAheadLimit: Int, private val reader: CodePointReader) {
-
+open class Scanner(
+    private val lookAheadLimit: Int,
+    private val reader: CodePointReader
+) {
     private var position = 1
     private var lineNumber = 1
 
@@ -18,13 +16,15 @@ open class Scanner @java.beans.ConstructorProperties("lookAheadLimit", "reader")
     constructor(lookAheadLimit: Int, text: String) : this(lookAheadLimit, StringReader(text))
 
 
+    val isStartOfFile get() = position == 1 && lineNumber == 1
+
     fun expect(string: String): Scanner = expect(StringToken(string))
 
     fun expect(token: Token): Scanner {
         for (predicate in token.predicates) {
             val info = this.toString()
             if (!predicate.test(read()))
-                throw YamlParseException("expected $predicate but got $info")
+                throw ParseException("expected $predicate but got $info")
         }
         return this
     }
@@ -54,15 +54,32 @@ open class Scanner @java.beans.ConstructorProperties("lookAheadLimit", "reader")
 
     open fun more(): Boolean = !end()
 
-    fun acceptBom() {
-        if (`is`(BOM))
-            reader.read()
-    }
-
     fun peek(): CodePoint = peek(1)[0]
 
     private fun peek(count: Int): List<CodePoint> {
         reader.mark(count).use { return reader.read(count) }
+    }
+
+    fun peekWhile(token: Token): String {
+        val predicates = token.predicates
+        reader.mark(lookAheadLimit).use {
+            val out = StringBuilder()
+            var matchLength = 0
+            while (true) {
+                val codePoint = reader.read()
+                if (codePoint.isEof)
+                    return ""
+                if (predicates[matchLength].test(codePoint)) {
+                    if (++matchLength == predicates.size)
+                        return out.toString()
+                } else {
+                    @Suppress("UNUSED_VALUE")
+                    matchLength = 0
+                    codePoint.appendTo(out)
+                }
+            }
+        }
+        throw UnsupportedOperationException("unreachable")
     }
 
     fun peekUntil(token: Token): String? {
@@ -92,11 +109,9 @@ open class Scanner @java.beans.ConstructorProperties("lookAheadLimit", "reader")
         return if (peek.size < count + 1) Optional.empty() else Optional.of(peek[peek.size - 1])
     }
 
-    fun read(): CodePoint {
+    open fun read(): CodePoint {
         val codePoint = reader.read()
-        if (BOM.test(codePoint))
-            throw YamlParseException("A BOM must not appear inside a document")
-        if (NL.test(codePoint)) {
+        if (codePoint.isNl) {
             lineNumber++
             position = 1
         } else {
@@ -141,5 +156,7 @@ open class Scanner @java.beans.ConstructorProperties("lookAheadLimit", "reader")
         return out.toString()
     }
 
-    override fun toString() = peek().xinfo() + " at line " + lineNumber + " char " + position
+    override fun toString() = "${peek().xinfo()} at $positionInfo"
+
+    val positionInfo get() = "line $lineNumber char $position"
 }

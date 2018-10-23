@@ -47,7 +47,7 @@ interface Visitor {
 
     fun visit(line: Scalar.Line) {}
 
-    fun leaveScalarLine(node: Scalar, line: Scalar.Line) {}
+    fun leaveScalarLine(scalar: Scalar, line: Scalar.Line) {}
 
     fun leave(scalar: Scalar) {}
 

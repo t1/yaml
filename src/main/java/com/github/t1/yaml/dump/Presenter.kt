@@ -11,6 +11,9 @@ import com.github.t1.yaml.model.Mapping.Entry
 import com.github.t1.yaml.model.Node
 import com.github.t1.yaml.model.Scalar
 import com.github.t1.yaml.model.Scalar.Line
+import com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED
+import com.github.t1.yaml.model.Scalar.Style.PLAIN
+import com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED
 import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
 import com.github.t1.yaml.model.Stream
@@ -107,18 +110,19 @@ class Presenter {
 
         override fun enterScalarLine(node: Scalar, line: Line) {
             out.append(indent()).append(spaces(line.indent))
-            out.append(line.text)
+            out.append(when (node.style) {
+                PLAIN -> line.text
+                SINGLE_QUOTED -> line.text.replace("'", "''")
+                DOUBLE_QUOTED -> line.text
+            })
+        }
+
+        override fun leaveScalarLine(scalar: Scalar, line: Line) {
+            out.append(scalar.style.quote)
             if (line.comment != null)
                 append(line.comment!!)
-        }
-
-        override fun leaveScalarLine(node: Scalar, line: Line) {
-            if (line !== node.lastLine())
+            if (line != scalar.lastLine)
                 nl()
-        }
-
-        override fun leave(scalar: Scalar) {
-            out.append(scalar.style.quote)
         }
 
 

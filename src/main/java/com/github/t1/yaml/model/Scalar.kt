@@ -67,11 +67,11 @@ data class Scalar(
     }
 
     fun comment(comment: Comment): Scalar {
-        lastLine().comment(comment)
+        lastLine.comment(comment)
         return this
     }
 
-    fun lastLine(): Line {
+    val lastLine get(): Line {
         if (lines.isEmpty())
             line("")
         return lines[lines.size - 1]

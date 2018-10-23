@@ -2,7 +2,10 @@ package helpers
 
 import com.github.t1.yaml.Yaml
 import com.github.t1.yaml.model.Stream
+import com.github.t1.yaml.parser.YamlParseException
+import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import kotlin.test.fail
 
 private const val BOM = "⇔"
 private const val EMPTY = "°"
@@ -46,3 +49,6 @@ fun withoutTrailingNl(stream: Stream?): String? {
 }
 
 fun parse(yaml: String): Stream = Yaml.parseAll(resolveMagic(yaml))
+
+fun catchParseException(body: () -> Unit): YamlParseException = Assertions.catchThrowableOfType(body, YamlParseException::class.java)
+    ?: fail("YamlParseException expected but nothing thrown")
