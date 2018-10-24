@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
             "!!str \"Document\"\n")
     }
 
-    @Disabled @Test fun spec_9_2_Document_Markers() {
+    @Test fun spec_9_2_Document_Markers() {
         parseAndCheck("" +
             "%YAML 1.2\n" +
             "---\n" +

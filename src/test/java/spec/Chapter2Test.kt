@@ -97,7 +97,7 @@ import org.junit.jupiter.api.Test
             "  }", "")
     }
 
-    @Disabled @Test fun spec_2_7_Two_Documents_in_a_Stream() {
+    @Test fun spec_2_7_Two_Documents_in_a_Stream() {
         parseAndCheck("" +
             "# Ranking of 1998 home runs\n" +
             "---\n" +
@@ -122,7 +122,7 @@ import org.junit.jupiter.api.Test
             "- !!str \"St Louis Cardinals\"\n")
     }
 
-    @Disabled @Test fun spec_2_8_Play_by_Play_Feed_from_a_Game() {
+    @Test fun spec_2_8_Play_by_Play_Feed_from_a_Game() {
         parseAndCheck("" +
             "---\n" +
             "time: 20:03:20\n" +
@@ -167,7 +167,7 @@ import org.junit.jupiter.api.Test
             "  - !!str \"Ken Griffey\"\n")
     }
 
-    @Disabled @Test fun spec_2_10_Node_for_Sammy_Sosa_appears_twice_in_this_document() {
+    @Test fun spec_2_10_Node_for_Sammy_Sosa_appears_twice_in_this_document() {
         parseAndCheck("" +
             "---\n" +
             "hr:\n" +
@@ -254,7 +254,7 @@ import org.junit.jupiter.api.Test
     }
 
     // TODO folded scalar
-    @Disabled @Test fun spec_2_15_Folded_newlines_are_preserved_for_more_indented_and_blank_lines() {
+    @Test fun spec_2_15_Folded_newlines_are_preserved_for_more_indented_and_blank_lines() {
         parseAndCheck("" +
             ">\n" +
             " Sammy Sosa completed another\n" +
@@ -270,7 +270,7 @@ import org.junit.jupiter.api.Test
     }
 
     // TODO literal and folded scalar
-    @Disabled @Test fun spec_2_16_Indentation_determines_scope() {
+    @Test fun spec_2_16_Indentation_determines_scope() {
         parseAndCheck("" +
             "name: Mark McGwire\n" +
             "accomplishment: >\n" +
@@ -286,7 +286,7 @@ import org.junit.jupiter.api.Test
             "? !!str \"stats\": !!str \"| 65 Home Runs 0.278 Batting Average\"\n")
     }
 
-    @Disabled @Test fun spec_2_17_Quoted_Scalars() {
+    @Test fun spec_2_17_Quoted_Scalars() {
         parseAndCheck("" +
             "unicode: \"Sosa did fine.\\u263A\"\n" + // TODO unicode
 
@@ -482,7 +482,7 @@ import org.junit.jupiter.api.Test
             "    Billsmer @ 338-4338.", "" + "")
     }
 
-    @Disabled @Test fun spec_2_28_Log_File() {
+    @Test fun spec_2_28_Log_File() {
         parseAndCheck("" +
             "---\n" +
             "Time: 2001-11-23 15:01:42 -5\n" +
