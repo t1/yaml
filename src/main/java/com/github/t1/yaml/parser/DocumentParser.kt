@@ -5,11 +5,12 @@ import com.github.t1.yaml.model.Directive
 import com.github.t1.yaml.model.Document
 import com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER
 import com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER
+import com.github.t1.yaml.parser.Marker.INDENTED_COMMENT
 import com.github.t1.yaml.parser.YamlSymbol.BOM
 import com.github.t1.yaml.parser.YamlSymbol.COMMENT
 import com.github.t1.yaml.parser.YamlSymbol.PERCENT
-import com.github.t1.yaml.parser.YamlSymbol.SPACE
 import com.github.t1.yaml.tools.NL
+import com.github.t1.yaml.tools.SPACE
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -20,16 +21,12 @@ import java.util.Optional
 
 class DocumentParser(reader: Reader) {
 
-    private val next: YamlScanner
+    private val next: YamlScanner = YamlScanner(reader)
     private var document: Document? = null
 
     constructor(yaml: String) : this(StringReader(yaml))
 
     constructor(inputStream: InputStream) : this(BufferedReader(InputStreamReader(inputStream, UTF_8)))
-
-    init {
-        this.next = YamlScanner(MAX_LOOK_AHEAD, reader)
-    }
 
     fun document(): Optional<Document> {
         this.document = Document()
@@ -63,7 +60,7 @@ class DocumentParser(reader: Reader) {
 
 
     private fun prefixComments() {
-        while (next.isIndentedComment)
+        while (next.peek(INDENTED_COMMENT))
             document!!.prefixComment(comment())
     }
 
@@ -81,7 +78,7 @@ class DocumentParser(reader: Reader) {
     private fun documentEnd() {
         if (next.accept(DOCUMENT_END_MARKER)) {
             document!!.hasDocumentEndMarker = true
-            if (next.`is`(SPACE))
+            if (next.peek(SPACE))
                 document!!.suffixComment = comment()
             else
                 next.accept(NL)
@@ -94,10 +91,5 @@ class DocumentParser(reader: Reader) {
 
     override fun toString(): String {
         return next.toString()
-    }
-
-    companion object {
-        /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832  */
-        private const val MAX_LOOK_AHEAD = 1024
     }
 }

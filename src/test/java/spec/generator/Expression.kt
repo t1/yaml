@@ -201,7 +201,7 @@ abstract class Expression {
     open class CodePointExpression(val codePoint: CodePoint) : Expression() {
 
         override fun toString(): String {
-            return "<" + codePoint.xinfo() + ">"
+            return "<${codePoint.info}>"
         }
 
         @Throws(IOException::class)

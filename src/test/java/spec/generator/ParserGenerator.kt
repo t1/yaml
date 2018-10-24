@@ -165,7 +165,7 @@ class ParserGenerator(private val spec: Spec) {
 
                     @Throws(IOException::class)
                     override fun visit(codePointExpression: CodePointExpression) {
-                        val codePoint = "CodePoint.of(0x" + codePointExpression.codePoint.hex() + ")"
+                        val codePoint = "CodePoint.of(0x${codePointExpression.codePoint.hex})"
                         val text = "next.is($codePoint) ? $codePoint : null;\n"
                         if (first) {
                             first = false

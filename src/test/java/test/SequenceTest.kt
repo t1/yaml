@@ -7,7 +7,6 @@ import com.github.t1.yaml.model.Scalar.Line
 import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 
 @Suppress("ClassName")
@@ -32,7 +31,7 @@ class SequenceTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenBlockSequenceOfIndentedScalars : SingleDocument() {
+    @Nested inner class givenBlockSequenceOfIndentedScalars : SingleDocument() {
         @BeforeEach fun setup() {
             input = "- 1\n" +
                 "  2\n" +
@@ -53,7 +52,7 @@ class SequenceTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenBlockSequenceWithIndentedScalarsInNewLines : SingleDocument() {
+    @Nested inner class givenBlockSequenceWithIndentedScalarsInNewLines : SingleDocument() {
         @BeforeEach fun setup() {
             input = "-\n" +
                 "  1\n" +

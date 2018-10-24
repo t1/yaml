@@ -164,7 +164,7 @@ class NodeExpressionParser(nodes: List<Node>) {
     }
 
     private fun switchLabel(): LiteralExpression {
-        return readLiteralUntil { next.`is`("⇒") }
+        return readLiteralUntil { next.peek("⇒") }
     }
 
     private fun switchValue(): LiteralExpression {

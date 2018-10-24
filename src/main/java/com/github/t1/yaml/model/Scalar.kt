@@ -3,8 +3,6 @@ package com.github.t1.yaml.model
 import com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED
 import com.github.t1.yaml.model.Scalar.Style.PLAIN
 import com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED
-import com.github.t1.yaml.tools.CodePoint
-import java.util.function.Predicate
 
 data class Scalar(
     override var anchor: String? = null,
@@ -15,12 +13,10 @@ data class Scalar(
     val lines: MutableList<Line> = mutableListOf()
 ) : Node {
 
-    val isEmpty: Boolean
-        get() = lines.isEmpty()
+    val isEmpty: Boolean get() = lines.isEmpty()
 
-    override fun toString(): String {
-        return "Scalar(tag=" + this.tag + ", style=" + this.style + ", lines=" + this.lines + ")"
-    }
+    override fun toString(): String =
+        "Scalar(tag=" + this.tag + ", style=" + this.style + ", lines=" + this.lines + ")"
 
     enum class Style(val quote: String) {
         PLAIN(""), SINGLE_QUOTED("\'"), DOUBLE_QUOTED("\"");
@@ -31,15 +27,6 @@ data class Scalar(
         var text: String = "",
         var comment: Comment? = null
     ) {
-        fun rtrim(): Int {
-            var spaces = 0
-            val count = CodePoint.count(text)
-            while (spaces < count && CodePoint.at(count - spaces - 1, text).`is`(Predicate { Character.isSpaceChar(it) }))
-                spaces++
-            this.text = text.substring(0, count - spaces)
-            return spaces
-        }
-
         fun indent(indent: Int): Line {
             this.indent = indent
             return this
@@ -71,11 +58,12 @@ data class Scalar(
         return this
     }
 
-    val lastLine get(): Line {
-        if (lines.isEmpty())
-            line("")
-        return lines[lines.size - 1]
-    }
+    val lastLine
+        get(): Line {
+            if (lines.isEmpty())
+                line("")
+            return lines[lines.size - 1]
+        }
 
     override fun guide(visitor: Visitor) {
         visitor.visit(this)

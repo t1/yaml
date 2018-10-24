@@ -1,13 +1,15 @@
 package com.github.t1.yaml.parser
 
+import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.NL
 import com.github.t1.yaml.tools.Symbol
-import com.github.t1.yaml.tools.toPredicate
+import com.github.t1.yaml.tools.Symbol.Companion.between
+import com.github.t1.yaml.tools.symbol
 
 /**
  * For reference, the number and name of the projection in the spec is given in a comment
  */
-enum class YamlSymbol(override val predicate: Symbol.P) : Symbol {
+enum class YamlSymbol(override val predicate: (CodePoint) -> Boolean) : Symbol {
     BOM('\uFEFF'), // 3 c-byte-order-mark
     MINUS('-'), // 4 c-sequence-entry
     QUESTION_MARK('?'), // 5 c-mapping-key
@@ -23,12 +25,11 @@ enum class YamlSymbol(override val predicate: Symbol.P) : Symbol {
     DOUBLE_QUOTE('\"'), // 19 c-double-quote
     PERCENT('%'), // 20 c-directive
 
-    SPACE(' '), // 31 s-space
     TAB('\t'), // 32 s-tab
     // WHITE(SPACE.or(TAB)),      // 33 s-white
 
-    // DEC(between('0', '9')),  // 35 ns-dec-digit
-    // HEX(DEC.or(between('A', 'F')).or(between('a', 'f'))), // 36 ns-hex-digit
+    DEC(between('0', '9')),  // 35 ns-dec-digit
+    HEX(DEC.or(between('A', 'F')).or(between('a', 'f'))), // 36 ns-hex-digit
 
     // BACKSLASH('\\'),           // 41 c-escape
 
@@ -38,7 +39,7 @@ enum class YamlSymbol(override val predicate: Symbol.P) : Symbol {
     FLOW_SEQUENCE_ITEM_END(FLOW_SEQUENCE_ENTRY.or(FLOW_SEQUENCE_END));
 
     @Suppress("unused")
-    constructor(codePoint: Char) : this(codePoint.toPredicate)
+    constructor(codePoint: Char) : this(symbol(codePoint))
 
     @Suppress("unused")
     constructor(symbol: Symbol) : this(symbol.predicate)

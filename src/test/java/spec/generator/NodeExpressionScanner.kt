@@ -3,6 +3,7 @@ package spec.generator
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.Scanner
+import com.github.t1.yaml.tools.StringToken
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
@@ -47,8 +48,8 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
         return if (!more() || !isText) false else withText { nextText!!.accept(text) }
     }
 
-    fun `is`(text: String): Boolean {
-        return nextText != null && nextText!!.`is`(text)
+    fun peek(text: String): Boolean {
+        return nextText?.peek(StringToken(text)) ?: false
     }
 
     fun peek(): CodePoint {
@@ -76,7 +77,7 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
 
     fun expect(text: String): NodeExpressionScanner {
         assert(more())
-        withText<Scanner> { nextText!!.expect(text) }
+        withText { nextText!!.expect(text) }
         return this
     }
 

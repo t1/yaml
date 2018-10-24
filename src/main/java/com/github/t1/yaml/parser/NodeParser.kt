@@ -1,23 +1,24 @@
 package com.github.t1.yaml.parser
 
 import com.github.t1.yaml.model.Collection.Style.FLOW
-import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Mapping
 import com.github.t1.yaml.model.Mapping.Entry
 import com.github.t1.yaml.model.Node
 import com.github.t1.yaml.model.Scalar
 import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
+import com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_START
+import com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START
 import com.github.t1.yaml.parser.YamlSymbol.COLON
-import com.github.t1.yaml.parser.YamlSymbol.COMMENT
+import com.github.t1.yaml.parser.YamlSymbol.FLOW_MAPPING_START
 import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_END
 import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_ENTRY
 import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_ITEM_END
 import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_START
 import com.github.t1.yaml.parser.YamlSymbol.MINUS
 import com.github.t1.yaml.parser.YamlSymbol.QUESTION_MARK
-import com.github.t1.yaml.parser.YamlSymbol.SPACE
 import com.github.t1.yaml.tools.NL
+import com.github.t1.yaml.tools.SPACE
 import com.github.t1.yaml.tools.WS
 
 internal class NodeParser(private val next: YamlScanner) {
@@ -27,21 +28,21 @@ internal class NodeParser(private val next: YamlScanner) {
 
     fun node(): Node {
         nesting.expect()
-        if (next.isFlowSequence)
-            return flowSequence()
-        if (next.isBlockSequence)
-            return blockSequence()
-        if (next.isFlowMapping)
-            return flowMapping()
-        return if (next.isBlockMapping) blockMapping() else scalar()
+        return when {
+            next.peek(FLOW_SEQUENCE_START) -> flowSequence()
+            next.peek(BLOCK_SEQUENCE_START) -> blockSequence()
+            next.peek(FLOW_MAPPING_START) -> flowMapping()
+            next.peek(BLOCK_MAPPING_START) -> blockMapping()
+            else -> scalar()
+        }
     }
 
     private fun flowSequence(): Node {
         next.expect(FLOW_SEQUENCE_START)
         val sequence = Sequence(style = FLOW)
-        do
+        do {
             sequence.item(flowSequenceItem())
-        while (next.more() && next.accept(FLOW_SEQUENCE_ENTRY))
+        } while (next.more() && next.accept(FLOW_SEQUENCE_ENTRY))
         next.expect(FLOW_SEQUENCE_END)
         next.skip(WS)
         return sequence
@@ -109,10 +110,6 @@ internal class NodeParser(private val next: YamlScanner) {
         val value = node()
         nesting.down()
         entry.value = value
-
-        if (value is Scalar && next.accept(COMMENT))
-        // TODO comments for non-scalars
-            comment(value)
     }
 
     private fun flowMapping(): Mapping {
@@ -120,10 +117,4 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun scalar(): Scalar = ScalarParser.of(next, nesting).scalar()
-
-    private fun comment(scalar: Scalar) {
-        next.accept(SPACE)
-        val line = scalar.lastLine
-        line.comment(Comment(indent = line.rtrim(), text = next.readLine()))
-    }
 }

@@ -115,7 +115,7 @@ class ScalarTest : AbstractYamlTest() {
                 "[illegal sequence]")
         }
 
-        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found flow sequence [[][LEFT SQUARE BRACKET][0x5b] at line 2 char 1")
+        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found FLOW_SEQUENCE_START [[][LEFT SQUARE BRACKET][0x5b] at line 2 char 1")
     }
 
     @Test fun expectScalarStartNotContinueWithBlockSequence() {
@@ -125,7 +125,7 @@ class ScalarTest : AbstractYamlTest() {
                 "- illegal sequence")
         }
 
-        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found block sequence [-][HYPHEN-MINUS][0x2d] at line 2 char 1")
+        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found BLOCK_SEQUENCE_START [-][HYPHEN-MINUS][0x2d] at line 2 char 1")
     }
 
     @Test fun expectScalarStartNotContinueWithBlockMapping() {
@@ -135,7 +135,7 @@ class ScalarTest : AbstractYamlTest() {
                 "key: value")
         }
 
-        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found block mapping [k][LATIN SMALL LETTER K][0x6b] at line 2 char 1")
+        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found BLOCK_MAPPING_START [k][LATIN SMALL LETTER K][0x6b] at line 2 char 1")
     }
 
     @Test fun expectPlainScalarStartNotContinueWithFlowMapping() {
@@ -145,7 +145,7 @@ class ScalarTest : AbstractYamlTest() {
                 "{key: value}")
         }
 
-        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found flow mapping [{][LEFT CURLY BRACKET][0x7b] at line 2 char 1")
+        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found FLOW_MAPPING_START [{][LEFT CURLY BRACKET][0x7b] at line 2 char 1")
     }
 
 
@@ -156,7 +156,7 @@ class ScalarTest : AbstractYamlTest() {
                 "  [illegal sequence]")
         }
 
-        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found flow sequence [[][LEFT SQUARE BRACKET][0x5b] at line 2 char 3")
+        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found FLOW_SEQUENCE_START [[][LEFT SQUARE BRACKET][0x5b] at line 2 char 3")
     }
 
     @Test fun expectNestedPlainScalarStartNotContinueWithBlockSequence() {
@@ -166,7 +166,7 @@ class ScalarTest : AbstractYamlTest() {
                 "  - illegal sequence")
         }
 
-        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found block sequence [-][HYPHEN-MINUS][0x2d] at line 2 char 3")
+        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found BLOCK_SEQUENCE_START [-][HYPHEN-MINUS][0x2d] at line 2 char 3")
     }
 
     @Test fun expectNestedPlainScalarStartNotContinueWithBlockMapping() {
@@ -176,7 +176,7 @@ class ScalarTest : AbstractYamlTest() {
                 "  key: value")
         }
 
-        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found block mapping [k][LATIN SMALL LETTER K][0x6b] at line 2 char 3")
+        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found BLOCK_MAPPING_START [k][LATIN SMALL LETTER K][0x6b] at line 2 char 3")
     }
 
     @Test fun expectNestedPlainScalarStartNotContinueWithFlowMapping() {
@@ -186,7 +186,7 @@ class ScalarTest : AbstractYamlTest() {
                 "  {key: value}")
         }
 
-        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found flow mapping [{][LEFT CURLY BRACKET][0x7b] at line 2 char 3")
+        assertThat(thrown).hasMessage("Expected a scalar node to continue with scalar values but found FLOW_MAPPING_START [{][LEFT CURLY BRACKET][0x7b] at line 2 char 3")
     }
 
 

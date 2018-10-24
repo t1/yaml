@@ -22,31 +22,21 @@ open class Scanner(
     fun expect(token: Token): Scanner {
         for (predicate in token.predicates) {
             val info = this.toString()
-            if (!predicate.test(read()))
+            if (!predicate(read()))
                 throw ParseException("expected $predicate but got $info")
         }
         return this
     }
 
-    fun `is`(string: String): Boolean = `is`(StringToken(string))
-
-    fun `is`(token: Token): Boolean {
-        val predicates = token.predicates
-        val codePoints = peek(predicates.size)
-        assert(predicates.size == codePoints.size)
-        for (i in predicates.indices)
-            if (!predicates[i].test(codePoints[i]))
-                return false
-        return true
-    }
+    fun peek(token: Token): Boolean = token.matches(this)
 
     fun accept(string: String): Boolean = accept(StringToken(string))
 
-    fun accept(token: Token): Boolean {
-        if (!`is`(token))
-            return false
-        expect(token)
-        return true
+    fun accept(token: Token): Boolean = peek(token) && expect(token).run { true }
+
+    fun skip(token: Token): Scanner {
+        accept(token)
+        return this
     }
 
     fun end(): Boolean = peek().isEof
@@ -55,7 +45,7 @@ open class Scanner(
 
     fun peek(): CodePoint = peek(1)[0]
 
-    private fun peek(count: Int): List<CodePoint> {
+    fun peek(count: Int): List<CodePoint> {
         reader.mark(count).use { return reader.read(count) }
     }
 
@@ -64,7 +54,7 @@ open class Scanner(
             val out = StringBuilder()
             while (true) {
                 val codePoint = reader.read()
-                if (codePoint.isEof || !symbol.test(codePoint))
+                if (codePoint.isEof || !codePoint(symbol))
                     return out.toString()
                 codePoint.appendTo(out)
             }
@@ -81,7 +71,7 @@ open class Scanner(
                 val codePoint = reader.read()
                 if (codePoint.isEof)
                     return null
-                if (predicates[matchLength].test(codePoint)) {
+                if (predicates[matchLength](codePoint)) {
                     if (++matchLength == predicates.size)
                         return out.toString()
                 } else {
@@ -118,7 +108,7 @@ open class Scanner(
 
     fun readUntil(end: Token): String {
         val builder = StringBuilder()
-        while (more() && !`is`(end))
+        while (more() && !peek(end))
             builder.appendCodePoint(read().value)
         return builder.toString()
     }
@@ -130,23 +120,18 @@ open class Scanner(
         return result
     }
 
-    fun skip(token: Token): Scanner {
-        accept(token)
-        return this
-    }
-
     fun count(token: String): Int = count(StringToken(token))
 
     fun count(token: Token): Int = readWhile(token).length
 
     private fun readWhile(token: Token): String {
         val out = StringBuilder()
-        while (`is`(token))
+        while (peek(token))
             out.appendCodePoint(read().value)
         return out.toString()
     }
 
-    override fun toString() = "${peek().xinfo()} at $positionInfo"
+    override fun toString() = "${peek().info} at $positionInfo"
 
     val positionInfo get() = "line $lineNumber char $position"
 }
