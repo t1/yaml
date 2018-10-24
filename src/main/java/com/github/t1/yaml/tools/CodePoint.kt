@@ -39,6 +39,8 @@ data class CodePoint(val value: Int) {
 
     fun `is`(predicate: Predicate<Int>): Boolean = predicate.test(value)
 
+    fun `is`(symbol: Symbol): Boolean = symbol.predicate.test(value)
+
     fun appendTo(out: StringBuilder) {
         out.appendCodePoint(value)
     }

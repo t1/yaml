@@ -10,10 +10,10 @@ import com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED
 import com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE
 import com.github.t1.yaml.parser.YamlSymbol.COMMENT
 import com.github.t1.yaml.parser.YamlSymbol.DOUBLE_QUOTE
-import com.github.t1.yaml.parser.YamlSymbol.NL_OR_COMMENT
 import com.github.t1.yaml.parser.YamlSymbol.SINGLE_QUOTE
 import com.github.t1.yaml.parser.YamlSymbol.SPACE
 import com.github.t1.yaml.tools.NL
+import com.github.t1.yaml.tools.spaces
 
 internal class ScalarParser private constructor(
     private val indent: Int,
@@ -56,21 +56,23 @@ internal class ScalarParser private constructor(
     private fun plain(): String {
         val builder = StringBuilder()
         while (next.more()) {
-            //val spaces = next.peekWhile(SPACE).length
-            //val then = next.peekAfter(spaces)
-            //if (then.map { NL_OR_COMMENT.test(it) }.orElse(true))
-            //    break
-            //next.count()
-            if (next.`is`(NL_OR_COMMENT) || next.`is`(BLOCK_MAPPING_VALUE))
-                break
+            // spaces before a comment or a block mapping value are not part of string scalar
+            val spaceCount = next.peekWhile(SPACE).length
+            val then = next.peekAfter(spaceCount)
+            if (then != null && COMMENT.test(then)) break
+            val spaces = spaces(spaceCount)
+            next.expect(spaces)
+            if (next.`is`(COMMENT) || next.`is`(BLOCK_MAPPING_VALUE)) break
+            builder.append(spaces)
+            if (!next.more() || next.`is`(NL)) break
             builder.appendCodePoint(next.read().value)
         }
         return builder.toString()
     }
 
     private fun morePlainLines() {
-        var lineContinue = next.accept(NL)
-        while (lineContinue && next.more() && nesting.accept()) {
+        // after the NL, there has to be more and it has to be nested
+        while (next.accept(NL) && next.more() && nesting.accept()) {
             if (next.isFlowSequence)
                 throw YamlParseException("Expected a scalar node to continue with scalar values but found flow sequence $next")
             if (next.isBlockSequence)
@@ -80,7 +82,7 @@ internal class ScalarParser private constructor(
             if (next.isBlockMapping)
                 throw YamlParseException("Expected a scalar node to continue with scalar values but found block mapping $next")
             scalar.line(Line().indent(next.count(SPACE)).text(plain()))
-            lineContinue = !next.accept(NL)
+            if (next.isIndentedComment) comment(scalar)
         }
     }
 
@@ -110,10 +112,8 @@ internal class ScalarParser private constructor(
     }
 
     private fun comment(scalar: Scalar) {
-        var indent = next.count(SPACE)
-        next.expect(COMMENT)
-        val line = scalar.lastLine
-        indent += line.rtrim() // FIXME ugly
-        line.comment(Comment(indent = indent, text = next.skip(SPACE).readLine()))
+        val indent = next.count(SPACE)
+        next.expect(COMMENT).skip(SPACE)
+        scalar.lastLine.comment(Comment(indent = indent, text = next.readUntil(NL)))
     }
 }

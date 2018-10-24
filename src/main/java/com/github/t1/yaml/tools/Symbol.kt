@@ -13,7 +13,7 @@ fun symbol(predicate: Predicate<Int>): Symbol = symbol(Symbol.P(predicate))
 fun symbol(predicate: Symbol.P): Symbol = predicate.toSymbol
 
 /** A single-character [Token]. */
-interface Symbol : Token, Predicate<CodePoint> {
+interface Symbol : Token, Predicate<CodePoint>, (CodePoint) -> Boolean {
     val predicate: P
 
     override val predicates: List<Predicate<CodePoint>> get() = listOf<Predicate<CodePoint>>(this)
@@ -26,6 +26,7 @@ interface Symbol : Token, Predicate<CodePoint> {
 
     operator fun minus(that: P): P = this.predicate.and(not(that))
 
+    override fun invoke(codePoint: CodePoint): Boolean = test(codePoint)
     override fun test(codePoint: CodePoint): Boolean = predicate.test(codePoint.value)
 
     class P(val predicate: Predicate<Int>) {

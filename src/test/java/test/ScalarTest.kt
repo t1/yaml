@@ -10,7 +10,6 @@ import helpers.catchParseException
 import helpers.parse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
@@ -260,7 +259,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenScalarWithCommentWithLeadingSpaces : SingleDocument() {
+    @Nested inner class givenScalarWithCommentWithLeadingSpaces : SingleDocument() {
         @BeforeEach fun setup() {
             input = "dummy-string #     dummy-comment"
             expected = Document(node = Scalar().line("dummy-string")
@@ -277,7 +276,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenScalarWithCommentAfter : SingleDocument() {
+    @Nested inner class givenScalarWithCommentAfter : SingleDocument() {
         @BeforeEach fun setup() {
             input = "dummy-string\n# dummy-comment"
             expected = Document()
@@ -286,7 +285,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenScalarWithCommentBeforeAndAfter : SingleDocument() {
+    @Nested inner class givenScalarWithCommentBeforeAndAfter : SingleDocument() {
         @BeforeEach fun setup() {
             input = "# before\n" +
                 "dummy-string\n" +
@@ -298,7 +297,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenScalarWithIndentedCommentBeforeAndAfter : SingleDocument() {
+    @Nested inner class givenScalarWithIndentedCommentBeforeAndAfter : SingleDocument() {
         @BeforeEach fun setup() {
             input = "    # before\n" +
                 "dummy-string\n" +
@@ -312,7 +311,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenIndentedScalarWithIndentedComment : SingleDocument() {
+    @Nested inner class givenIndentedScalarWithIndentedComment : SingleDocument() {
         @BeforeEach fun setup() {
             input = "    dummy-string  # dummy-comment"
             expected = Document(node = Scalar()
@@ -321,7 +320,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenTwoLineScalarWithCommentInside : SingleDocument() {
+    @Nested inner class givenTwoLineScalarWithCommentInside : SingleDocument() {
         @BeforeEach fun setup() {
             input = "before # inside\nafter"
             expected = Document(node = Scalar()
@@ -330,7 +329,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenTwoLineScalarWithCommentAfterSecond : SingleDocument() {
+    @Nested inner class givenTwoLineScalarWithCommentAfterSecond : SingleDocument() {
         @BeforeEach fun setup() {
             input = "one\ntwo # comment"
             expected = Document(node = Scalar()
@@ -339,7 +338,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenTwoLineScalarWithTwoComments : SingleDocument() {
+    @Nested inner class givenTwoLineScalarWithTwoComments : SingleDocument() {
         @BeforeEach fun setup() {
             input = "one # first\ntwo # second"
             expected = Document(node = Scalar()
@@ -348,7 +347,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenTwoLineScalarWithTwoIndentedComments : SingleDocument() {
+    @Nested inner class givenTwoLineScalarWithTwoIndentedComments : SingleDocument() {
         @BeforeEach fun setup() {
             input = "one      # first\nlong-two # second"
             expected = Document(node = Scalar()
@@ -357,7 +356,7 @@ class ScalarTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenTwoLineScalarWithCommentBetween : SingleDocument() {
+    @Nested inner class givenTwoLineScalarWithCommentBetween : SingleDocument() {
         @BeforeEach fun setup() {
             input = "one\n" +
                 "# comment\n" +

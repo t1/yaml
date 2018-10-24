@@ -2,7 +2,6 @@ package com.github.t1.yaml.tools
 
 import java.io.Reader
 import java.io.StringReader
-import java.util.Optional
 
 open class Scanner(
     private val lookAheadLimit: Int,
@@ -60,23 +59,14 @@ open class Scanner(
         reader.mark(count).use { return reader.read(count) }
     }
 
-    fun peekWhile(token: Token): String {
-        val predicates = token.predicates
+    fun peekWhile(symbol: Symbol): String {
         reader.mark(lookAheadLimit).use {
             val out = StringBuilder()
-            var matchLength = 0
             while (true) {
                 val codePoint = reader.read()
-                if (codePoint.isEof)
-                    return ""
-                if (predicates[matchLength].test(codePoint)) {
-                    if (++matchLength == predicates.size)
-                        return out.toString()
-                } else {
-                    @Suppress("UNUSED_VALUE")
-                    matchLength = 0
-                    codePoint.appendTo(out)
-                }
+                if (codePoint.isEof || !symbol.test(codePoint))
+                    return out.toString()
+                codePoint.appendTo(out)
             }
         }
         throw UnsupportedOperationException("unreachable")
@@ -104,9 +94,9 @@ open class Scanner(
         throw UnsupportedOperationException("unreachable")
     }
 
-    fun peekAfter(count: Int): Optional<CodePoint> {
+    fun peekAfter(count: Int): CodePoint? {
         val peek = peek(count + 1)
-        return if (peek.size < count + 1) Optional.empty() else Optional.of(peek[peek.size - 1])
+        return if (peek.size < count + 1) null else peek[peek.size - 1]
     }
 
     open fun read(): CodePoint {

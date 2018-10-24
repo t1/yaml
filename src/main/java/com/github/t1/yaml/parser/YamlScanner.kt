@@ -30,7 +30,7 @@ internal class YamlScanner(lookAheadLimit: Int, reader: Reader) : Scanner(lookAh
             val spaces = peekUntil(NL_OR_COMMENT)
             return (spaces != null
                 && CodePoint.stream(spaces).allMatch(SPACE)
-                && peekAfter(spaces.length).map { COMMENT.test(it) }.orElse(false))
+                && peekAfter(spaces.length)?.`is`(COMMENT) == true)
         }
 
     val isFlowSequence: Boolean get() = `is`(FLOW_SEQUENCE_START)
