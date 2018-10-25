@@ -3,8 +3,6 @@ package spec.generator
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.ArrayList
@@ -13,7 +11,6 @@ import java.util.regex.Pattern
 
 class SpecLoader {
 
-    @Throws(IOException::class)
     fun load(): Spec {
         return loadSpecFrom(if (Files.exists(CACHE)) loadHtmlFromCache() else fetchHtmlFromYamlOrg())
     }
@@ -77,13 +74,11 @@ class SpecLoader {
     companion object {
         private val CACHE = Paths.get("target", "spec.html")
 
-        @Throws(IOException::class)
         private fun loadHtmlFromCache(): Document {
             println("load spec from $CACHE")
             return Jsoup.parse(CACHE.toFile(), "UTF-8")
         }
 
-        @Throws(IOException::class)
         private fun fetchHtmlFromYamlOrg(): Document {
             println("fetch spec from yaml.org")
             val document = Jsoup.connect("http://yaml.org/spec/1.2/spec.html").get()

@@ -5,11 +5,9 @@ import org.assertj.core.api.Assertions.contentOf
 import org.assertj.core.api.SoftAssertions
 import org.jsoup.Jsoup
 import org.junit.jupiter.api.Test
-import java.io.IOException
 
 class LoadSpecTest {
-    @Test @Throws(IOException::class)
-    fun shouldParseFullSpec() {
+    @Test fun shouldParseFullSpec() {
         val spec = SpecLoader().load()
 
         val actual = StringBuilder()

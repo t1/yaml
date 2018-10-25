@@ -8,103 +8,61 @@ import java.util.ArrayList
 import java.util.stream.Collectors.joining
 
 abstract class Expression {
-    @Throws(IOException::class)
     abstract fun guide(visitor: Visitor)
 
     abstract class Visitor {
         ///////////// no subexpression
         open fun visit(nullExpression: NullExpression) {}
 
-        @Throws(IOException::class)
-        open fun visit(codePointExpression: CodePointExpression) {
-        }
-
-        @Throws(IOException::class)
-        open fun visit(literalExpression: LiteralExpression) {
-        }
-
-        @Throws(IOException::class)
-        open fun visit(referenceExpression: ReferenceExpression) {
-        }
+        open fun visit(codePointExpression: CodePointExpression) {}
+        open fun visit(literalExpression: LiteralExpression) {}
+        open fun visit(referenceExpression: ReferenceExpression) {}
 
 
         ///////////// fixed number of subexpressions
-        open fun visit(repeatedExpression: RepeatedExpression): Visitor {
-            return this
-        }
+        open fun visit(repeatedExpression: RepeatedExpression): Visitor = this
 
         open fun leave(repeatedExpression: RepeatedExpression) {}
 
 
-        open fun visit(rangeExpression: RangeExpression): Visitor {
-            return this
-        }
-
+        open fun visit(rangeExpression: RangeExpression): Visitor = this
         open fun leave(rangeExpression: RangeExpression) {}
 
 
         ///////////// arbitrary subexpressions
-        open fun visit(minusExpression: MinusExpression): Visitor {
-            return this
-        }
+        open fun visit(minusExpression: MinusExpression): Visitor = this
 
         open fun leave(minusExpression: MinusExpression) {}
 
 
-        @Throws(IOException::class)
-        open fun visit(alternativesExpression: AlternativesExpression): Visitor {
-            return this
-        }
-
-        @Throws(IOException::class)
-        open fun leave(alternativesExpression: AlternativesExpression) {
-        }
+        open fun visit(alternativesExpression: AlternativesExpression): Visitor = this
+        open fun leave(alternativesExpression: AlternativesExpression) {}
 
 
-        open fun visit(sequenceExpression: SequenceExpression): Visitor {
-            return this
-        }
-
+        open fun visit(sequenceExpression: SequenceExpression): Visitor = this
         open fun leave(sequenceExpression: SequenceExpression) {}
 
 
-        open fun visit(switchExpression: SwitchExpression): Visitor {
-            return this
-        }
-
+        open fun visit(switchExpression: SwitchExpression): Visitor = this
         open fun leave(switchExpression: SwitchExpression) {}
     }
 
-    protected open fun last(): Expression {
-        throw UnsupportedOperationException()
-    }
+    protected open fun last(): Expression = throw UnsupportedOperationException()
 
-    protected open fun replaceLastWith(expression: Expression) {
-        throw UnsupportedOperationException()
-    }
+    protected open fun replaceLastWith(expression: Expression): Unit = throw UnsupportedOperationException()
 
     open class NullExpression : Expression() {
-        override fun toString(): String {
-            return "<empty>"
-        }
-
-        override fun guide(visitor: Visitor) {
-            visitor.visit(this)
-        }
+        override fun toString(): String = "<empty>"
+        override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
     abstract class ContainerExpression : Expression() {
         val expressions: MutableList<Expression> = ArrayList()
 
-        override fun last(): Expression {
-            return lastOf(expressions).last()
-        }
-
+        override fun last(): Expression = lastOf(expressions).last()
         override fun replaceLastWith(expression: Expression) {
-            if (lastOf(expressions) is ContainerExpression)
-                lastOf(expressions).replaceLastWith(expression)
-            else
-                setLastOf(expressions, expression)
+            if (lastOf(expressions) is ContainerExpression) lastOf(expressions).replaceLastWith(expression)
+            else setLastOf(expressions, expression)
         }
 
         open fun add(expression: Expression): ContainerExpression {
@@ -113,15 +71,12 @@ abstract class Expression {
         }
 
         open fun merge(expression: Expression): SwitchExpression? {
-            if (expression is ContainerExpression)
-                expressions.addAll(expression.expressions)
-            else
-                expressions.add(expression)
+            if (expression is ContainerExpression) expressions.addAll(expression.expressions)
+            else expressions.add(expression)
             return null
         }
 
         companion object {
-
             fun <T : ContainerExpression> of(left: Expression, right: Expression, type: Class<T>): T {
                 val result: ContainerExpression
                 try {
@@ -135,22 +90,17 @@ abstract class Expression {
                     throw RuntimeException(e)
                 }
 
-                if (type.isInstance(right))
-                    result.expressions.addAll((right as ContainerExpression).expressions)
-                else
-                    result.add(right)
+                if (type.isInstance(right)) result.expressions.addAll((right as ContainerExpression).expressions)
+                else result.add(right)
                 return type.cast(result)
             }
         }
     }
 
     open class AlternativesExpression : ContainerExpression() {
+        override fun toString(): String =
+            expressions.stream().map { it.toString() }.collect(joining(" ||\n   ", "[", "]"))
 
-        override fun toString(): String {
-            return expressions.stream().map { it.toString() }.collect(joining(" ||\n   ", "[", "]"))
-        }
-
-        @Throws(IOException::class)
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             expressions.forEach { expression ->
@@ -164,20 +114,15 @@ abstract class Expression {
         }
 
         companion object {
-            fun of(left: Expression, right: Expression): AlternativesExpression {
-                return of(left, right, AlternativesExpression::class.java)
-            }
+            fun of(left: Expression, right: Expression): AlternativesExpression =
+                of(left, right, AlternativesExpression::class.java)
         }
     }
 
     open class SequenceExpression : ContainerExpression() {
-
-        override fun toString(): String {
-            return if (expressions.isEmpty())
-                "<empty sequence>"
-            else
-                expressions.stream().map { it.toString() }.collect(joining(" + "))
-        }
+        override fun toString() =
+            if (expressions.isEmpty()) "<empty sequence>"
+            else expressions.stream().map { it.toString() }.collect(joining(" + "))
 
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
@@ -192,43 +137,23 @@ abstract class Expression {
         }
 
         companion object {
-            fun of(left: Expression, right: Expression): SequenceExpression {
-                return of(left, right, SequenceExpression::class.java)
-            }
+            fun of(left: Expression, right: Expression): SequenceExpression =
+                of(left, right, SequenceExpression::class.java)
         }
     }
 
     open class CodePointExpression(val codePoint: CodePoint) : Expression() {
-
-        override fun toString(): String {
-            return "<${codePoint.info}>"
-        }
-
-        @Throws(IOException::class)
-        override fun guide(visitor: Visitor) {
-            visitor.visit(this)
-        }
+        override fun toString(): String = "<${codePoint.info}>"
+        override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
     open class LiteralExpression(val literal: String) : Expression() {
-
-        override fun toString(): String {
-            return "<$literal>"
-        }
-
-        @Throws(IOException::class)
-        override fun guide(visitor: Visitor) {
-            visitor.visit(this)
-        }
+        override fun toString(): String = "<$literal>"
+        override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
     open class RangeExpression(private val left: Expression, private val right: Expression) : Expression() {
-
-        override fun toString(): String {
-            return "[$left-$right]"
-        }
-
-        @Throws(IOException::class)
+        override fun toString(): String = "[$left-$right]"
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             left.guide(sub)
@@ -238,15 +163,8 @@ abstract class Expression {
     }
 
     open class ReferenceExpression(val ref: String) : Expression() {
-
-        override fun toString(): String {
-            return "->$ref"
-        }
-
-        @Throws(IOException::class)
-        override fun guide(visitor: Visitor) {
-            visitor.visit(this)
-        }
+        override fun toString(): String = "->$ref"
+        override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
     open class MinusExpression(private val minuend: Expression) : Expression() {
@@ -263,11 +181,9 @@ abstract class Expression {
         }
 
         override fun toString(): String {
-            return minuend.toString() + " - " +
-                subtrahends.stream().map { it.toString() }.collect(joining(" - "))
+            return minuend.toString() + " - " + subtrahends.stream().map { it.toString() }.collect(joining(" - "))
         }
 
-        @Throws(IOException::class)
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             minuend.guide(sub)
@@ -282,20 +198,13 @@ abstract class Expression {
         }
 
         companion object {
-
-            fun of(minuend: Expression, subtrahend: Expression): MinusExpression {
-                return MinusExpression(minuend).minus(subtrahend)
-            }
+            fun of(minuend: Expression, subtrahend: Expression): MinusExpression =
+                MinusExpression(minuend).minus(subtrahend)
         }
     }
 
     open class RepeatedExpression(private val expression: Expression, private val repetitions: String) : Expression() {
-
-        override fun toString(): String {
-            return "($expression × $repetitions)"
-        }
-
-        @Throws(IOException::class)
+        override fun toString(): String = "($expression × $repetitions)"
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             expression.guide(sub)
@@ -306,22 +215,17 @@ abstract class Expression {
     open class SwitchExpression : ContainerExpression() {
         private val cases: MutableList<Expression> = ArrayList()
 
-        open fun balanced(): Boolean {
-            return cases.size == expressions.size
-        }
+        open fun balanced(): Boolean = cases.size == expressions.size
 
         open fun addCase(expression: Expression): SwitchExpression {
-            if (balanced())
-                cases.add(expression)
-            else
-                setLastOf(cases, expression)
+            if (balanced()) cases.add(expression)
+            else setLastOf(cases, expression)
             return this
         }
 
         override fun merge(expression: Expression): SwitchExpression {
-            if (balanced()) {
-                replaceLastWith(expression)
-            } else {
+            if (balanced()) replaceLastWith(expression)
+            else {
                 assert(cases.size == expressions.size + 1)
                 expressions.add(expression)
             }
@@ -339,7 +243,6 @@ abstract class Expression {
             return out.toString()
         }
 
-        @Throws(IOException::class)
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             for (i in cases.indices) {
@@ -352,11 +255,7 @@ abstract class Expression {
     }
 
     companion object {
-
-        private fun lastOf(expressions: List<Expression>): Expression {
-            return expressions[expressions.size - 1]
-        }
-
+        private fun lastOf(expressions: List<Expression>): Expression = expressions[expressions.size - 1]
         private fun setLastOf(expressions: MutableList<Expression>, expression: Expression) {
             expressions[expressions.size - 1] = expression
         }

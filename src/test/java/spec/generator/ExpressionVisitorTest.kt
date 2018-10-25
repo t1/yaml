@@ -19,7 +19,6 @@ import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
 import spec.generator.Expression.Visitor
-import java.io.IOException
 
 class ExpressionVisitorTest {
     private val visitor: Visitor = mock(Visitor::class.java)
@@ -38,8 +37,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitCodePoint() {
+    @Test fun visitCodePoint() {
         val expression = CodePointExpression(CodePoint.of("x"))
 
         expression.guide(visitor)
@@ -48,8 +46,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitLiteral() {
+    @Test fun visitLiteral() {
         val expression = LiteralExpression("foo")
 
         expression.guide(visitor)
@@ -58,8 +55,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitReference() {
+    @Test fun visitReference() {
         val expression = ReferenceExpression("foo")
 
         expression.guide(visitor)
@@ -68,8 +64,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitRepeated() {
+    @Test fun visitRepeated() {
         val literal = LiteralExpression("foo")
         val expression = RepeatedExpression(literal, "4")
         `when`(visitor.visit(expression)).thenReturn(visitor)
@@ -82,8 +77,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).leave(expression)
     }
 
-    @Test @Throws(IOException::class)
-    fun visitRepeatedWithSub() {
+    @Test fun visitRepeatedWithSub() {
         val literal = LiteralExpression("foo")
         val expression = RepeatedExpression(literal, "4")
         val sub = mock(Visitor::class.java)
@@ -98,8 +92,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitRange() {
+    @Test fun visitRange() {
         val literal1 = LiteralExpression("foo")
         val literal2 = LiteralExpression("bar")
         val expression = RangeExpression(literal1, literal2)
@@ -114,8 +107,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).leave(expression)
     }
 
-    @Test @Throws(IOException::class)
-    fun visitRangeWithSub() {
+    @Test fun visitRangeWithSub() {
         val literal1 = LiteralExpression("foo")
         val literal2 = LiteralExpression("bar")
         val expression = RangeExpression(literal1, literal2)
@@ -132,8 +124,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitMinus() {
+    @Test fun visitMinus() {
         val literal1 = LiteralExpression("foo")
         val literal2 = LiteralExpression("bar")
         val literal3 = LiteralExpression("baz")
@@ -150,8 +141,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).leave(expression)
     }
 
-    @Test @Throws(IOException::class)
-    fun visitMinusWithSub() {
+    @Test fun visitMinusWithSub() {
         val literal1 = LiteralExpression("foo")
         val literal2 = LiteralExpression("bar")
         val literal3 = LiteralExpression("baz")
@@ -170,8 +160,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitAlternatives() {
+    @Test fun visitAlternatives() {
         val literal1 = LiteralExpression("foo")
         val literal2 = LiteralExpression("bar")
         val expression = AlternativesExpression.of(literal1, literal2)
@@ -186,8 +175,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).leave(expression)
     }
 
-    @Test @Throws(IOException::class)
-    fun visitAlternativesWithSub() {
+    @Test fun visitAlternativesWithSub() {
         val literal1 = LiteralExpression("foo")
         val literal2 = LiteralExpression("bar")
         val expression = AlternativesExpression.of(literal1, literal2)
@@ -204,8 +192,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitSequence() {
+    @Test fun visitSequence() {
         val literal1 = LiteralExpression("foo")
         val literal2 = LiteralExpression("bar")
         val expression = SequenceExpression.of(literal1, literal2)
@@ -220,8 +207,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).leave(expression)
     }
 
-    @Test @Throws(IOException::class)
-    fun visitSequenceWithSub() {
+    @Test fun visitSequenceWithSub() {
         val literal1 = LiteralExpression("foo")
         val literal2 = LiteralExpression("bar")
         val expression = SequenceExpression.of(literal1, literal2)
@@ -237,8 +223,7 @@ class ExpressionVisitorTest {
         inOrder.verify(sub).leave(expression)
     }
 
-    @Test @Throws(IOException::class)
-    fun visitSwitch() {
+    @Test fun visitSwitch() {
         val key1 = LiteralExpression("key1")
         val value1 = LiteralExpression("value1")
         val key2 = LiteralExpression("key2")
@@ -259,8 +244,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).leave(expression)
     }
 
-    @Test @Throws(IOException::class)
-    fun visitSwitchWithSub() {
+    @Test fun visitSwitchWithSub() {
         val key1 = LiteralExpression("key1")
         val value1 = LiteralExpression("value1")
         val key2 = LiteralExpression("key2")
@@ -282,8 +266,7 @@ class ExpressionVisitorTest {
         inOrder.verify(sub).leave(expression)
     }
 
-    @Test @Throws(IOException::class)
-    fun visitUnbalancedSwitch() {
+    @Test fun visitUnbalancedSwitch() {
         val key1 = LiteralExpression("key1")
         val value1 = LiteralExpression("value1")
         val key2 = LiteralExpression("key2")
@@ -303,8 +286,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test @Throws(IOException::class)
-    fun visitNested() {
+    @Test fun visitNested() {
         val literal1 = LiteralExpression("literal-1")
         val literal2 = LiteralExpression("literal-2")
         val literal3 = LiteralExpression("literal-3")

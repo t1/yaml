@@ -26,7 +26,6 @@ class ParserGenerator(private val spec: Spec) {
 
     }
 
-    @Throws(IOException::class)
     fun generateJavaCode(className: String, out: Writer) {
         ParserGenerator.JavaCodeGenerator(className, out).write(spec.productions)
     }
@@ -34,7 +33,6 @@ class ParserGenerator(private val spec: Spec) {
     class JavaCodeGenerator(private val className: String, private val out: Writer) {
         private var production: Production? = null
 
-        @Throws(IOException::class)
         fun write(productions: List<Production>) {
             out.append("" +
                 "package com.github.t1.yaml.parser;\n" +
@@ -78,7 +76,6 @@ class ParserGenerator(private val spec: Spec) {
             out.append("}\n")
         }
 
-        @Throws(IOException::class)
         private fun writeProduction() {
             out.append("\n").append(methodComment())
             out.append("    private Object ").append(methodName()).append("(").append(args()).append(") {\n")
@@ -114,7 +111,6 @@ class ParserGenerator(private val spec: Spec) {
                     .split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()).collect(joining(", int ", "int ", ""))
         }
 
-        @Throws(IOException::class)
         private fun writeBody() {
             val productionBodyWriter = ProductionBodyWriter()
             production!!.expression.guide(productionBodyWriter)
@@ -122,7 +118,6 @@ class ParserGenerator(private val spec: Spec) {
                 append("        return null;\n")
         }
 
-        @Throws(IOException::class)
         private fun append(text: String) {
             out.append(text)
         }
@@ -130,7 +125,6 @@ class ParserGenerator(private val spec: Spec) {
         private inner class ProductionBodyWriter : Visitor() {
             var written = false
 
-            @Throws(IOException::class)
             override fun visit(literalExpression: LiteralExpression) {
                 if (!written) {
                     written = true
@@ -138,20 +132,17 @@ class ParserGenerator(private val spec: Spec) {
                 }
             }
 
-            @Throws(IOException::class)
             override fun visit(referenceExpression: ReferenceExpression) {
                 written = true
                 append("        return " + methodName(referenceExpression.ref) + "();\n")
             }
 
-            @Throws(IOException::class)
             override fun visit(alternativesExpression: AlternativesExpression): Visitor {
                 written = true
                 append("        Object result = ")
                 return object : Visitor() {
                     private var first = true
 
-                    @Throws(IOException::class)
                     override fun visit(referenceExpression: ReferenceExpression) {
                         if (first) {
                             first = false
@@ -163,7 +154,6 @@ class ParserGenerator(private val spec: Spec) {
                         }
                     }
 
-                    @Throws(IOException::class)
                     override fun visit(codePointExpression: CodePointExpression) {
                         val codePoint = "CodePoint.of(0x${codePointExpression.codePoint.hex})"
                         val text = "next.is($codePoint) ? $codePoint : null;\n"
@@ -177,7 +167,6 @@ class ParserGenerator(private val spec: Spec) {
                         append(text)
                     }
 
-                    @Throws(IOException::class)
                     override fun leave(alternativesExpression: AlternativesExpression) {
                         append("" +
                             "        if (result == null)\n" +
@@ -192,7 +181,6 @@ class ParserGenerator(private val spec: Spec) {
     companion object {
         private val JAVA_SOURCE = Paths.get("src/main/java/com/github/t1/yaml/parser/GeneratedParser.java")
 
-        @Throws(IOException::class)
         @JvmStatic fun main(args: Array<String>) {
             val spec = SpecLoader().load()
             ParserGenerator(spec).generateJavaCode()

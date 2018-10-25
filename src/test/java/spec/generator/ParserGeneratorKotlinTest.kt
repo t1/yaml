@@ -12,7 +12,7 @@ import spec.generator.Expression.ReferenceExpression
 import java.io.StringWriter
 import java.util.Arrays.asList
 
-class ParserGeneratorJavaTest {
+class ParserGeneratorKotlinTest {
     private fun generate(vararg productions: Production): String {
         val writer = StringWriter()
 
