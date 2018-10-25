@@ -1,5 +1,3 @@
-@file:Suppress("ClassName")
-
 package test
 
 import com.github.t1.yaml.model.Document
@@ -11,7 +9,8 @@ import com.github.t1.yaml.model.Sequence.Item
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 
-class MappingTest : AbstractYamlTest() {
+@Suppress("ClassName")
+class BlockMappingTest : AbstractYamlTest() {
     @Nested inner class givenBlockMapping : SingleDocument() {
         @BeforeEach fun setup() {
             input = "sky: blue\nsea: green"

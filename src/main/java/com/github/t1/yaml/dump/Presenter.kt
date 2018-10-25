@@ -71,37 +71,6 @@ class Presenter {
         }
 
 
-        override fun enterSequenceItem(sequence: Sequence, item: Item) {
-            when (sequence.style) {
-                FLOW -> {
-                    skipIndent = true
-                    out.append(if (item === sequence.firstItem()) "[" else ", ")
-                }
-                BLOCK -> {
-                    out.append(indent())
-                    skipNextIndent = !item.nl
-                    indent++
-                    out.append("-").append(if (item.nl) "\n" else " ")
-                }
-            }
-        }
-
-        override fun leaveSequenceItem(sequence: Sequence, item: Item) {
-            when (sequence.style) {
-                FLOW -> {
-                    if (item === sequence.lastItem())
-                        out.append("]")
-                    skipIndent = false
-                }
-                BLOCK -> {
-                    if (item !== sequence.lastItem())
-                        nl()
-                    indent--
-                }
-            }
-        }
-
-
         override fun visit(scalar: Scalar) {
             if (scalar.tag != null)
                 out.append(scalar.tag).append(' ')
@@ -126,6 +95,45 @@ class Presenter {
         }
 
 
+        override fun enterSequenceItem(sequence: Sequence, item: Item) {
+            when (sequence.style) {
+                FLOW -> {
+                    skipIndent = true
+                    out.append(if (item === sequence.firstItem) "[" else ", ")
+                }
+                BLOCK -> {
+                    out.append(indent())
+                    skipNextIndent = !item.nl
+                    indent++
+                    out.append("-").append(if (item.nl) "\n" else " ")
+                }
+            }
+        }
+
+        override fun leaveSequenceItem(sequence: Sequence, item: Item) {
+            when (sequence.style) {
+                FLOW -> {
+                    if (item === sequence.lastItem)
+                        out.append("]")
+                    skipIndent = false
+                }
+                BLOCK -> {
+                    if (item !== sequence.lastItem)
+                        nl()
+                    indent--
+                }
+            }
+        }
+
+
+        override fun enterMappingEntry(mapping: Mapping, entry: Entry) {
+            when (mapping.style) {
+                FLOW -> out.append(if (entry === mapping.firstEntry) "{" else ",")
+                BLOCK -> {
+                }
+            }
+        }
+
         override fun enterMappingKey(entry: Entry, key: Node) {
             out.append(if (entry.hasMarkedKey) "? " else "")
         }
@@ -141,8 +149,10 @@ class Presenter {
         }
 
         override fun leaveMappingEntry(mapping: Mapping, entry: Entry) {
-            if (entry !== mapping.lastEntry())
-                nl()
+            when (mapping.style) {
+                FLOW -> if (entry === mapping.lastEntry) out.append("}")
+                BLOCK -> if (entry !== mapping.lastEntry) nl()
+            }
         }
 
         private fun append(comment: Comment): StringBuilder {

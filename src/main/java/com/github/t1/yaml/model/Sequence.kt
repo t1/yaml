@@ -23,9 +23,9 @@ data class Sequence(
         return this
     }
 
-    fun firstItem(): Item = items[0]
+    val firstItem get() = items[0]
 
-    fun lastItem(): Item = items[items.size - 1]
+    val lastItem get() = items[items.size - 1]
 
     override fun guide(visitor: Visitor) {
         visitor.visit(this)

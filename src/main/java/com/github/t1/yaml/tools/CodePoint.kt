@@ -46,14 +46,14 @@ data class CodePoint(val value: Int) {
     companion object {
         val EOF = of(-1)
 
-        fun decode(text: String): CodePoint = of(Integer.decode(text)!!)
-
+        fun of(codePoint: Char): CodePoint = of(codePoint.toInt())
         fun of(codePoint: Int): CodePoint = CodePoint(codePoint)
-
         fun of(text: String): CodePoint {
             assert(count(text) == 1)
             return at(0, text)
         }
+
+        fun decode(text: String): CodePoint = of(Integer.decode(text)!!)
 
         private fun count(string: String): Int = string.codePointCount(0, string.length)
 

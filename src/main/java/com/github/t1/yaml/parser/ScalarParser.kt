@@ -11,10 +11,16 @@ import com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_START
 import com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE
 import com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START
 import com.github.t1.yaml.parser.Marker.INDENTED_COMMENT
+import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
+import com.github.t1.yaml.parser.ScalarParser.Mode.NORMAL
+import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
+import com.github.t1.yaml.parser.YamlSymbol.COLLECT_ENTRY
+import com.github.t1.yaml.parser.YamlSymbol.COLON
 import com.github.t1.yaml.parser.YamlSymbol.COMMENT
 import com.github.t1.yaml.parser.YamlSymbol.DOUBLE_QUOTE
-import com.github.t1.yaml.parser.YamlSymbol.FLOW_MAPPING_START
-import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_START
+import com.github.t1.yaml.parser.YamlSymbol.MAPPING_END
+import com.github.t1.yaml.parser.YamlSymbol.MAPPING_START
+import com.github.t1.yaml.parser.YamlSymbol.SEQUENCE_START
 import com.github.t1.yaml.parser.YamlSymbol.SINGLE_QUOTE
 import com.github.t1.yaml.tools.NL
 import com.github.t1.yaml.tools.SPACE
@@ -25,13 +31,16 @@ internal class ScalarParser private constructor(
     private val indent: Int,
     private val next: YamlScanner,
     private val nesting: Nesting,
+    private val mode: Mode,
     style: Style
 ) {
+    enum class Mode { NORMAL, KEY, VALUE }
+
     companion object {
-        fun of(next: YamlScanner, nesting: Nesting): ScalarParser {
+        fun of(next: YamlScanner, nesting: Nesting, mode: Mode = NORMAL): ScalarParser {
             val indent = next.count(SPACE)
             val style = recognize(next)
-            return ScalarParser(indent, next, nesting, style)
+            return ScalarParser(indent, next, nesting, mode, style)
         }
 
         private fun recognize(scanner: YamlScanner): Style = when {
@@ -46,7 +55,7 @@ internal class ScalarParser private constructor(
     fun scalar(): Scalar {
         scalar.line(Line(indent = indent, text = text()))
         if (next.peek(INDENTED_COMMENT)) comment(scalar)
-        if (scalar.style == PLAIN) morePlainLines()
+        if (scalar.style == PLAIN && mode == NORMAL) morePlainLines()
         else next.accept(NL)
         return scalar
     }
@@ -70,6 +79,8 @@ internal class ScalarParser private constructor(
             next.expect(spaces)
             if (next.peek(COMMENT) || next.peek(BLOCK_MAPPING_VALUE)) break
             builder.append(spaces)
+            if (mode == KEY && next.peek(COLON)) break
+            if (mode == VALUE && (next.peek(COLLECT_ENTRY) || next.peek(MAPPING_END))) break
             if (!next.more() || next.peek(NL)) break
             builder.appendCodePoint(next.read().value)
         }
@@ -86,7 +97,7 @@ internal class ScalarParser private constructor(
     }
 
     private fun checkValidPlainScalarContinue() {
-        for (token in listOf<Token>(FLOW_SEQUENCE_START, BLOCK_SEQUENCE_START, FLOW_MAPPING_START, BLOCK_MAPPING_START))
+        for (token in listOf<Token>(SEQUENCE_START, BLOCK_SEQUENCE_START, MAPPING_START, BLOCK_MAPPING_START))
             if (next.peek(token))
                 throw YamlParseException("Expected a scalar node to continue with scalar values but found $token $next")
     }

@@ -26,7 +26,8 @@ data class Mapping(
         return this
     }
 
-    fun lastEntry(): Entry = entries[entries.size - 1]
+    val firstEntry get() = entries[0]
+    val lastEntry get() = entries[entries.size - 1]
 
     override fun guide(visitor: Visitor) {
         visitor.visit(this)

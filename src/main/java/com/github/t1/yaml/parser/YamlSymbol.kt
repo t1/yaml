@@ -14,11 +14,11 @@ enum class YamlSymbol(override val predicate: (CodePoint) -> Boolean) : Symbol {
     MINUS('-'), // 4 c-sequence-entry
     QUESTION_MARK('?'), // 5 c-mapping-key
     COLON(':'), // 6 c-mapping-value
-    FLOW_SEQUENCE_ENTRY(','), // 7 c-collect-entry
-    FLOW_SEQUENCE_START('['), // 8 c-sequence-start
-    FLOW_SEQUENCE_END(']'), // 9 c-sequence-end
-    FLOW_MAPPING_START('{'), // 10 c-mapping-start
-    // FLOW_MAPPING_END('}'),     // 11 c-mapping-end
+    COLLECT_ENTRY(','), // 7 c-collect-entry
+    SEQUENCE_START('['), // 8 c-sequence-start
+    SEQUENCE_END(']'), // 9 c-sequence-end
+    MAPPING_START('{'), // 10 c-mapping-start
+    MAPPING_END('}'),     // 11 c-mapping-end
     COMMENT('#'), // 12 c-comment
 
     SINGLE_QUOTE('\''), // 18 c-single-quote
@@ -36,7 +36,7 @@ enum class YamlSymbol(override val predicate: (CodePoint) -> Boolean) : Symbol {
     /////////////////////////// not in spec
     DOT('.'),
     NL_OR_COMMENT(NL.or(COMMENT)),
-    FLOW_SEQUENCE_ITEM_END(FLOW_SEQUENCE_ENTRY.or(FLOW_SEQUENCE_END));
+    FLOW_SEQUENCE_ITEM_END(COLLECT_ENTRY.or(SEQUENCE_END));
 
     @Suppress("unused")
     constructor(codePoint: Char) : this(symbol(codePoint))
