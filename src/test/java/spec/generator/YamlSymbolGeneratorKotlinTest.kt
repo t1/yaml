@@ -12,13 +12,14 @@ import spec.generator.Expression.ReferenceExpression
 import java.io.StringWriter
 import java.util.Arrays.asList
 
-class ParserGeneratorJavaTest {
+@Disabled
+class YamlSymbolGeneratorKotlinTest {
     private fun generate(vararg productions: Production): String {
         val writer = StringWriter()
 
         val spec = Spec(asList(*productions))
-        val generator = ParserGenerator(spec)
-        generator.generateJavaCode("FooParser", writer)
+        val generator = YamlSymbolGenerator(spec)
+        generator.generateCode("FooParser", writer)
 
         return writer.toString()
     }
@@ -39,7 +40,7 @@ class ParserGeneratorJavaTest {
             "\n" +
             "import static java.nio.charset.StandardCharsets.UTF_8;\n" +
             "\n" +
-            "@Generated(\"" + ParserGenerator::class.java.name + "\")\n" +
+            "@Generated(\"" + YamlSymbolGenerator::class.java.name + "\")\n" +
             "public class FooParser {\n" +
             "    private final Scanner next;\n" +
             "    private Document document;\n" +

@@ -14,14 +14,14 @@ import com.github.t1.yaml.parser.Marker.INDENTED_COMMENT
 import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
 import com.github.t1.yaml.parser.ScalarParser.Mode.NORMAL
 import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
-import com.github.t1.yaml.parser.YamlSymbol.COLLECT_ENTRY
-import com.github.t1.yaml.parser.YamlSymbol.COLON
-import com.github.t1.yaml.parser.YamlSymbol.COMMENT
-import com.github.t1.yaml.parser.YamlSymbol.DOUBLE_QUOTE
-import com.github.t1.yaml.parser.YamlSymbol.MAPPING_END
-import com.github.t1.yaml.parser.YamlSymbol.MAPPING_START
-import com.github.t1.yaml.parser.YamlSymbol.SEQUENCE_START
-import com.github.t1.yaml.parser.YamlSymbol.SINGLE_QUOTE
+import com.github.t1.yaml.parser.YamlTokens.`c-collect-entry`
+import com.github.t1.yaml.parser.YamlTokens.`c-comment`
+import com.github.t1.yaml.parser.YamlTokens.`c-double-quote`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-start`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
+import com.github.t1.yaml.parser.YamlTokens.`c-single-quote`
 import com.github.t1.yaml.tools.NL
 import com.github.t1.yaml.tools.SPACE
 import com.github.t1.yaml.tools.Token
@@ -44,8 +44,8 @@ internal class ScalarParser private constructor(
         }
 
         private fun recognize(scanner: YamlScanner): Style = when {
-            scanner.accept(SINGLE_QUOTE) -> SINGLE_QUOTED
-            scanner.accept(DOUBLE_QUOTE) -> DOUBLE_QUOTED
+            scanner.accept(`c-single-quote`) -> SINGLE_QUOTED
+            scanner.accept(`c-double-quote`) -> DOUBLE_QUOTED
             else -> PLAIN
         }
     }
@@ -77,10 +77,10 @@ internal class ScalarParser private constructor(
             if (then != null && then(COMMENT)) break
             val spaces = spaces(spaceCount)
             next.expect(spaces)
-            if (next.peek(COMMENT) || next.peek(BLOCK_MAPPING_VALUE)) break
+            if (next.peek(`c-comment`) || next.peek(BLOCK_MAPPING_VALUE)) break
             builder.append(spaces)
-            if (mode == KEY && next.peek(COLON)) break
-            if (mode == VALUE && (next.peek(COLLECT_ENTRY) || next.peek(MAPPING_END))) break
+            if (mode == KEY && next.peek(`c-mapping-value`)) break
+            if (mode == VALUE && (next.peek(`c-collect-entry`) || next.peek(`c-mapping-end`))) break
             if (!next.more() || next.peek(NL)) break
             builder.appendCodePoint(next.read().value)
         }
@@ -97,7 +97,7 @@ internal class ScalarParser private constructor(
     }
 
     private fun checkValidPlainScalarContinue() {
-        for (token in listOf<Token>(SEQUENCE_START, BLOCK_SEQUENCE_START, MAPPING_START, BLOCK_MAPPING_START))
+        for (token in listOf<Token>(`c-sequence-start`, BLOCK_SEQUENCE_START, `c-mapping-start`, BLOCK_MAPPING_START))
             if (next.peek(token))
                 throw YamlParseException("Expected a scalar node to continue with scalar values but found $token $next")
     }
@@ -105,8 +105,8 @@ internal class ScalarParser private constructor(
     private fun singleQuoted(): String {
         val out = StringBuilder()
         while (next.more())
-            if (next.accept(SINGLE_QUOTE))
-                if (next.accept(SINGLE_QUOTE))
+            if (next.accept(`c-single-quote`))
+                if (next.accept(`c-single-quote`))
                     out.append("'")
                 else
                     return out.toString()
@@ -118,7 +118,7 @@ internal class ScalarParser private constructor(
     private fun doubleQuoted(): String {
         val out = StringBuilder()
         while (next.more()) {
-            if (next.accept(DOUBLE_QUOTE))
+            if (next.accept(`c-double-quote`))
                 return out.toString()
             if (next.accept("\\"))
                 out.append("\\")
@@ -129,7 +129,7 @@ internal class ScalarParser private constructor(
 
     private fun comment(scalar: Scalar) {
         val indent = next.count(SPACE)
-        next.expect(COMMENT).skip(SPACE)
+        next.expect(`c-comment`).skip(SPACE)
         scalar.lastLine.comment(Comment(indent = indent, text = next.readUntil(NL)))
     }
 }

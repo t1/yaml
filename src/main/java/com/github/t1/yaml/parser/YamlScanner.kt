@@ -2,7 +2,7 @@ package com.github.t1.yaml.parser
 
 import com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER
 import com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER
-import com.github.t1.yaml.parser.YamlSymbol.BOM
+import com.github.t1.yaml.parser.YamlTokens.`c-byte-order-mark`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.Scanner
 import java.io.Reader
@@ -10,11 +10,9 @@ import java.io.Reader
 internal class YamlScanner(reader: Reader) : Scanner(MAX_LOOK_AHEAD, reader) {
 
     override fun read(): CodePoint {
-        val start = isStartOfFile // before the read
-        val codePoint = super.read()
-        if (!start && codePoint(BOM))
+        if (!isStartOfFile && peek(`c-byte-order-mark`))
             throw YamlParseException("A BOM must not appear inside a document")
-        return codePoint
+        return super.read()
     }
 
     override fun more(): Boolean {

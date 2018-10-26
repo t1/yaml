@@ -12,39 +12,39 @@ abstract class Expression {
 
     abstract class Visitor {
         ///////////// no subexpression
-        open fun visit(nullExpression: NullExpression) {}
+        open fun visit(expression: NullExpression) {}
 
-        open fun visit(codePointExpression: CodePointExpression) {}
-        open fun visit(literalExpression: LiteralExpression) {}
-        open fun visit(referenceExpression: ReferenceExpression) {}
+        open fun visit(expression: CodePointExpression) {}
+        open fun visit(expression: LiteralExpression) {}
+        open fun visit(expression: ReferenceExpression) {}
 
 
         ///////////// fixed number of subexpressions
-        open fun visit(repeatedExpression: RepeatedExpression): Visitor = this
+        open fun visit(expression: RepeatedExpression): Visitor = this
 
-        open fun leave(repeatedExpression: RepeatedExpression) {}
+        open fun leave(expression: RepeatedExpression) {}
 
 
-        open fun visit(rangeExpression: RangeExpression): Visitor = this
-        open fun leave(rangeExpression: RangeExpression) {}
+        open fun visit(expression: RangeExpression): Visitor = this
+        open fun leave(expression: RangeExpression) {}
 
 
         ///////////// arbitrary subexpressions
-        open fun visit(minusExpression: MinusExpression): Visitor = this
+        open fun visit(expression: MinusExpression): Visitor = this
 
-        open fun leave(minusExpression: MinusExpression) {}
-
-
-        open fun visit(alternativesExpression: AlternativesExpression): Visitor = this
-        open fun leave(alternativesExpression: AlternativesExpression) {}
+        open fun leave(expression: MinusExpression) {}
 
 
-        open fun visit(sequenceExpression: SequenceExpression): Visitor = this
-        open fun leave(sequenceExpression: SequenceExpression) {}
+        open fun visit(expression: AlternativesExpression): Visitor = this
+        open fun leave(expression: AlternativesExpression) {}
 
 
-        open fun visit(switchExpression: SwitchExpression): Visitor = this
-        open fun leave(switchExpression: SwitchExpression) {}
+        open fun visit(expression: SequenceExpression): Visitor = this
+        open fun leave(expression: SequenceExpression) {}
+
+
+        open fun visit(expression: SwitchExpression): Visitor = this
+        open fun leave(expression: SwitchExpression) {}
     }
 
     protected open fun last(): Expression = throw UnsupportedOperationException()

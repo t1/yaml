@@ -6,9 +6,9 @@ import com.github.t1.yaml.model.Document
 import com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER
 import com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER
 import com.github.t1.yaml.parser.Marker.INDENTED_COMMENT
-import com.github.t1.yaml.parser.YamlSymbol.BOM
-import com.github.t1.yaml.parser.YamlSymbol.COMMENT
-import com.github.t1.yaml.parser.YamlSymbol.PERCENT
+import com.github.t1.yaml.parser.YamlTokens.`c-byte-order-mark`
+import com.github.t1.yaml.parser.YamlTokens.`c-comment`
+import com.github.t1.yaml.parser.YamlTokens.`c-directive`
 import com.github.t1.yaml.tools.NL
 import com.github.t1.yaml.tools.SPACE
 import java.io.Reader
@@ -22,7 +22,7 @@ class DocumentParser(reader: Reader) {
     fun document(): Optional<Document> {
         this.document = Document()
 
-        next.accept(BOM)
+        next.accept(`c-byte-order-mark`)
 
         if (next.end())
             return Optional.empty()
@@ -36,7 +36,7 @@ class DocumentParser(reader: Reader) {
     }
 
     private fun directives() {
-        if (next.accept(PERCENT))
+        if (next.accept(`c-directive`))
             document!!.directive(directive())
 
         if (next.accept(DIRECTIVES_END_MARKER)) {
@@ -55,7 +55,7 @@ class DocumentParser(reader: Reader) {
     }
 
     private fun comment(): Comment =
-        Comment(indent = next.count(SPACE), text = next.expect(COMMENT).skip(SPACE).readLine())
+        Comment(indent = next.count(SPACE), text = next.expect(`c-comment`).skip(SPACE).readLine())
 
 
     private fun node() {

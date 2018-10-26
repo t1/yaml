@@ -11,18 +11,18 @@ import com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_START
 import com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START
 import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
 import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
-import com.github.t1.yaml.parser.YamlSymbol.COLLECT_ENTRY
-import com.github.t1.yaml.parser.YamlSymbol.COLON
-import com.github.t1.yaml.parser.YamlSymbol.FLOW_SEQUENCE_ITEM_END
-import com.github.t1.yaml.parser.YamlSymbol.MAPPING_END
-import com.github.t1.yaml.parser.YamlSymbol.MAPPING_START
-import com.github.t1.yaml.parser.YamlSymbol.MINUS
-import com.github.t1.yaml.parser.YamlSymbol.QUESTION_MARK
-import com.github.t1.yaml.parser.YamlSymbol.SEQUENCE_END
-import com.github.t1.yaml.parser.YamlSymbol.SEQUENCE_START
+import com.github.t1.yaml.parser.YamlTokens.`c-collect-entry`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-key`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-start`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
 import com.github.t1.yaml.tools.NL
 import com.github.t1.yaml.tools.SPACE
 import com.github.t1.yaml.tools.WS
+import com.github.t1.yaml.tools.symbol
 
 internal class NodeParser(private val next: YamlScanner) {
     private val nesting = Nesting(this.next)
@@ -32,28 +32,28 @@ internal class NodeParser(private val next: YamlScanner) {
     fun node(): Node {
         nesting.expect()
         return when {
-            next.peek(SEQUENCE_START) -> flowSequence()
+            next.peek(`c-sequence-start`) -> flowSequence()
             next.peek(BLOCK_SEQUENCE_START) -> blockSequence()
-            next.peek(MAPPING_START) -> flowMapping()
+            next.peek(`c-mapping-start`) -> flowMapping()
             next.peek(BLOCK_MAPPING_START) -> blockMapping()
             else -> scalar()
         }
     }
 
     private fun flowSequence(): Node {
-        next.expect(SEQUENCE_START)
+        next.expect(`c-sequence-start`)
         val sequence = Sequence(style = FLOW)
         do {
             sequence.item(flowSequenceItem())
-        } while (next.more() && next.accept(COLLECT_ENTRY))
-        next.expect(SEQUENCE_END)
+        } while (next.more() && next.accept(`c-collect-entry`))
+        next.expect(`c-sequence-end`)
         next.skip(WS)
         return sequence
     }
 
     private fun flowSequenceItem(): Item {
         next.skip(SPACE)
-        val line = next.readUntil(FLOW_SEQUENCE_ITEM_END) // TODO this must be a call to node()!
+        val line = next.readUntil(symbol(',').or(symbol(']'))) // TODO this must be a call to node()!
         next.skip(SPACE)
         return Item(node = Scalar().line(line))
     }
@@ -67,7 +67,7 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun blockSequenceItem(): Item {
-        next.expect(MINUS)
+        next.expect(`c-sequence-entry`)
         val nlItem = next.accept(NL)
         if (!nlItem) {
             next.expect(SPACE)
@@ -95,14 +95,14 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun blockMappingKey(entry: Entry) {
-        entry.hasMarkedKey = next.accept(QUESTION_MARK)
+        entry.hasMarkedKey = next.accept(`c-mapping-key`)
         if (entry.hasMarkedKey)
             next.expect(SPACE)
         entry.key = scalar() // TODO key node()
     }
 
     private fun blockMappingValue(entry: Entry) {
-        next.expect(COLON)
+        next.expect(`c-mapping-value`)
         entry.hasNlAfterKey = next.accept(NL)
         if (!entry.hasNlAfterKey) {
             next.expect(SPACE)
@@ -115,12 +115,12 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun flowMapping(): Mapping {
-        next.expect(MAPPING_START)
+        next.expect(`c-mapping-start`)
         val mapping = Mapping(style = FLOW)
         do {
             mapping.entry(flowMappingEntry())
-        } while (next.more() && next.accept(COLLECT_ENTRY))
-        next.expect(MAPPING_END)
+        } while (next.more() && next.accept(`c-collect-entry`))
+        next.expect(`c-mapping-end`)
         return mapping
     }
 
@@ -132,7 +132,7 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun flowMappingKey(entry: Entry) {
-        entry.hasMarkedKey = next.accept(QUESTION_MARK)
+        entry.hasMarkedKey = next.accept(`c-mapping-key`)
         if (entry.hasMarkedKey)
             next.expect(SPACE)
         entry.key = ScalarParser.of(next, nesting, mode = KEY).scalar()
@@ -140,7 +140,7 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun flowMappingValue(entry: Entry) {
-        next.expect(COLON)
+        next.expect(`c-mapping-value`)
         entry.hasNlAfterKey = next.accept(NL)
         if (!entry.hasNlAfterKey) {
             next.expect(SPACE)
