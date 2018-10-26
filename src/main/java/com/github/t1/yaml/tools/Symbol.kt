@@ -6,6 +6,8 @@ val NL = LF.or(CR)
 val WS = symbol("whitespace") { Character.isWhitespace(it.value) }
 val SPACE = symbol("space-char") { Character.isSpaceChar(it.value) }
 
+fun symbol(int: Int): Symbol = symbol(CodePoint.of(int).info) { it.value == int }
+
 fun symbol(char: Char): Symbol = symbol(CodePoint.of(char).info) { it.value == char.toInt() }
 
 fun symbol(

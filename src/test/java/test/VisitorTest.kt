@@ -8,18 +8,30 @@ import com.github.t1.yaml.model.Scalar.Line
 import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
 import com.github.t1.yaml.model.Visitor
+import com.github.t1.yaml.tools.Scanner
 import com.nhaarman.mockito_kotlin.mock
+import helpers.catchParseException
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import java.io.StringReader
 
 class VisitorTest {
     private val visitor: Visitor = mock()
 
     @AfterEach fun tearDown() {
         verifyNoMoreInteractions(visitor)
+    }
+
+    @Test fun shouldFailUnexpected() {
+        val scanner = Scanner(10, StringReader("a"))
+
+        val exception = catchParseException { scanner.expect("b") }
+
+        assertThat(exception).hasMessage("expected [b][LATIN SMALL LETTER B][0x62] but got [a][LATIN SMALL LETTER A][0x61] at line 1 char 1")
     }
 
 

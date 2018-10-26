@@ -7,6 +7,7 @@ import com.github.t1.yaml.tools.StringToken
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
+import java.io.StringReader
 
 /**
  * Scans an html snippet which includes seamless scanning of text nodes.
@@ -85,7 +86,7 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
         assert(more())
         assert(node() is TextNode)
         if (nextText == null)
-            nextText = Scanner(256, (node() as TextNode).text().trim { it <= ' ' })
+            nextText = Scanner(256, StringReader((node() as TextNode).text().trim { it <= ' ' }))
         val result = runnable()
         if (nextText!!.end())
             next()

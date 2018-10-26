@@ -11,22 +11,13 @@ import com.github.t1.yaml.parser.YamlSymbol.COMMENT
 import com.github.t1.yaml.parser.YamlSymbol.PERCENT
 import com.github.t1.yaml.tools.NL
 import com.github.t1.yaml.tools.SPACE
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
 import java.io.Reader
-import java.io.StringReader
-import java.nio.charset.StandardCharsets.UTF_8
 import java.util.Optional
 
 class DocumentParser(reader: Reader) {
 
     private val next: YamlScanner = YamlScanner(reader)
     private var document: Document? = null
-
-    constructor(yaml: String) : this(StringReader(yaml))
-
-    constructor(inputStream: InputStream) : this(BufferedReader(InputStreamReader(inputStream, UTF_8)))
 
     fun document(): Optional<Document> {
         this.document = Document()
@@ -54,9 +45,8 @@ class DocumentParser(reader: Reader) {
         }
     }
 
-    private fun directive(): Directive {
-        return Directive(next.readWord(), next.readLine())
-    }
+    private fun directive(): Directive =
+        Directive(next.readWord(), next.readLine())
 
 
     private fun prefixComments() {
@@ -64,9 +54,8 @@ class DocumentParser(reader: Reader) {
             document!!.prefixComment(comment())
     }
 
-    private fun comment(): Comment {
-        return Comment(indent = next.count(SPACE), text = next.expect(COMMENT).skip(SPACE).readLine())
-    }
+    private fun comment(): Comment =
+        Comment(indent = next.count(SPACE), text = next.expect(COMMENT).skip(SPACE).readLine())
 
 
     private fun node() {
@@ -85,11 +74,7 @@ class DocumentParser(reader: Reader) {
         }
     }
 
-    fun more(): Boolean {
-        return next.anyMore()
-    }
+    fun more(): Boolean = next.anyMore()
 
-    override fun toString(): String {
-        return next.toString()
-    }
+    override fun toString() = next.toString()
 }

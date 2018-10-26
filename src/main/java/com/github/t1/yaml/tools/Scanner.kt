@@ -1,18 +1,15 @@
 package com.github.t1.yaml.tools
 
 import java.io.Reader
-import java.io.StringReader
 
 open class Scanner(
     private val lookAheadLimit: Int,
-    private val reader: CodePointReader
+    reader: Reader
 ) {
     private var position = 1
     private var lineNumber = 1
 
-    constructor(lookAheadLimit: Int, reader: Reader) : this(lookAheadLimit, CodePointReader(reader))
-
-    constructor(lookAheadLimit: Int, text: String) : this(lookAheadLimit, StringReader(text))
+    private val reader: CodePointReader = CodePointReader(reader)
 
 
     val isStartOfFile get() = position == 1 && lineNumber == 1
@@ -29,19 +26,6 @@ open class Scanner(
     }
 
     fun peek(token: Token): Boolean = token.matches(this)
-
-    fun accept(string: String): Boolean = accept(StringToken(string))
-
-    fun accept(token: Token): Boolean = peek(token) && expect(token).run { true }
-
-    fun skip(token: Token): Scanner {
-        accept(token)
-        return this
-    }
-
-    fun end(): Boolean = peek().isEof
-
-    open fun more(): Boolean = !end()
 
     fun peek(): CodePoint = peek(1)[0]
 
@@ -88,6 +72,19 @@ open class Scanner(
         val peek = peek(count + 1)
         return if (peek.size < count + 1) null else peek[peek.size - 1]
     }
+
+    fun accept(string: String): Boolean = accept(StringToken(string))
+
+    fun accept(token: Token): Boolean = peek(token) && expect(token).run { true }
+
+    fun skip(token: Token): Scanner {
+        accept(token)
+        return this
+    }
+
+    fun end(): Boolean = peek().isEof
+
+    open fun more(): Boolean = !end()
 
     open fun read(): CodePoint {
         val codePoint = reader.read()

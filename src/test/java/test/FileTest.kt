@@ -93,7 +93,6 @@ import java.nio.file.Path
     }
 
     companion object {
-
         private var expectedDocument: Document? = null
         private var expectedStream: Stream? = null
 
