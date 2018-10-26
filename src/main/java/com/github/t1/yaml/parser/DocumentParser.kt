@@ -3,12 +3,12 @@ package com.github.t1.yaml.parser
 import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Directive
 import com.github.t1.yaml.model.Document
-import com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER
-import com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER
 import com.github.t1.yaml.parser.Marker.INDENTED_COMMENT
 import com.github.t1.yaml.parser.YamlTokens.`c-byte-order-mark`
 import com.github.t1.yaml.parser.YamlTokens.`c-comment`
 import com.github.t1.yaml.parser.YamlTokens.`c-directive`
+import com.github.t1.yaml.parser.YamlTokens.`c-directives-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-document-end`
 import com.github.t1.yaml.tools.NL
 import com.github.t1.yaml.tools.SPACE
 import java.io.Reader
@@ -39,7 +39,7 @@ class DocumentParser(reader: Reader) {
         if (next.accept(`c-directive`))
             document!!.directive(directive())
 
-        if (next.accept(DIRECTIVES_END_MARKER)) {
+        if (next.accept(`c-directives-end`)) {
             document!!.hasDirectivesEndMarker = true
             next.expect(NL)
         }
@@ -65,7 +65,7 @@ class DocumentParser(reader: Reader) {
     }
 
     private fun documentEnd() {
-        if (next.accept(DOCUMENT_END_MARKER)) {
+        if (next.accept(`c-document-end`)) {
             document!!.hasDocumentEndMarker = true
             if (next.peek(SPACE))
                 document!!.suffixComment = comment()

@@ -27,9 +27,7 @@ enum class Marker(vararg symbols: Symbol) : Token {
             return token != null && token.isNotEmpty() && !token.contains("\n")
         }
     },
-    BLOCK_MAPPING_VALUE(COLON, WS),
-    DIRECTIVES_END_MARKER(MINUS, MINUS, MINUS),
-    DOCUMENT_END_MARKER(DOT, DOT, DOT);
+    BLOCK_MAPPING_VALUE(COLON, WS);
 
     private val symbols: List<Symbol> = listOf(*symbols)
     override val predicates: List<(CodePoint) -> Boolean> = this.symbols.flatMap(Symbol::predicates)
@@ -37,5 +35,4 @@ enum class Marker(vararg symbols: Symbol) : Token {
 
 private val MINUS = symbol('-') // TODO `c-sequence-entry`
 private val COLON = symbol(':') // TODO `c-mapping-value`
-private val DOT = symbol('.') // TODO ?
 val COMMENT = symbol('#') // TODO `c-comment`

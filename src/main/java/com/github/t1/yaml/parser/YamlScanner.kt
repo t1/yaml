@@ -1,8 +1,8 @@
 package com.github.t1.yaml.parser
 
-import com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER
-import com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER
 import com.github.t1.yaml.parser.YamlTokens.`c-byte-order-mark`
+import com.github.t1.yaml.parser.YamlTokens.`c-directives-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-document-end`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.Scanner
 import java.io.Reader
@@ -17,8 +17,8 @@ internal class YamlScanner(reader: Reader) : Scanner(MAX_LOOK_AHEAD, reader) {
 
     override fun more(): Boolean {
         return (anyMore()
-            && !peek(DOCUMENT_END_MARKER)
-            && !peek(DIRECTIVES_END_MARKER)) // of next document
+            && !peek(`c-document-end`)
+            && !peek(`c-directives-end`)) // of next document
     }
 
     fun anyMore(): Boolean = super.more()

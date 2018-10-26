@@ -1,6 +1,14 @@
 package spec.generator
 
+import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
+import spec.generator.Expression.MinusExpression
+import spec.generator.Expression.RangeExpression
+import spec.generator.Expression.ReferenceExpression
+import spec.generator.Expression.RepeatedExpression
+import spec.generator.Expression.SequenceExpression
+import spec.generator.Expression.SwitchExpression
+import spec.generator.Expression.Visitor
 import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
@@ -71,29 +79,54 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 "\n" +
                 "    constructor(codePoint: Char) : this(symbol(codePoint))\n" +
                 "    constructor(symbol: Symbol) : this(listOf(symbol.predicate))\n" +
+                "    constructor(token: Token) : this(token.predicates)\n" +
                 "    @Deprecated(\"missing production visitor\") constructor() : this(listOf())\n" +
                 "}\n")
         }
 
-        private inner class ProductionWriter(val production: Production) : Expression.Visitor() {
+        private inner class ProductionWriter(val production: Production) : Visitor() {
             fun write() {
                 append("\n" +
                     "    /**\n" +
                     "     * ${production.toString().replace("\n", "\n     * ")}\n" +
-                    "     */\n" +
-                    "    `$methodName`(")
-                production.expression.guide(this)
-                append("),\n")
-            }
-
-            private val methodName get() = production.name + if (production.args == null) "" else "(${production.args.replace("<", "«")})"
-
-            override fun visit(expression: CodePointExpression) {
-                if (expression.isCurrent)
-                    append("'${expression.codePoint.escaped}'")
+                    "     */\n")
+                if (production.counter in setOf(87, 98))
+                    append("// TODO to be fixed\n")
+                else {
+                    append("    `$methodName`(")
+                    production.expression.guide(this)
+                    append("),\n")
+                }
             }
 
             private val Expression.isCurrent get() = this === production.expression
+
+            private fun SequenceExpression.isFirst(expression: Expression) = this.expressions.first() === expression
+
+            private val methodName get() = production.name + if (production.args == null) "" else "(${production.args.replace("<", "«")})"
+
+            override fun visit(codePoint: CodePointExpression) {
+                if (codePoint.isCurrent)
+                    append("'${codePoint.codePoint.escaped}'")
+            }
+
+            override fun visit(reference: ReferenceExpression) {
+                append("`${reference.ref}`")
+            }
+
+            override fun visit(sequence: SequenceExpression) = object : Visitor() {
+                override fun visit(codePoint: CodePointExpression) {
+                    if (!sequence.isFirst(codePoint))
+                        append(" + ")
+                    append("symbol('${codePoint.codePoint.escaped}')")
+                }
+            }
+
+            override fun visit(alternatives: AlternativesExpression) = object : Visitor() {}
+            override fun visit(minus: MinusExpression) = object : Visitor() {}
+            override fun visit(repeated: RepeatedExpression) = object : Visitor() {}
+            override fun visit(range: RangeExpression) = object : Visitor() {}
+            override fun visit(switch: SwitchExpression) = object : Visitor() {}
         }
     }
 }

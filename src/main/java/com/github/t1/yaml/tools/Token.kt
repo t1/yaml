@@ -13,4 +13,8 @@ interface Token {
                 return false
         return true
     }
+
+    operator fun plus(token: Token) = object : Token {
+        override val predicates: List<(CodePoint) -> Boolean> = this@Token.predicates + token.predicates
+    }
 }
