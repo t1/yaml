@@ -19,9 +19,7 @@ import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
 import com.github.t1.yaml.parser.YamlTokens.`c-sequence-end`
 import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
 import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
-import com.github.t1.yaml.tools.NL
-import com.github.t1.yaml.tools.SPACE
-import com.github.t1.yaml.tools.WS
+import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.symbol
 
 internal class NodeParser(private val next: YamlScanner) {
@@ -52,9 +50,9 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun flowSequenceItem(): Item {
-        next.skip(SPACE)
+        next.skip(`s-space`)
         val line = next.readUntil(symbol(',').or(symbol(']'))) // TODO this must be a call to node()!
-        next.skip(SPACE)
+        next.skip(`s-space`)
         return Item(node = Scalar().line(line))
     }
 
@@ -68,9 +66,9 @@ internal class NodeParser(private val next: YamlScanner) {
 
     private fun blockSequenceItem(): Item {
         next.expect(`c-sequence-entry`)
-        val nlItem = next.accept(NL)
+        val nlItem = next.accept(`b-break`)
         if (!nlItem) {
-            next.expect(SPACE)
+            next.expect(`s-space`)
             nesting.skipNext(true)
         }
         nesting.up()
@@ -97,15 +95,15 @@ internal class NodeParser(private val next: YamlScanner) {
     private fun blockMappingKey(entry: Entry) {
         entry.hasMarkedKey = next.accept(`c-mapping-key`)
         if (entry.hasMarkedKey)
-            next.expect(SPACE)
+            next.expect(`s-space`)
         entry.key = scalar() // TODO key node()
     }
 
     private fun blockMappingValue(entry: Entry) {
         next.expect(`c-mapping-value`)
-        entry.hasNlAfterKey = next.accept(NL)
+        entry.hasNlAfterKey = next.accept(`b-break`)
         if (!entry.hasNlAfterKey) {
-            next.expect(SPACE)
+            next.expect(`s-space`)
             nesting.skipNext(true)
         }
 
@@ -134,16 +132,16 @@ internal class NodeParser(private val next: YamlScanner) {
     private fun flowMappingKey(entry: Entry) {
         entry.hasMarkedKey = next.accept(`c-mapping-key`)
         if (entry.hasMarkedKey)
-            next.expect(SPACE)
+            next.expect(`s-space`)
         entry.key = ScalarParser.of(next, nesting, mode = KEY).scalar()
         // TODO key node()
     }
 
     private fun flowMappingValue(entry: Entry) {
         next.expect(`c-mapping-value`)
-        entry.hasNlAfterKey = next.accept(NL)
+        entry.hasNlAfterKey = next.accept(`b-break`)
         if (!entry.hasNlAfterKey) {
-            next.expect(SPACE)
+            next.expect(`s-space`)
             nesting.skipNext(true)
         }
 

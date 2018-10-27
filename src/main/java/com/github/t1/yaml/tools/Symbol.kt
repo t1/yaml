@@ -1,9 +1,5 @@
 package com.github.t1.yaml.tools
 
-val NL = symbol('\n').or(symbol('\r'))
-val WS = symbol("whitespace") { Character.isWhitespace(it.value) }
-val SPACE = symbol("space-char") { Character.isSpaceChar(it.value) }
-
 fun symbol(char: Char): Symbol = symbol(CodePoint.of(char))
 fun symbol(string: String): Symbol = symbol(CodePoint.of(string))
 fun symbol(codePoint: CodePoint): Symbol = symbol(codePoint.info) { it == codePoint }

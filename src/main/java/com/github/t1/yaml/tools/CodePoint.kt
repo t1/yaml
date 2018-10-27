@@ -48,6 +48,8 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
 
     private val isDigit get() = Character.isDigit(value)
     private val isBmpCodePoint get () = Character.isBmpCodePoint(value)
+    val isWhitespace get () = Character.isWhitespace(value)
+    val isSpaceChar get () = Character.isSpaceChar(value)
 
     /** End Of File */
     val isEof: Boolean get() = value < 0

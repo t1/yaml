@@ -22,8 +22,7 @@ import com.github.t1.yaml.parser.YamlTokens.`c-mapping-start`
 import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
 import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
 import com.github.t1.yaml.parser.YamlTokens.`c-single-quote`
-import com.github.t1.yaml.tools.NL
-import com.github.t1.yaml.tools.SPACE
+import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.spaces
 
@@ -38,7 +37,7 @@ internal class ScalarParser private constructor(
 
     companion object {
         fun of(next: YamlScanner, nesting: Nesting, mode: Mode = NORMAL): ScalarParser {
-            val indent = next.count(SPACE)
+            val indent = next.count(`s-space`)
             val style = recognize(next)
             return ScalarParser(indent, next, nesting, mode, style)
         }
@@ -56,7 +55,7 @@ internal class ScalarParser private constructor(
         scalar.line(Line(indent = indent, text = text()))
         if (next.peek(INDENTED_COMMENT)) comment(scalar)
         if (scalar.style == PLAIN && mode == NORMAL) morePlainLines()
-        else next.accept(NL)
+        else next.accept(`b-break`)
         return scalar
     }
 
@@ -72,7 +71,7 @@ internal class ScalarParser private constructor(
         val builder = StringBuilder()
         while (next.more()) {
             // spaces before a comment or a block mapping value are not part of string scalar
-            val spaceCount = next.peekWhile(SPACE).length
+            val spaceCount = next.peekWhile(`s-space`).length
             val then = next.peekAfter(spaceCount)
             if (then != null && then(COMMENT)) break
             val spaces = spaces(spaceCount)
@@ -81,17 +80,17 @@ internal class ScalarParser private constructor(
             builder.append(spaces)
             if (mode == KEY && next.peek(`c-mapping-value`)) break
             if (mode == VALUE && (next.peek(`c-collect-entry`) || next.peek(`c-mapping-end`))) break
-            if (!next.more() || next.peek(NL)) break
+            if (!next.more() || next.peek(`b-break`)) break
             builder.appendCodePoint(next.read().value)
         }
         return builder.toString()
     }
 
     private fun morePlainLines() {
-        // after the NL, there has to be more and it has to be nested
-        while (next.accept(NL) && next.more() && nesting.accept()) {
+        // after the `b-break`, there has to be more and it has to be nested
+        while (next.accept(`b-break`) && next.more() && nesting.accept()) {
             checkValidPlainScalarContinue()
-            scalar.line(Line().indent(next.count(SPACE)).text(plain()))
+            scalar.line(Line().indent(next.count(`s-space`)).text(plain()))
             if (next.peek(INDENTED_COMMENT)) comment(scalar)
         }
     }
@@ -128,8 +127,8 @@ internal class ScalarParser private constructor(
     }
 
     private fun comment(scalar: Scalar) {
-        val indent = next.count(SPACE)
-        next.expect(`c-comment`).skip(SPACE)
-        scalar.lastLine.comment(Comment(indent = indent, text = next.readUntil(NL)))
+        val indent = next.count(`s-space`)
+        next.expect(`c-comment`).skip(`s-space`)
+        scalar.lastLine.comment(Comment(indent = indent, text = next.readUntil(`b-break`)))
     }
 }

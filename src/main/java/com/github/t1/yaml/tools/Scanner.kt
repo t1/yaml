@@ -33,18 +33,7 @@ open class Scanner(
         reader.mark(count).use { return reader.read(count) }
     }
 
-    fun peekWhile(symbol: Symbol): String {
-        reader.mark(lookAheadLimit).use {
-            val out = StringBuilder()
-            while (true) {
-                val codePoint = reader.read()
-                if (codePoint.isEof || !codePoint(symbol))
-                    return out.toString()
-                codePoint.appendTo(out)
-            }
-        }
-        throw UnsupportedOperationException("unreachable")
-    }
+    fun peekWhile(token: Token) = peekUntil(!token) ?: ""
 
     fun peekUntil(token: Token): String? {
         val predicates = token.predicates
@@ -97,10 +86,6 @@ open class Scanner(
         return codePoint
     }
 
-    fun readWord(): String = readUntilAndSkip(WS)
-
-    fun readLine(): String = readUntilAndSkip(NL)
-
     fun readUntil(end: String): String = readUntil(StringToken(end))
 
     fun readUntil(end: Token): String {
@@ -110,7 +95,7 @@ open class Scanner(
         return builder.toString()
     }
 
-    private fun readUntilAndSkip(end: Token): String {
+    fun readUntilAndSkip(end: Token): String {
         val result = readUntil(end)
         if (more())
             expect(end)

@@ -9,8 +9,7 @@ import com.github.t1.yaml.parser.YamlTokens.`c-comment`
 import com.github.t1.yaml.parser.YamlTokens.`c-directive`
 import com.github.t1.yaml.parser.YamlTokens.`c-directives-end`
 import com.github.t1.yaml.parser.YamlTokens.`c-document-end`
-import com.github.t1.yaml.tools.NL
-import com.github.t1.yaml.tools.SPACE
+import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import java.io.Reader
 import java.util.Optional
 
@@ -41,7 +40,7 @@ class DocumentParser(reader: Reader) {
 
         if (next.accept(`c-directives-end`)) {
             document!!.hasDirectivesEndMarker = true
-            next.expect(NL)
+            next.expect(`b-break`)
         }
     }
 
@@ -55,7 +54,11 @@ class DocumentParser(reader: Reader) {
     }
 
     private fun comment(): Comment =
-        Comment(indent = next.count(SPACE), text = next.expect(`c-comment`).skip(SPACE).readLine())
+        Comment(indent = next.count(`s-space`), text = next.run {
+            expect(`c-comment`)
+            skip(`s-space`)
+            return@run readLine()
+        })
 
 
     private fun node() {
@@ -67,10 +70,10 @@ class DocumentParser(reader: Reader) {
     private fun documentEnd() {
         if (next.accept(`c-document-end`)) {
             document!!.hasDocumentEndMarker = true
-            if (next.peek(SPACE))
+            if (next.peek(`s-space`))
                 document!!.suffixComment = comment()
             else
-                next.accept(NL)
+                next.accept(`b-break`)
         }
     }
 

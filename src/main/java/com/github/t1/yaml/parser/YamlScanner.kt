@@ -15,6 +15,10 @@ internal class YamlScanner(reader: Reader) : Scanner(MAX_LOOK_AHEAD, reader) {
         return super.read()
     }
 
+    fun readWord(): String = readUntilAndSkip(WS)
+
+    fun readLine(): String = readUntilAndSkip(`b-break`)
+
     override fun more(): Boolean {
         return (anyMore()
             && !peek(`c-document-end`)
