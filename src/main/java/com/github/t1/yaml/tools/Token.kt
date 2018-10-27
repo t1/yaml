@@ -14,7 +14,27 @@ interface Token {
         return true
     }
 
-    operator fun plus(token: Token) = object : Token {
-        override val predicates: List<(CodePoint) -> Boolean> = this@Token.predicates + token.predicates
+    operator fun plus(that: Token) = object : Token {
+        override val predicates: List<(CodePoint) -> Boolean> = this@Token.predicates + that.predicates
+
+        override fun toString() = "${this@Token} + $that"
     }
+
+    infix fun or(that: Token): Token = object : Token {
+        override val predicates: List<(CodePoint) -> Boolean> = listOf({ it: CodePoint ->
+            this@Token.onlyPredicate(it) || that.onlyPredicate(it)
+        })
+
+        override fun toString() = "${this@Token} or $that"
+    }
+
+    val onlyPredicate
+        get(): (CodePoint) -> Boolean {
+            require(predicates.size == 1) { "expected the token <$this> to have exactly one predicate, but found $predicates" }
+            return predicates[0]
+        }
+
+    // operator fun minus(that: Symbol): Symbol = symbol("${this.predicate} minus ${that.predicate}") { it(this) && !it(that) }
+    //
+    // operator fun not(): Symbol = symbol("not ${this.predicate}") { it(this) }
 }

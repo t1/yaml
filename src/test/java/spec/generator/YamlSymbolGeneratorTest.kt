@@ -8,6 +8,7 @@ import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
 import spec.generator.Expression.LiteralExpression
 import spec.generator.Expression.MinusExpression
+import spec.generator.Expression.RangeExpression
 import spec.generator.Expression.ReferenceExpression
 import spec.generator.Expression.SequenceExpression
 import java.io.StringWriter
@@ -21,7 +22,9 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun shouldGenerateCodePointProduction() {
-        val written = generate(Production(0, "foo", null, codePoint('x')))
+        val production = production(codePoint('x'))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -31,21 +34,49 @@ class YamlSymbolGeneratorTest {
             "    `foo`('x'),\n"))
     }
 
-    @Test fun shouldGenerateThreeCodePointSequenceProduction() {
-        val expression = SequenceExpression.of(codePoint('a'), SequenceExpression.of(codePoint('b'), codePoint('c')))
+    @Test fun shouldGenerateBigCodePointProduction() {
+        val production = production(CodePointExpression(CodePoint.of(0x10428)))
 
-        val written = generate(Production(0, "foo", null, expression))
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     *   <[\\uD801\\uDC28][DESERET SMALL LETTER LONG I][0x10428]>\n" +
+            "     */\n" +
+            "    `foo`(\"\\uD801\\uDC28\"),\n"))
+    }
+
+    @Test fun shouldGenerateThreeCodePointSequenceProduction() {
+        val production = production(seq(codePoint('a'), codePoint('b'), codePoint('c')))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   <[a][LATIN SMALL LETTER A][0x61]> + <[b][LATIN SMALL LETTER B][0x62]> + <[c][LATIN SMALL LETTER C][0x63]>\n" +
             "     */\n" +
-            "    `foo`(symbol('a') + symbol('b') + symbol('c')),\n"))
+            "    `foo`('a' + 'b' + 'c'),\n"))
+    }
+
+    @Test fun shouldGenerateCodePointRangeProduction() {
+        val production = production(range('0', '9'))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     *   [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]\n" +
+            "     */\n" +
+            "    `foo`('0' .. '9'),\n"))
     }
 
     @Disabled @Test fun shouldGenerateOneCharLiteralProduction() {
-        val written = generate(Production(0, "foo", null, LiteralExpression("x")))
+        val production = production(LiteralExpression("x"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -56,8 +87,9 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateThreeCharLiteralProduction() {
-        val written = generate(Production(0, "foo", null,
-            LiteralExpression("bar")))
+        val production = production(LiteralExpression("bar"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -68,8 +100,9 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateLiteralProductionWithOneArg() {
-        val written = generate(Production(0, "foo", "n",
-            LiteralExpression("baz")))
+        val production = Production(0, "foo", "n", LiteralExpression("baz"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -82,8 +115,9 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateLiteralProductionWithLessArg() {
-        val written = generate(Production(0, "foo", "<n",
-            LiteralExpression("bar")))
+        val production = Production(0, "foo", "<n", LiteralExpression("bar"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -96,8 +130,9 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateLiteralProductionWithLessEqArg() {
-        val written = generate(Production(0, "foo", "≤n",
-            LiteralExpression("bar")))
+        val production = Production(0, "foo", "≤n", LiteralExpression("bar"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -110,8 +145,9 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateLiteralProductionWithTwoArgs() {
-        val written = generate(Production(0, "foo", "c,n",
-            LiteralExpression("bar")))
+        val production = Production(0, "foo", "c,n", LiteralExpression("bar"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -124,8 +160,9 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateLiteralProductionWithMinus() {
-        val written = generate(Production(0, "c-foo", null,
-            LiteralExpression("bar")))
+        val production = Production(0, "c-foo", null, LiteralExpression("bar"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -138,8 +175,9 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateLiteralProductionWithPlus() {
-        val written = generate(Production(0, "c+foo", null,
-            LiteralExpression("bar")))
+        val production = Production(0, "c+foo", null, LiteralExpression("bar"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -153,7 +191,9 @@ class YamlSymbolGeneratorTest {
 
 
     @Test fun shouldGenerateRefProduction() {
-        val written = generate(Production(0, "foo", null, ReferenceExpression("bar")))
+        val production = production(ref("bar"))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
@@ -164,86 +204,88 @@ class YamlSymbolGeneratorTest {
     }
 
 
-    @Disabled @Test fun shouldGenerateAlternativeReferencesProduction() {
-        val written = generate(Production(0, "ref-alternatives", null,
-            AlternativesExpression.of(ReferenceExpression("ref1"), ReferenceExpression("ref2"))))
+    @Test fun shouldGenerateAlternativeReferencesProduction() {
+        val production = production(alt(ref("ref1"), ref("ref2")))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
-            "     * `0` : ref-alternatives:\n" +
+            "     * `0` : foo:\n" +
             "     *   [->ref1 ||\n" +
             "     *    ->ref2]\n" +
             "     */\n" +
-            "    `ref_alternatives`() {\n" +
-            "        Object result = ref1();\n" +
-            "        if (result == null)\n" +
-            "            result = ref2();\n" +
-            "        if (result == null)\n" +
-            "            throw new YamlParseException(\"can't find ref-alternatives\" + next);\n" +
-            "        return result;\n" +
-            "    }\n"))
+            "    `foo`(`ref1` or `ref2`),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateAlternativeCodePointsProduction() {
-        val written = generate(Production(0, "c-alternatives", null,
-            AlternativesExpression.of(codePoint('a'), codePoint('b'))))
+    @Test fun shouldGenerateAlternativeCodePointsProduction() {
+        val production = production(alt(codePoint('a'), codePoint('b')))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
-            "     * `0` : c-alternatives:\n" +
+            "     * `0` : foo:\n" +
             "     *   [<[a][LATIN SMALL LETTER A][0x61]> ||\n" +
             "     *    <[b][LATIN SMALL LETTER B][0x62]>]\n" +
             "     */\n" +
-            "    `c_alternatives`() {\n" +
-            "        Object result = next.is(CodePoint.of(0x61)) ? CodePoint.of(0x61) : null;\n" +
-            "        if (result == null)\n" +
-            "            result = next.is(CodePoint.of(0x62)) ? CodePoint.of(0x62) : null;\n" +
-            "        if (result == null)\n" +
-            "            throw new YamlParseException(\"can't find c-alternatives\" + next);\n" +
-            "        return result;\n" +
-            "    }\n"))
+            "    `foo`('a' or 'b'),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateMixedAlternativesProduction() {
-        val written = generate(Production(0, "mixed-alternatives", null,
-            AlternativesExpression.of(
-                ReferenceExpression("ref1"),
-                codePoint('b'))))
+    @Test fun shouldGenerateMixedAlternativesProduction() {
+        val production = production(alt(ref("ref1"), codePoint('b')))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
-            "     * `0` : mixed-alternatives:\n" +
+            "     * `0` : foo:\n" +
             "     *   [->ref1 ||\n" +
             "     *    <[b][LATIN SMALL LETTER B][0x62]>]\n" +
             "     */\n" +
-            "    `mixed_alternatives`() {\n" +
-            "        Object result = ref1();\n" +
-            "        if (result == null)\n" +
-            "            result = next.is(CodePoint.of(0x62)) ? CodePoint.of(0x62) : null;\n" +
-            "        if (result == null)\n" +
-            "            throw new YamlParseException(\"can't find mixed-alternatives\" + next);\n" +
-            "        return result;\n" +
-            "    }\n"))
+            "    `foo`(`ref1` or 'b'),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateMinusRefProduction() {
-        val written = generate(Production(27, "nb-char", null,
-            MinusExpression(ReferenceExpression("c-printable"))
-                .minus(ReferenceExpression("b-char"))
-                .minus(ReferenceExpression("c-byte-order-mark"))
-        ))
+    @Test fun shouldGenerateAlternativeOfCodePointOrRangeProduction() {
+        val production = production(alt(codePoint('\t'), range(CodePoint.of(' '), CodePoint.of(0x10ffff))))
+
+        val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
-            "     * `27` : nb-char:\n" +
-            "     *   ->c-printable - ->b-char - ->c-byte-order-mark\n" +
+            "     * `0` : foo:\n" +
+            "     *   [<[\\t][CHARACTER TABULATION][0x9]> ||\n" +
+            "     *    [<[ ][SPACE][0x20]>-<[\\uDBFF\\uDFFF][?][0x10ffff]>]]\n" +
             "     */\n" +
-            "    `nb_char`() {\n" +
-            "" +
-            "    }\n"))
+            "    `foo`('\\t' or (' ' .. \"\\uDBFF\\uDFFF\")),\n"))
     }
 
-    private fun codePoint(char: Char) = CodePointExpression(CodePoint.of(char))
+    @Disabled @Test fun shouldGenerateMinusRefProduction() {
+        val production = production(MinusExpression(ref("c-printable")).minus(ref("b-char")).minus(ref("c-byte-order-mark")))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "    /**\n" +
+            "     * `27` : foo:\n" +
+            "     *   ->c-printable - ->b-char - ->c-byte-order-mark\n" +
+            "     */\n" +
+            "    `foo`()\n"))
+    }
+
+    private fun production(expression: Expression) = Production(0, "foo", null, expression)
+
+    private fun codePoint(char: Char) = codePoint(CodePoint.of(char))
+    private fun codePoint(codePoint: CodePoint) = CodePointExpression(codePoint)
+
+    private fun range(min: Char, max: Char) = range(CodePoint.of(min), CodePoint.of(max))
+    private fun range(min: CodePoint, max: CodePoint) = RangeExpression(codePoint(min), codePoint(max))
+    private fun ref(ref: String) = ReferenceExpression(ref)
+
+    private fun seq(e1: Expression, e2: Expression, e3: Expression) = SequenceExpression.of(e1, seq(e2, e3))
+    private fun seq(e1: Expression, e2: Expression) = SequenceExpression.of(e1, e2)
+
+    private fun alt(left: Expression, right: Expression) = AlternativesExpression.of(left, right)
 
     private fun generate(vararg productions: Production): String {
         val writer = StringWriter()
@@ -256,37 +298,9 @@ class YamlSymbolGeneratorTest {
     }
 
     private fun source(body: String): String {
-        return "package com.github.t1.yaml.parser\n" +
-            "\n" +
-            "import com.github.t1.yaml.tools.CodePoint\n" +
-            "import com.github.t1.yaml.tools.Symbol\n" +
-            "import com.github.t1.yaml.tools.Token\n" +
-            "import com.github.t1.yaml.tools.symbol\n" +
-            "import javax.annotation.Generated\n" +
-            "\n" +
-            "/**\n" +
-            " * The productions as specified in the YAML spec\n" +
-            " *\n" +
-            " * e-        A production matching no characters.\n" +
-            " * c-        A production starting and ending with a special character.\n" +
-            " * b-        A production matching a single line break.\n" +
-            " * nb-       A production starting and ending with a non-break character.\n" +
-            " * s-        A production starting and ending with a white space character.\n" +
-            " * ns-       A production starting and ending with a non-space character.\n" +
-            " * l-        A production matching complete line(s).\n" +
-            " * X-Y-      A production starting with an X- character and ending with a Y- character, where X- and Y- are any of the above prefixes.\n" +
-            " * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.\n" +
-            " */\n" +
-            "@Generated(\"${YamlSymbolGenerator::class.qualifiedName}\")\n" +
-            "@Suppress(\"unused\", \"EnumEntryName\", \"NonAsciiCharacters\")\n" +
+        return YamlSymbolGenerator.PREFIX +
             "enum class FooParser(override val predicates: List<(CodePoint) -> Boolean>) : Token {\n" +
             body +
-            "    ;\n" +
-            "\n" +
-            "    constructor(codePoint: Char) : this(symbol(codePoint))\n" +
-            "    constructor(symbol: Symbol) : this(listOf(symbol.predicate))\n" +
-            "    constructor(token: Token) : this(token.predicates)\n" +
-            "    @Deprecated(\"missing production visitor\") constructor() : this(listOf())\n" +
-            "}\n"
+            YamlSymbolGenerator.SUFFIX
     }
 }

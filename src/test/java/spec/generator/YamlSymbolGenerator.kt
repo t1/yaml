@@ -2,6 +2,7 @@ package spec.generator
 
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
+import spec.generator.Expression.ContainerExpression
 import spec.generator.Expression.MinusExpression
 import spec.generator.Expression.RangeExpression
 import spec.generator.Expression.ReferenceExpression
@@ -9,7 +10,6 @@ import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
 import spec.generator.Expression.Visitor
-import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -17,6 +17,54 @@ import java.nio.file.Paths
 class YamlSymbolGenerator(private val spec: Spec) {
     companion object {
         private val SOURCE_FILE = Paths.get("src/main/java/com/github/t1/yaml/parser/YamlTokens.kt")
+        val PREFIX = "" +
+            "package com.github.t1.yaml.parser\n" +
+            "\n" +
+            "import com.github.t1.yaml.tools.CodePoint\n" +
+            "import com.github.t1.yaml.tools.CodePointRange\n" +
+            "import com.github.t1.yaml.tools.Symbol\n" +
+            "import com.github.t1.yaml.tools.Token\n" +
+            "import com.github.t1.yaml.tools.symbol\n" +
+            "import com.github.t1.yaml.tools.toCodePointRange\n" +
+            "import javax.annotation.Generated\n" +
+            "\n" +
+            "/**\n" +
+            " * The productions as specified in the YAML spec\n" +
+            " *\n" +
+            " * e-        A production matching no characters.\n" +
+            " * c-        A production starting and ending with a special character.\n" +
+            " * b-        A production matching a single line break.\n" +
+            " * nb-       A production starting and ending with a non-break character.\n" +
+            " * s-        A production starting and ending with a white space character.\n" +
+            " * ns-       A production starting and ending with a non-space character.\n" +
+            " * l-        A production matching complete line(s).\n" +
+            " * X-Y-      A production starting with an X- character and ending with a Y- character, where X- and Y- are any of the above prefixes.\n" +
+            " * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.\n" +
+            " */\n" +
+            "@Generated(\"${YamlSymbolGenerator::class.qualifiedName}\")\n" +
+            "@Suppress(\"unused\", \"EnumEntryName\", \"NonAsciiCharacters\")\n"
+
+        const val SUFFIX = "" +
+            "    ;\n" +
+            "\n" +
+            "    constructor(codePoint: Char) : this(symbol(codePoint))\n" +
+            "    constructor(symbol: Symbol) : this(listOf(symbol.predicate))\n" +
+            "    constructor(token: Token) : this(token.predicates)\n" +
+            "    constructor(range: CharRange) : this(range.toCodePointRange())\n" +
+            "    constructor(range: CodePointRange) : this(symbol(range))\n" +
+            "    @Deprecated(\"missing production visitor\") constructor() : this(listOf())\n" +
+            "}\n" +
+            "\n" +
+            "private infix fun Char.or(that: Char) = symbol(this) or symbol(that)\n" +
+            "private infix fun Char.or(that: Token) = symbol(this) or that\n" +
+            "private infix fun Token.or(that: String): Token = or(symbol(that))\n" +
+            "private infix fun Token.or(that: Char): Token = or(symbol(that))\n" +
+            "private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this) .. CodePoint.of(that))\n" +
+            "private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this) .. CodePoint.of(that))\n" +
+            "private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this) .. CodePoint.of(that))\n" +
+            "private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)\n" +
+            "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
+            "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n"
 
         @JvmStatic fun main(args: Array<String>) {
             val spec = SpecLoader().load()
@@ -29,11 +77,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
         val suffix = ".kt"
         assert(className.endsWith(suffix))
         className = className.substring(0, className.length - suffix.length)
-        try {
-            Files.newBufferedWriter(SOURCE_FILE).use { writer -> generateCode(className, writer) }
-        } catch (e: IOException) {
-            throw RuntimeException("while generating $SOURCE_FILE", e)
-        }
+        Files.newBufferedWriter(SOURCE_FILE).use { writer -> generateCode(className, writer) }
     }
 
     fun generateCode(className: String, out: Writer) {
@@ -44,44 +88,14 @@ class YamlSymbolGenerator(private val spec: Spec) {
         private fun append(string: String) = out.append(string)
 
         fun write(productions: List<Production>) {
-            append("" +
-                "package com.github.t1.yaml.parser\n" +
-                "\n" +
-                "import com.github.t1.yaml.tools.CodePoint\n" +
-                "import com.github.t1.yaml.tools.Symbol\n" +
-                "import com.github.t1.yaml.tools.Token\n" +
-                "import com.github.t1.yaml.tools.symbol\n" +
-                "import javax.annotation.Generated\n" +
-                "\n" +
-                "/**\n" +
-                " * The productions as specified in the YAML spec\n" +
-                " *\n" +
-                " * e-        A production matching no characters.\n" +
-                " * c-        A production starting and ending with a special character.\n" +
-                " * b-        A production matching a single line break.\n" +
-                " * nb-       A production starting and ending with a non-break character.\n" +
-                " * s-        A production starting and ending with a white space character.\n" +
-                " * ns-       A production starting and ending with a non-space character.\n" +
-                " * l-        A production matching complete line(s).\n" +
-                " * X-Y-      A production starting with an X- character and ending with a Y- character, where X- and Y- are any of the above prefixes.\n" +
-                " * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.\n" +
-                " */\n" +
-                "@Generated(\"${YamlSymbolGenerator::class.qualifiedName}\")\n" +
-                "@Suppress(\"unused\", \"EnumEntryName\", \"NonAsciiCharacters\")\n" +
+            append(PREFIX +
                 "enum class $className(override val predicates: List<(CodePoint) -> Boolean>) : Token {\n")
 
             for (production in productions) {
                 ProductionWriter(production).write()
             }
 
-            append("" +
-                "    ;\n" +
-                "\n" +
-                "    constructor(codePoint: Char) : this(symbol(codePoint))\n" +
-                "    constructor(symbol: Symbol) : this(listOf(symbol.predicate))\n" +
-                "    constructor(token: Token) : this(token.predicates)\n" +
-                "    @Deprecated(\"missing production visitor\") constructor() : this(listOf())\n" +
-                "}\n")
+            append(SUFFIX)
         }
 
         private inner class ProductionWriter(val production: Production) : Visitor() {
@@ -89,25 +103,24 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 append("\n" +
                     "    /**\n" +
                     "     * ${production.toString().replace("\n", "\n     * ")}\n" +
-                    "     */\n")
-                if (production.counter in setOf(87, 98))
-                    append("// TODO to be fixed\n")
-                else {
-                    append("    `$methodName`(")
+                    "     */\n" +
+                    "    `$methodName`(")
+                if (production.counter in setOf(28, 37, 81, 87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 185, 188, 196, 198))
+                    append("/* TODO not generated */")
+                else
                     production.expression.guide(this)
-                    append("),\n")
-                }
+                append("),\n")
             }
 
             private val Expression.isCurrent get() = this === production.expression
 
-            private fun SequenceExpression.isFirst(expression: Expression) = this.expressions.first() === expression
+            private fun ContainerExpression.isFirst(expression: Expression) = this.expressions.first() === expression
 
             private val methodName get() = production.name + if (production.args == null) "" else "(${production.args.replace("<", "«")})"
 
             override fun visit(codePoint: CodePointExpression) {
                 if (codePoint.isCurrent)
-                    append("'${codePoint.codePoint.escaped}'")
+                    append(string(codePoint))
             }
 
             override fun visit(reference: ReferenceExpression) {
@@ -118,14 +131,47 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 override fun visit(codePoint: CodePointExpression) {
                     if (!sequence.isFirst(codePoint))
                         append(" + ")
-                    append("symbol('${codePoint.codePoint.escaped}')")
+                    append("'${codePoint.codePoint.escaped}'")
                 }
             }
 
-            override fun visit(alternatives: AlternativesExpression) = object : Visitor() {}
+            override fun visit(alternatives: AlternativesExpression) = object : Visitor() {
+                override fun visit(reference: ReferenceExpression) {
+                    if (!alternatives.isFirst(reference))
+                        append(" or ")
+                    this@ProductionWriter.visit(reference)
+                }
+
+                override fun visit(range: RangeExpression): Visitor {
+                    if (!alternatives.isFirst(range))
+                        append(" or ")
+                    append("(")
+                    this@ProductionWriter.visit(range)
+                    append(")")
+                    return object : Visitor() {}
+                }
+
+                override fun visit(codePoint: CodePointExpression) {
+                    if (!alternatives.isFirst(codePoint))
+                        append(" or ")
+                    append(string(codePoint)) // TODO this@ProductionWriter.visit(codePoint)
+                }
+            }
+
             override fun visit(minus: MinusExpression) = object : Visitor() {}
             override fun visit(repeated: RepeatedExpression) = object : Visitor() {}
-            override fun visit(range: RangeExpression) = object : Visitor() {}
+            override fun visit(range: RangeExpression): Visitor {
+                append(string(range.left as CodePointExpression)) // TODO range.left.guide(this)
+                append(" .. ")
+                append(string(range.right as CodePointExpression)) // TODO range.right.guide(this)
+                return this
+            }
+
+            private fun string(codePoint: CodePointExpression): String {
+                val quote = if (codePoint.codePoint.isBig) '\"' else '\''
+                return "$quote${codePoint.codePoint.escaped}$quote"
+            }
+
             override fun visit(switch: SwitchExpression) = object : Visitor() {}
         }
     }

@@ -1,16 +1,17 @@
 package com.github.t1.yaml.parser
 
 import com.github.t1.yaml.parser.YamlTokens.`c-mapping-key`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.SPACE
 import com.github.t1.yaml.tools.Scanner
-import com.github.t1.yaml.tools.Symbol
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.WS
 import com.github.t1.yaml.tools.symbol
 
-/** A Token composed of multiple Symbols  */
-enum class Marker(vararg symbols: Symbol) : Token {
+/** A Token composed of multiple Tokens  */
+enum class Marker(vararg tokens: Token) : Token {
     INDENTED_COMMENT() {
         override fun matches(scanner: Scanner): Boolean {
             val spaces = scanner.peekWhile(SPACE).length
@@ -18,7 +19,7 @@ enum class Marker(vararg symbols: Symbol) : Token {
             return then?.invoke(COMMENT) == true
         }
     },
-    BLOCK_SEQUENCE_START(MINUS, WS),
+    BLOCK_SEQUENCE_START(`c-sequence-entry`, WS),
     BLOCK_MAPPING_START() {
         override fun matches(scanner: Scanner): Boolean {
             if (scanner.peek(`c-mapping-key`))
@@ -27,12 +28,10 @@ enum class Marker(vararg symbols: Symbol) : Token {
             return token != null && token.isNotEmpty() && !token.contains("\n")
         }
     },
-    BLOCK_MAPPING_VALUE(COLON, WS);
+    BLOCK_MAPPING_VALUE(`c-mapping-value`, WS);
 
-    private val symbols: List<Symbol> = listOf(*symbols)
-    override val predicates: List<(CodePoint) -> Boolean> = this.symbols.flatMap(Symbol::predicates)
+    private val tokens: List<Token> = listOf(*tokens)
+    override val predicates: List<(CodePoint) -> Boolean> = this.tokens.flatMap(Token::predicates)
 }
 
-private val MINUS = symbol('-') // TODO `c-sequence-entry`
-private val COLON = symbol(':') // TODO `c-mapping-value`
 val COMMENT = symbol('#') // TODO `c-comment`

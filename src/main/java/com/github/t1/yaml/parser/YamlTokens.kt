@@ -1,9 +1,11 @@
 package com.github.t1.yaml.parser
 
 import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.yaml.tools.CodePointRange
 import com.github.t1.yaml.tools.Symbol
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.symbol
+import com.github.t1.yaml.tools.toCodePointRange
 import javax.annotation.Generated
 
 /**
@@ -29,19 +31,19 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    <[\n][LINE FEED (LF)][0xa]> ||
      *    <[\r][CARRIAGE RETURN (CR)][0xd]> ||
      *    [<[ ][SPACE][0x20]>-<[~][TILDE][0x7e]>] ||
-     *    <[\u85][NEXT LINE (NEL)][0x85]> ||
+     *    <[\u0085][NEXT LINE (NEL)][0x85]> ||
      *    [<[ ][NO-BREAK SPACE][0xa0]>-<[퟿][?][0xd7ff]>] ||
      *    [<[][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] ||
      *    [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
      */
-    `c-printable`(),
+    `c-printable`('\t' or '\n' or '\r' or (' ' .. '~') or '\u0085' or (' ' .. '퟿') or ('' .. '�') or ("\uD800\uDC00" .. "\uDBFF\uDFFF")),
 
     /**
      * `2` : nb-json:
      *   [<[\t][CHARACTER TABULATION][0x9]> ||
      *    [<[ ][SPACE][0x20]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
      */
-    `nb-json`(),
+    `nb-json`('\t' or (' ' .. "\uDBFF\uDFFF")),
 
     /**
      * `3` : c-byte-order-mark:
@@ -156,7 +158,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [<[@][COMMERCIAL AT][0x40]> ||
      *    <[`][GRAVE ACCENT][0x60]>]
      */
-    `c-reserved`(),
+    `c-reserved`('@' or '`'),
 
     /**
      * `22` : c-indicator:
@@ -179,7 +181,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-directive ||
      *    ->c-reserved]
      */
-    `c-indicator`(),
+    `c-indicator`(`c-sequence-entry` or `c-mapping-key` or `c-mapping-value` or `c-collect-entry` or `c-sequence-start` or `c-sequence-end` or `c-mapping-start` or `c-mapping-end` or `c-comment` or `c-anchor` or `c-alias` or `c-tag` or `c-literal` or `c-folded` or `c-single-quote` or `c-double-quote` or `c-directive` or `c-reserved`),
 
     /**
      * `23` : c-flow-indicator:
@@ -189,7 +191,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-mapping-start ||
      *    ->c-mapping-end]
      */
-    `c-flow-indicator`(),
+    `c-flow-indicator`(`c-collect-entry` or `c-sequence-start` or `c-sequence-end` or `c-mapping-start` or `c-mapping-end`),
 
     /**
      * `24` : b-line-feed:
@@ -208,7 +210,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->b-line-feed ||
      *    ->b-carriage-return]
      */
-    `b-char`(),
+    `b-char`(`b-line-feed` or `b-carriage-return`),
 
     /**
      * `27` : nb-char:
@@ -222,7 +224,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->b-carriage-return ||
      *    ->b-line-feed]
      */
-    `b-break`(),
+    `b-break`(/* TODO not generated */),
 
     /**
      * `29` : b-as-line-feed:
@@ -253,7 +255,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->s-space ||
      *    ->s-tab]
      */
-    `s-white`(),
+    `s-white`(`s-space` or `s-tab`),
 
     /**
      * `34` : ns-char:
@@ -265,7 +267,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      * `35` : ns-dec-digit:
      *   [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]
      */
-    `ns-dec-digit`(),
+    `ns-dec-digit`('0' .. '9'),
 
     /**
      * `36` : ns-hex-digit:
@@ -273,14 +275,14 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    [<[A][LATIN CAPITAL LETTER A][0x41]>-<[F][LATIN CAPITAL LETTER F][0x46]>] ||
      *    [<[a][LATIN SMALL LETTER A][0x61]>-<[f][LATIN SMALL LETTER F][0x66]>]]
      */
-    `ns-hex-digit`(),
+    `ns-hex-digit`(`ns-dec-digit` or ('A' .. 'F') or ('a' .. 'f')),
 
     /**
      * `37` : ns-ascii-letter:
      *   [[<[A][LATIN CAPITAL LETTER A][0x41]>-<[Z][LATIN CAPITAL LETTER Z][0x5a]>] ||
      *    [<[a][LATIN SMALL LETTER A][0x61]>-<[z][LATIN SMALL LETTER Z][0x7a]>]]
      */
-    `ns-ascii-letter`(),
+    `ns-ascii-letter`(/* TODO not generated */),
 
     /**
      * `38` : ns-word-char:
@@ -288,7 +290,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->ns-ascii-letter ||
      *    <[-][HYPHEN-MINUS][0x2d]>]
      */
-    `ns-word-char`(),
+    `ns-word-char`(`ns-dec-digit` or `ns-ascii-letter` or '-'),
 
     /**
      * `39` : ns-uri-char:
@@ -316,7 +318,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    <[[][LEFT SQUARE BRACKET][0x5b]> ||
      *    <[]][RIGHT SQUARE BRACKET][0x5d]>]
      */
-    `ns-uri-char`(symbol('%') + symbol('#') + symbol(';') + symbol('/') + symbol('?') + symbol(':') + symbol('@') + symbol('&') + symbol('=') + symbol('+') + symbol('$') + symbol(',') + symbol('_') + symbol('.') + symbol('!') + symbol('~') + symbol('*') + symbol('\'') + symbol('(') + symbol(')') + symbol('[') + symbol(']')),
+    `ns-uri-char`('%' + '#' + ';' + '/' + '?' + ':' + '@' + '&' + '=' + '+' + '$' + ',' + '_' + '.' + '!' + '~' + '*' + '\'' + '(' + ')' + '[' + ']'),
 
     /**
      * `40` : ns-tag-char:
@@ -353,7 +355,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [<[t][LATIN SMALL LETTER T][0x74]> ||
      *    <[\t][CHARACTER TABULATION][0x9]>]
      */
-    `ns-esc-horizontal-tab`(),
+    `ns-esc-horizontal-tab`('t' or '\t'),
 
     /**
      * `46` : ns-esc-line-feed:
@@ -437,19 +439,19 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      * `59` : ns-esc-8-bit:
      *   <[x][LATIN SMALL LETTER X][0x78]> + (->ns-hex-digit × 2)
      */
-    `ns-esc-8-bit`(symbol('x')),
+    `ns-esc-8-bit`('x'),
 
     /**
      * `60` : ns-esc-16-bit:
      *   <[u][LATIN SMALL LETTER U][0x75]> + (->ns-hex-digit × 4)
      */
-    `ns-esc-16-bit`(symbol('u')),
+    `ns-esc-16-bit`('u'),
 
     /**
      * `61` : ns-esc-32-bit:
      *   <[U][LATIN CAPITAL LETTER U][0x55]> + (->ns-hex-digit × 8)
      */
-    `ns-esc-32-bit`(symbol('U')),
+    `ns-esc-32-bit`('U'),
 
     /**
      * `62` : c-ns-esc-char:
@@ -545,7 +547,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->b-l-trimmed(n,c) ||
      *    ->b-as-space]
      */
-    `b-l-folded(n,c)`(),
+    `b-l-folded(n,c)`(`b-l-trimmed(n,c)` or `b-as-space`),
 
     /**
      * `74` : s-flow-folded (n):
@@ -599,7 +601,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->s-l-comments + ->s-flow-line-prefix(n) ||
      *    ->s-separate-in-line]
      */
-    `s-separate-lines(n)`(),
+    `s-separate-lines(n)`(/* TODO not generated */),
 
     /**
      * `82` : l-directive:
@@ -631,19 +633,19 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      * `86` : ns-yaml-directive:
      *   <[Y][LATIN CAPITAL LETTER Y][0x59]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[M][LATIN CAPITAL LETTER M][0x4d]> + <[L][LATIN CAPITAL LETTER L][0x4c]> + ->s-separate-in-line + ->ns-yaml-version
      */
-    `ns-yaml-directive`(symbol('Y') + symbol('A') + symbol('M') + symbol('L')),
+    `ns-yaml-directive`('Y' + 'A' + 'M' + 'L'),
 
     /**
      * `87` : ns-yaml-version:
      *   (->ns-dec-digit × +) + <[.][FULL STOP][0x2e]> + (->ns-dec-digit × +)
      */
-// TODO to be fixed
+    `ns-yaml-version`(/* TODO not generated */),
 
     /**
      * `88` : ns-tag-directive:
      *   <[T][LATIN CAPITAL LETTER T][0x54]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[G][LATIN CAPITAL LETTER G][0x47]> + ->s-separate-in-line + ->c-tag-handle + ->s-separate-in-line + ->ns-tag-prefix
      */
-    `ns-tag-directive`(symbol('T') + symbol('A') + symbol('G')),
+    `ns-tag-directive`('T' + 'A' + 'G'),
 
     /**
      * `89` : c-tag-handle:
@@ -651,7 +653,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-secondary-tag-handle ||
      *    ->c-primary-tag-handle]
      */
-    `c-tag-handle`(),
+    `c-tag-handle`(/* TODO not generated */),
 
     /**
      * `90` : c-primary-tag-handle:
@@ -676,7 +678,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->c-ns-local-tag-prefix ||
      *    ->ns-global-tag-prefix]
      */
-    `ns-tag-prefix`(),
+    `ns-tag-prefix`(/* TODO not generated */),
 
     /**
      * `94` : c-ns-local-tag-prefix:
@@ -695,7 +697,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) ||
      *    ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)]
      */
-    `c-ns-properties(n,c)`(),
+    `c-ns-properties(n,c)`(/* TODO not generated */),
 
     /**
      * `97` : c-ns-tag-property:
@@ -703,13 +705,13 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-ns-shorthand-tag ||
      *    ->c-non-specific-tag]
      */
-    `c-ns-tag-property`(),
+    `c-ns-tag-property`(/* TODO not generated */),
 
     /**
      * `98` : c-verbatim-tag:
      *   ->c-tag + <[<][LESS-THAN SIGN][0x3c]> + (->ns-uri-char × +) + <[>][GREATER-THAN SIGN][0x3e]>
      */
-// TODO to be fixed
+    `c-verbatim-tag`(/* TODO not generated */),
 
     /**
      * `99` : c-ns-shorthand-tag:
@@ -764,7 +766,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->c-ns-esc-char ||
      *    ->nb-json - ->c-escape - ->c-double-quote]
      */
-    `nb-double-char`(),
+    `nb-double-char`(`c-ns-esc-char` or `nb-json` or `c-escape` or `c-double-quote`),
 
     /**
      * `108` : ns-double-char:
@@ -804,7 +806,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->s-double-escaped(n) ||
      *    ->s-flow-folded(n)]
      */
-    `s-double-break(n)`(),
+    `s-double-break(n)`(`s-double-escaped(n)` or `s-flow-folded(n)`),
 
     /**
      * `114` : nb-ns-double-in-line:
@@ -837,7 +839,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->c-quoted-quote ||
      *    ->nb-json - ->c-single-quote]
      */
-    `nb-single-char`(),
+    `nb-single-char`(`c-quoted-quote` or `nb-json` or `c-single-quote`),
 
     /**
      * `119` : ns-single-char:
@@ -893,7 +895,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-mapping-value ||
      *    ->c-sequence-entry]
      */
-    `ns-plain-first(c)`(),
+    `ns-plain-first(c)`(/* TODO not generated */),
 
     /**
      * `127` : ns-plain-safe (c):
@@ -983,7 +985,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->ns-flow-pair(n,c) ||
      *    ->ns-flow-node(n,c)]
      */
-    `ns-flow-seq-entry(n,c)`(),
+    `ns-flow-seq-entry(n,c)`(/* TODO not generated */),
 
     /**
      * `140` : c-flow-mapping (n,c):
@@ -1002,14 +1004,14 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) ||
      *    ->ns-flow-map-implicit-entry(n,c)]
      */
-    `ns-flow-map-entry(n,c)`(),
+    `ns-flow-map-entry(n,c)`(/* TODO not generated */),
 
     /**
      * `143` : ns-flow-map-explicit-entry (n,c):
      *   [->ns-flow-map-implicit-entry(n,c) ||
      *    ->e-node + ->e-node]
      */
-    `ns-flow-map-explicit-entry(n,c)`(),
+    `ns-flow-map-explicit-entry(n,c)`(/* TODO not generated */),
 
     /**
      * `144` : ns-flow-map-implicit-entry (n,c):
@@ -1017,7 +1019,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-ns-flow-map-empty-key-entry(n,c) ||
      *    ->c-ns-flow-map-json-key-entry(n,c)]
      */
-    `ns-flow-map-implicit-entry(n,c)`(),
+    `ns-flow-map-implicit-entry(n,c)`(/* TODO not generated */),
 
     /**
      * `145` : ns-flow-map-yaml-key-entry (n,c):
@@ -1058,7 +1060,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) ||
      *    ->ns-flow-pair-entry(n,c)]
      */
-    `ns-flow-pair(n,c)`(),
+    `ns-flow-pair(n,c)`(/* TODO not generated */),
 
     /**
      * `151` : ns-flow-pair-entry (n,c):
@@ -1066,7 +1068,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-ns-flow-map-empty-key-entry(n,c) ||
      *    ->c-ns-flow-pair-json-key-entry(n,c)]
      */
-    `ns-flow-pair-entry(n,c)`(),
+    `ns-flow-pair-entry(n,c)`(/* TODO not generated */),
 
     /**
      * `152` : ns-flow-pair-yaml-key-entry (n,c):
@@ -1105,14 +1107,14 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-single-quoted(n,c) ||
      *    ->c-double-quoted(n,c)]
      */
-    `c-flow-json-content(n,c)`(),
+    `c-flow-json-content(n,c)`(`c-flow-sequence(n,c)` or `c-flow-mapping(n,c)` or `c-single-quoted(n,c)` or `c-double-quoted(n,c)`),
 
     /**
      * `158` : ns-flow-content (n,c):
      *   [->ns-flow-yaml-content(n,c) ||
      *    ->c-flow-json-content(n,c)]
      */
-    `ns-flow-content(n,c)`(),
+    `ns-flow-content(n,c)`(`ns-flow-yaml-content(n,c)` or `c-flow-json-content(n,c)`),
 
     /**
      * `159` : ns-flow-yaml-node (n,c):
@@ -1121,7 +1123,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-yaml-content(n,c) ||
      *    ->e-scalar]]
      */
-    `ns-flow-yaml-node(n,c)`(),
+    `ns-flow-yaml-node(n,c)`(`c-ns-alias-node` or `ns-flow-yaml-content(n,c)` or `c-ns-properties(n,c)` or `s-separate(n,c)` or `ns-flow-yaml-content(n,c)` or `e-scalar`),
 
     /**
      * `160` : c-flow-json-node (n,c):
@@ -1136,7 +1138,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-content(n,c) ||
      *    ->e-scalar]]
      */
-    `ns-flow-node(n,c)`(),
+    `ns-flow-node(n,c)`(`c-ns-alias-node` or `ns-flow-content(n,c)` or `c-ns-properties(n,c)` or `s-separate(n,c)` or `ns-flow-content(n,c)` or `e-scalar`),
 
     /**
      * `162` : c-b-block-header (m,t):
@@ -1292,7 +1294,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->s-l+block-node(n,c) ||
      *    ->e-node + ->s-l-comments]
      */
-    `s-l+block-indented(n,c)`(),
+    `s-l+block-indented(n,c)`(/* TODO not generated */),
 
     /**
      * `186` : ns-l-compact-sequence (n):
@@ -1311,7 +1313,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->c-l-block-map-explicit-entry(n) ||
      *    ->ns-l-block-map-implicit-entry(n)]
      */
-    `ns-l-block-map-entry(n)`(),
+    `ns-l-block-map-entry(n)`(/* TODO not generated */),
 
     /**
      * `189` : c-l-block-map-explicit-entry (n):
@@ -1344,7 +1346,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->c-s-implicit-json-key(c) ||
      *    ->ns-s-implicit-yaml-key(c)]
      */
-    `ns-s-block-map-implicit-key`(),
+    `ns-s-block-map-implicit-key`(`c-s-implicit-json-key(c)` or `ns-s-implicit-yaml-key(c)`),
 
     /**
      * `194` : c-l-block-map-implicit-value (n):
@@ -1364,7 +1366,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->s-l+block-in-block(n,c) ||
      *    ->s-l+flow-in-block(n)]
      */
-    `s-l+block-node(n,c)`(),
+    `s-l+block-node(n,c)`(/* TODO not generated */),
 
     /**
      * `197` : s-l+flow-in-block (n):
@@ -1377,7 +1379,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *   [->s-l+block-scalar(n,c) ||
      *    ->s-l+block-collection(n,c)]
      */
-    `s-l+block-in-block(n,c)`(),
+    `s-l+block-in-block(n,c)`(/* TODO not generated */),
 
     /**
      * `199` : s-l+block-scalar (n,c):
@@ -1410,13 +1412,13 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      * `203` : c-directives-end:
      *   <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]>
      */
-    `c-directives-end`(symbol('-') + symbol('-') + symbol('-')),
+    `c-directives-end`('-' + '-' + '-'),
 
     /**
      * `204` : c-document-end:
      *   <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]>
      */
-    `c-document-end`(symbol('.') + symbol('.') + symbol('.')),
+    `c-document-end`('.' + '.' + '.'),
 
     /**
      * `205` : l-document-suffix:
@@ -1457,7 +1459,7 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
      *    ->l-explicit-document ||
      *    ->l-bare-document]
      */
-    `l-any-document`(),
+    `l-any-document`(`l-directive-document` or `l-explicit-document` or `l-bare-document`),
 
     /**
      * `211` : l-yaml-stream:
@@ -1470,5 +1472,18 @@ enum class YamlTokens(override val predicates: List<(CodePoint) -> Boolean>) : T
     constructor(codePoint: Char) : this(symbol(codePoint))
     constructor(symbol: Symbol) : this(listOf(symbol.predicate))
     constructor(token: Token) : this(token.predicates)
+    constructor(range: CharRange) : this(range.toCodePointRange())
+    constructor(range: CodePointRange) : this(symbol(range))
     @Deprecated("missing production visitor") constructor() : this(listOf())
 }
+
+private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
+private infix fun Char.or(that: Token) = symbol(this) or that
+private infix fun Token.or(that: String): Token = or(symbol(that))
+private infix fun Token.or(that: Char): Token = or(symbol(that))
+private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this) .. CodePoint.of(that))
+private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this) .. CodePoint.of(that))
+private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this) .. CodePoint.of(that))
+private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
+private infix operator fun Token.plus(that: Char) = this + symbol(that)
+private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))

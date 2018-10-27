@@ -2,10 +2,11 @@ package spec.generator
 
 import com.github.t1.yaml.tools.CodePoint
 
-import java.io.IOException
 import java.util.ArrayList
 
 import java.util.stream.Collectors.joining
+import kotlin.reflect.KClass
+import kotlin.reflect.primaryConstructor
 
 abstract class Expression {
     abstract fun guide(visitor: Visitor)
@@ -21,25 +22,23 @@ abstract class Expression {
 
         ///////////// fixed number of subexpressions
         open fun visit(repeated: RepeatedExpression): Visitor = this
-        open fun leave(repeated: RepeatedExpression) {}
 
+        open fun leave(repeated: RepeatedExpression) {}
 
         open fun visit(range: RangeExpression): Visitor = this
         open fun leave(range: RangeExpression) {}
 
 
-        ///////////// arbitrary subexpressions
+        ///////////// arbitrary number of subexpressions
         open fun visit(minus: MinusExpression): Visitor = this
-        open fun leave(minus: MinusExpression) {}
 
+        open fun leave(minus: MinusExpression) {}
 
         open fun visit(alternatives: AlternativesExpression): Visitor = this
         open fun leave(alternatives: AlternativesExpression) {}
 
-
         open fun visit(sequence: SequenceExpression): Visitor = this
         open fun leave(sequence: SequenceExpression) {}
-
 
         open fun visit(switch: SwitchExpression): Visitor = this
         open fun leave(switch: SwitchExpression) {}
@@ -75,20 +74,21 @@ abstract class Expression {
         }
 
         companion object {
-            fun <T : ContainerExpression> of(left: Expression, right: Expression, type: Class<T>): T {
+            fun <T : ContainerExpression> of(left: Expression, right: Expression, type: KClass<T>): T {
                 val result: ContainerExpression
                 try {
-                    result = if (type.isInstance(left))
+                    result = if (type.java.isInstance(left)) // TODO broken in Kotlin 1.2.71
                         left as ContainerExpression
                     else
-                        type.newInstance().add(left)
+                        type.primaryConstructor!!.call().add(left)
                 } catch (e: InstantiationException) {
                     throw RuntimeException(e)
                 } catch (e: IllegalAccessException) {
                     throw RuntimeException(e)
                 }
 
-                if (type.isInstance(right)) result.expressions.addAll((right as ContainerExpression).expressions)
+                if (type.java.isInstance(right)) // TODO broken in Kotlin 1.2.71
+                    result.expressions.addAll((right as ContainerExpression).expressions)
                 else result.add(right)
                 return type.cast(result)
             }
@@ -101,42 +101,28 @@ abstract class Expression {
 
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
-            expressions.forEach { expression ->
-                try {
-                    expression.guide(sub)
-                } catch (e: IOException) {
-                    throw RuntimeException(e)
-                }
-            }
+            expressions.forEach { it.guide(sub) }
             sub.leave(this)
         }
 
         companion object {
-            fun of(left: Expression, right: Expression): AlternativesExpression =
-                of(left, right, AlternativesExpression::class.java)
+            fun of(left: Expression, right: Expression): AlternativesExpression = of(left, right, AlternativesExpression::class)
         }
     }
 
     open class SequenceExpression : ContainerExpression() {
         override fun toString() =
             if (expressions.isEmpty()) "<empty sequence>"
-            else expressions.stream().map { it.toString() }.collect(joining(" + "))
+            else expressions.stream().map { it.toString() }.collect(joining(" + "))!!
 
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
-            expressions.forEach { expression ->
-                try {
-                    expression.guide(sub)
-                } catch (e: IOException) {
-                    throw RuntimeException(e)
-                }
-            }
+            expressions.forEach { it.guide(sub) }
             sub.leave(this)
         }
 
         companion object {
-            fun of(left: Expression, right: Expression): SequenceExpression =
-                of(left, right, SequenceExpression::class.java)
+            fun of(left: Expression, right: Expression): SequenceExpression = of(left, right, SequenceExpression::class)
         }
     }
 
@@ -150,7 +136,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class RangeExpression(private val left: Expression, private val right: Expression) : Expression() {
+    open class RangeExpression(val left: Expression, val right: Expression) : Expression() {
         override fun toString(): String = "[$left-$right]"
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
@@ -185,13 +171,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             minuend.guide(sub)
-            subtrahends.forEach { subtrahend ->
-                try {
-                    subtrahend.guide(sub)
-                } catch (e: IOException) {
-                    throw RuntimeException(e)
-                }
-            }
+            subtrahends.forEach { it.guide(sub) }
             sub.leave(this)
         }
 
@@ -259,3 +239,5 @@ abstract class Expression {
         }
     }
 }
+
+private fun <T : Any> KClass<T>.cast(result: Any): T = this.java.cast(result) // TODO maybe this will become part of KClass some day

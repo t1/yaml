@@ -3,7 +3,7 @@
    <[\n][LINE FEED (LF)][0xa]> ||
    <[\r][CARRIAGE RETURN (CR)][0xd]> ||
    [<[ ][SPACE][0x20]>-<[~][TILDE][0x7e]>] ||
-   <[\u85][NEXT LINE (NEL)][0x85]> ||
+   <[\u0085][NEXT LINE (NEL)][0x85]> ||
    [<[ ][NO-BREAK SPACE][0xa0]>-<[퟿][?][0xd7ff]>] ||
    [<[][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] ||
    [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]

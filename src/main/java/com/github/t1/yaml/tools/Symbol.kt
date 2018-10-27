@@ -1,43 +1,20 @@
 package com.github.t1.yaml.tools
 
-val LF = symbol('\n')
-val CR = symbol('\r')
-val NL = LF.or(CR)
+val NL = symbol('\n').or(symbol('\r'))
 val WS = symbol("whitespace") { Character.isWhitespace(it.value) }
 val SPACE = symbol("space-char") { Character.isSpaceChar(it.value) }
 
-fun symbol(int: Int): Symbol = symbol(CodePoint.of(int).info) { it.value == int }
-
-fun symbol(char: Char): Symbol = symbol(CodePoint.of(char).info) { it.value == char.toInt() }
-
-fun symbol(
-    description: String,
-    predicate: (CodePoint) -> Boolean
-): Symbol = object : Symbol {
-    override val predicate: (CodePoint) -> Boolean
-        get() = object : (CodePoint) -> Boolean {
-            override fun invoke(codePoint: CodePoint) = predicate(codePoint)
-            override fun toString(): String = description
-        }
-
-    override fun toString() = "<$predicate>"
-}
+fun symbol(char: Char): Symbol = symbol(CodePoint.of(char))
+fun symbol(string: String): Symbol = symbol(CodePoint.of(string))
+fun symbol(codePoint: CodePoint): Symbol = symbol(codePoint.info) { it == codePoint }
+fun symbol(range: CodePointRange) = symbol("between ${range.start} and ${range.endInclusive}") { it in range }
+fun symbol(description: String, predicate: (CodePoint) -> Boolean) = Symbol(object : (CodePoint) -> Boolean {
+    override fun invoke(codePoint: CodePoint) = predicate(codePoint)
+    override fun toString(): String = description
+})
 
 /** A single-character [Token] */
-interface Symbol : Token {
-    val predicate: (CodePoint) -> Boolean
-
+class Symbol(val predicate: (CodePoint) -> Boolean) : Token {
     override val predicates: List<(CodePoint) -> Boolean> get() = listOf(predicate)
-
-    fun or(that: Symbol): Symbol = symbol("${this.predicate} or ${that.predicate}") { it(this) || it(that) }
-
-    operator fun minus(that: Symbol): Symbol = symbol("${this.predicate} minus ${that.predicate}") { it(this) && !it(that) }
-
-    operator fun not(): Symbol = symbol("not ${this.predicate}") { it(this) }
-
-    companion object {
-        fun between(min: Char, max: Char): Symbol = between(min.toInt(), max.toInt())
-
-        fun between(min: Int, max: Int): Symbol = symbol("between $min and $max") { it.value in min..max }
-    }
+    override fun toString() = "<$predicate>"
 }

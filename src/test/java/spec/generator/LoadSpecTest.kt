@@ -67,7 +67,7 @@ class LoadSpecTest {
             "   <[\\n][LINE FEED (LF)][0xa]> ||\n" +
             "   <[\\r][CARRIAGE RETURN (CR)][0xd]> ||\n" +
             "   [<[ ][SPACE][0x20]>-<[~][TILDE][0x7e]>] ||\n" +
-            "   <[\\u85][NEXT LINE (NEL)][0x85]> ||\n" +
+            "   <[\\u0085][NEXT LINE (NEL)][0x85]> ||\n" +
             "   [<[ ][NO-BREAK SPACE][0xa0]>-<[\uD7FF][?][0xd7ff]>] ||\n" +
             "   [<[\uE000][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] ||\n" +
             "   [<[\\uD800\\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\\uDBFF\\uDFFF][?][0x10ffff]>]]")

@@ -1,6 +1,8 @@
 package com.github.t1.yaml.tools
 
-data class CodePoint(val value: Int) {
+data class CodePoint(val value: Int) : Comparable<CodePoint> {
+    override fun compareTo(other: CodePoint) = this.value.compareTo(other.value)
+
     override fun toString(): String = if (value < 0) "" else String(Character.toChars(value))
 
     val info get() = "[$escaped][$name][0x$hex]"
@@ -12,13 +14,14 @@ data class CodePoint(val value: Int) {
             value == '\r'.toInt() -> "\\r"
             value == '\''.toInt() -> "\\'"
             value == '\\'.toInt() -> "\\\\"
-            isBom || isNel -> "\\u$HEX"
-            isBig -> "\\u${HEX(highSurrogate)}\\u${HEX(lowSurrogate)}"
+            isBom || isNel || isBig -> unicodeEscape
             isBmpCodePoint -> toString()
-            else -> "\\u$HEX"
+            else -> unicodeEscape
         }
 
-    private val isBig get() = value > 0xffff
+    private val unicodeEscape get() = if (isBig) "\\u${pad(HEX(highSurrogate))}\\u${pad(HEX(lowSurrogate))}" else "\\u${pad(HEX)}"
+
+    val isBig get() = value > 0xffff
     private val lowSurrogate get() = Character.lowSurrogate(value)
     private val highSurrogate get() = Character.highSurrogate(value)
 
@@ -35,6 +38,8 @@ data class CodePoint(val value: Int) {
 
     @Suppress("FunctionName")
     private fun HEX(char: Char) = Integer.toHexString(char.toInt()).toUpperCase()
+
+    private fun pad(string: String) = "0000".substring(string.length) + string
 
     val isHex: Boolean
         get() = isDigit
@@ -65,20 +70,27 @@ data class CodePoint(val value: Int) {
         out.appendCodePoint(value)
     }
 
+    operator fun rangeTo(that: CodePoint) = CodePointRange(this, that)
+
     companion object {
         val EOF = of(-1)
 
         fun of(codePoint: Char): CodePoint = of(codePoint.toInt())
         fun of(codePoint: Int): CodePoint = CodePoint(codePoint)
-        fun of(text: String): CodePoint {
-            assert(count(text) == 1)
-            return at(0, text)
+        fun of(string: String): CodePoint {
+            require(string.codePointCount == 1) { "expected a string with one code point but found \"$this\"" }
+            return of(string.codePointAt(0))
         }
 
         fun decode(text: String): CodePoint = of(Integer.decode(text)!!)
 
-        private fun count(string: String): Int = string.codePointCount(0, string.length)
-
-        private fun at(index: Int, string: String): CodePoint = of(string.codePointAt(index))
+        private val String.codePointCount get(): Int = this.codePointCount(0, length)
     }
 }
+
+data class CodePointRange(
+    override val start: CodePoint,
+    override val endInclusive: CodePoint
+) : ClosedRange<CodePoint>
+
+fun CharRange.toCodePointRange() = CodePoint.of(this.start) .. CodePoint.of(this.endInclusive)
