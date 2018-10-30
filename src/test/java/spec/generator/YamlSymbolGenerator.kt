@@ -109,7 +109,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     "     * ${production.toString().replace("\n", "\n     * ")}\n" +
                     "     */\n" +
                     "    `$methodName`(")
-                if (production.counter in setOf(27, 37, 81, 87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 159, 161, 185, 188, 196, 198))
+                if (production.counter in setOf(37, 81, 87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 159, 161, 185, 188, 196, 198))
                     append("undefined /* TODO not generated */")
                 else
                     production.expression.guide(this)
@@ -183,7 +183,14 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 }
             }
 
-            override fun visit(minus: MinusExpression) = object : Visitor() {}
+            override fun visit(minus: MinusExpression) = object : Visitor() {
+                override fun visit(reference: ReferenceExpression) {
+                    if (reference !== minus.minuend)
+                        append(" - ")
+                    this@ProductionWriter.visit(reference)
+                }
+            }
+
             override fun visit(repeated: RepeatedExpression) = object : Visitor() {}
             override fun visit(range: RangeExpression): Visitor {
                 append(string(range.left as CodePointExpression)) // TODO range.left.guide(this)

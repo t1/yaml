@@ -218,7 +218,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `27` : nb-char:
      *   ->c-printable - ->b-char - ->c-byte-order-mark
      */
-    `nb-char`(undefined /* TODO not generated */),
+    `nb-char`(`c-printable` - `b-char` - `c-byte-order-mark`),
 
     /**
      * `28` : b-break:
@@ -263,7 +263,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `34` : ns-char:
      *   ->nb-char - ->s-white
      */
-    `ns-char`(),
+    `ns-char`(`nb-char` - `s-white`),
 
     /**
      * `35` : ns-dec-digit:
@@ -326,7 +326,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `40` : ns-tag-char:
      *   ->ns-uri-char - ->c-tag - ->c-flow-indicator
      */
-    `ns-tag-char`(),
+    `ns-tag-char`(`ns-uri-char` - `c-tag` - `c-flow-indicator`),
 
     /**
      * `41` : c-escape:
@@ -737,7 +737,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `102` : ns-anchor-char:
      *   ->ns-char - ->c-flow-indicator
      */
-    `ns-anchor-char`(),
+    `ns-anchor-char`(`ns-char` - `c-flow-indicator`),
 
     /**
      * `103` : ns-anchor-name:
@@ -774,7 +774,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `108` : ns-double-char:
      *   ->nb-double-char - ->s-white
      */
-    `ns-double-char`(),
+    `ns-double-char`(`nb-double-char` - `s-white`),
 
     /**
      * `109` : c-double-quoted (n,c):
@@ -847,7 +847,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `119` : ns-single-char:
      *   ->nb-single-char - ->s-white
      */
-    `ns-single-char`(),
+    `ns-single-char`(`nb-single-char` - `s-white`),
 
     /**
      * `120` : c-single-quoted (n,c):
@@ -918,7 +918,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `129` : ns-plain-safe-in:
      *   ->ns-char - ->c-flow-indicator
      */
-    `ns-plain-safe-in`(),
+    `ns-plain-safe-in`(`ns-char` - `c-flow-indicator`),
 
     /**
      * `130` : ns-plain-char (c):
@@ -926,7 +926,7 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->c-comment ||
      *    ->c-mapping-value]
      */
-    `ns-plain-char(c)`(),
+    `ns-plain-char(c)`(`ns-plain-safe(c)` - `c-mapping-value` - `c-comment` - `c-comment` - `c-mapping-value`),
 
     /**
      * `131` : ns-plain (n,c):

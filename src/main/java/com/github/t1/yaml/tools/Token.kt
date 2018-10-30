@@ -24,7 +24,9 @@ interface Token {
         override fun match(scanner: Scanner) = this@Token.match(scanner) or that.match(scanner)
     }
 
-    // operator fun minus(that: Symbol): Symbol = symbol("${this.predicate} minus ${that.predicate}") { it(this) && !it(that) }
+    operator fun minus(that: Token) = object : Token {
+        override fun toString() = "$this minus $that"
+        override fun match(scanner: Scanner) = this@Token.match(scanner) and !that.match(scanner) }
 
     operator fun not() = object : Token {
         override fun match(scanner: Scanner) = !this@Token.match(scanner)
@@ -47,6 +49,11 @@ data class Match(
     infix fun or(that: Match) = when {
         this.matches -> this
         that.matches -> that
+        else -> Match(false)
+    }
+
+    infix fun and(that: Match) = when {
+        this.matches && that.matches -> this
         else -> Match(false)
     }
 

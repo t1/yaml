@@ -131,7 +131,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class LiteralExpression(val literal: String) : Expression() {
+    open class LiteralExpression(private val literal: String) : Expression() {
         override fun toString(): String = "<$literal>"
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
@@ -151,7 +151,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class MinusExpression(private val minuend: Expression) : Expression() {
+    open class MinusExpression(val minuend: Expression) : Expression() {
         private val subtrahends = ArrayList<Expression>()
 
         operator fun minus(subtrahend: Expression): MinusExpression {

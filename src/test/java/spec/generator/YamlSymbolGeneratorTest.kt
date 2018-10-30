@@ -275,17 +275,17 @@ class YamlSymbolGeneratorTest {
             "    `foo`((`a` + `b`) or `a` or `b`),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateMinusRefProduction() {
-        val production = production(MinusExpression(ref("c-printable")).minus(ref("b-char")).minus(ref("c-byte-order-mark")))
+    @Test fun shouldGenerateMinusRefProduction() {
+        val production = production(MinusExpression(ref("a")).minus(ref("b")).minus(ref("c")))
 
         val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
-            "     * `27` : foo:\n" +
-            "     *   ->c-printable - ->b-char - ->c-byte-order-mark\n" +
+            "     * `0` : foo:\n" +
+            "     *   ->a - ->b - ->c\n" +
             "     */\n" +
-            "    `foo`()\n"))
+            "    `foo`(`a` - `b` - `c`),\n"))
     }
 
     private fun production(expression: Expression) = Production(0, "foo", null, expression)
