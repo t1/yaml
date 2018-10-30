@@ -1,5 +1,7 @@
 package com.github.t1.yaml.tools
 
+import kotlin.streams.asSequence
+
 data class CodePoint(val value: Int) : Comparable<CodePoint> {
     override fun compareTo(other: CodePoint) = this.value.compareTo(other.value)
 
@@ -14,6 +16,7 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
             value == '\r'.toInt() -> "\\r"
             value == '\''.toInt() -> "\\'"
             value == '\\'.toInt() -> "\\\\"
+            isEof -> "-1"
             isBom || isNel || isBig -> unicodeEscape
             isBmpCodePoint -> toString()
             else -> unicodeEscape
@@ -33,7 +36,8 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
         }
 
     @Suppress("PrivatePropertyName")
-    private val HEX: String get() = hex.toUpperCase()
+    private val HEX: String
+        get() = hex.toUpperCase()
     private val hex: String get() = Integer.toHexString(value)
 
     @Suppress("FunctionName")
@@ -66,8 +70,6 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
     /** New-Line */
     val isNl: Boolean get() = value == '\n'.toInt() || value == '\r'.toInt()
 
-    operator fun invoke(symbol: Symbol): Boolean = symbol.predicate(this)
-
     fun appendTo(out: StringBuilder) {
         out.appendCodePoint(value)
     }
@@ -84,6 +86,8 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
             return of(string.codePointAt(0))
         }
 
+        fun allOf(string: String): List<CodePoint> = string.codePoints().asSequence().map { operand -> CodePoint.of(operand) }.toList()
+
         fun decode(text: String): CodePoint = of(Integer.decode(text)!!)
 
         private val String.codePointCount get(): Int = this.codePointCount(0, length)
@@ -95,4 +99,4 @@ data class CodePointRange(
     override val endInclusive: CodePoint
 ) : ClosedRange<CodePoint>
 
-fun CharRange.toCodePointRange() = CodePoint.of(this.start) .. CodePoint.of(this.endInclusive)
+fun CharRange.toCodePointRange() = CodePoint.of(this.start)..CodePoint.of(this.endInclusive)

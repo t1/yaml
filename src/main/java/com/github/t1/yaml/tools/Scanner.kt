@@ -1,60 +1,53 @@
 package com.github.t1.yaml.tools
 
-import java.io.Reader
+open class Scanner(private val reader: CodePointReader) {
+    constructor(string: String) : this(CodePointReader(string))
 
-open class Scanner(
-    private val lookAheadLimit: Int,
-    reader: Reader
-) {
-    private var position = 1
-    private var lineNumber = 1
+    open fun read(): CodePoint = reader.read()
 
-    private val reader: CodePointReader = CodePointReader(reader)
+    private fun <T> mark(body: (CodePointReader.Read) -> T): T = reader.mark(body)
+
+    val isStartOfFile get() = reader.isStartOfFile
 
 
-    val isStartOfFile get() = position == 1 && lineNumber == 1
+    override fun toString() = "${peek().info} at $positionInfo"
 
-    fun expect(string: String): Scanner = expect(StringToken(string))
+    val positionInfo get() = reader.position.info
+
+
+    fun expect(string: String): Scanner = expect(token(string))
 
     fun expect(token: Token): Scanner {
-        for (predicate in token.predicates) {
-            val info = this.toString()
-            if (!predicate(read()))
-                throw ParseException("expected $predicate but got $info")
-        }
+        val match = match(token)
+        if (!match.matches)
+            throw ParseException("expected $token but got ${match.codePoints.joinToString { it.info }} at $positionInfo")
+        skip(match.length)
         return this
     }
 
-    fun peek(token: Token): Boolean = token.matches(this)
+    fun peek(token: Token): Boolean = match(token).matches
+
+    fun match(token: Token) = token.match(this)
 
     fun peek(): CodePoint = peek(1)[0]
 
-    fun peek(count: Int): List<CodePoint> {
-        reader.mark(count).use { return reader.read(count) }
-    }
+    fun peek(count: Int): List<CodePoint> = mark { reader.read(count) }
 
     fun peekWhile(token: Token) = peekUntil(!token) ?: ""
 
     fun peekUntil(token: Token): String? {
-        val predicates = token.predicates
-        reader.mark(lookAheadLimit).use {
-            val out = StringBuilder()
-            var matchLength = 0
+        val out = StringBuilder()
+        val found: Boolean = mark {
             while (true) {
-                val codePoint = reader.read()
-                if (codePoint.isEof)
-                    return null
-                if (predicates[matchLength](codePoint)) {
-                    if (++matchLength == predicates.size)
-                        return out.toString()
-                } else {
-                    @Suppress("UNUSED_VALUE")
-                    matchLength = 0
-                    codePoint.appendTo(out)
-                }
+                val match = token.match(this)
+                if (match.matches) return@mark true
+                skip(1)
+                if (end()) return@mark false
+                match.codePoints.forEach { c -> out.append(c) }
             }
+            @Suppress("UNREACHABLE_CODE") throw UnsupportedOperationException("unreachable") // Kotlin 1.2.71 limitation
         }
-        throw UnsupportedOperationException("unreachable")
+        return if (found) out.toString() else null
     }
 
     fun peekAfter(count: Int): CodePoint? {
@@ -62,9 +55,20 @@ open class Scanner(
         return if (peek.size < count + 1) null else peek[peek.size - 1]
     }
 
-    fun accept(string: String): Boolean = accept(StringToken(string))
+    fun matchesAfter(count: Int, token: Token): Boolean {
+        val then = peekAfter(count) ?: return false
+        // TODO there must be a more elegant way
+        return token.match(Scanner(CodePointReader(then.toString()))).matches
+    }
+
+    fun accept(string: String): Boolean = accept(token(string))
 
     fun accept(token: Token): Boolean = peek(token) && expect(token).run { true }
+
+    private fun skip(count: Int): Scanner {
+        reader.read(count)
+        return this
+    }
 
     fun skip(token: Token): Scanner {
         accept(token)
@@ -75,18 +79,7 @@ open class Scanner(
 
     open fun more(): Boolean = !end()
 
-    open fun read(): CodePoint {
-        val codePoint = reader.read()
-        if (codePoint.isNl) {
-            lineNumber++
-            position = 1
-        } else {
-            position++
-        }
-        return codePoint
-    }
-
-    fun readUntil(end: String): String = readUntil(StringToken(end))
+    fun readUntil(end: String): String = readUntil(token(end))
 
     fun readUntil(end: Token): String {
         val builder = StringBuilder()
@@ -102,7 +95,7 @@ open class Scanner(
         return result
     }
 
-    fun count(token: String): Int = count(StringToken(token))
+    fun count(token: String): Int = count(token(token))
 
     fun count(token: Token): Int = readWhile(token).length
 
@@ -112,8 +105,4 @@ open class Scanner(
             out.appendCodePoint(read().value)
         return out.toString()
     }
-
-    override fun toString() = "${peek().info} at $positionInfo"
-
-    val positionInfo get() = "line $lineNumber char $position"
 }

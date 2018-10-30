@@ -3,11 +3,10 @@ package spec.generator
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.Scanner
-import com.github.t1.yaml.tools.StringToken
+import com.github.t1.yaml.tools.token
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
-import java.io.StringReader
 
 /**
  * Scans an html snippet which includes seamless scanning of text nodes.
@@ -50,7 +49,7 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
     }
 
     fun peek(text: String): Boolean {
-        return nextText?.peek(StringToken(text)) ?: false
+        return nextText?.peek(token(text)) ?: false
     }
 
     fun peek(): CodePoint {
@@ -86,7 +85,7 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
         assert(more())
         assert(node() is TextNode)
         if (nextText == null)
-            nextText = Scanner(256, StringReader((node() as TextNode).text().trim { it <= ' ' }))
+            nextText = Scanner((node() as TextNode).text().trim { it <= ' ' })
         val result = runnable()
         if (nextText!!.end())
             next()

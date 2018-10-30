@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import java.io.StringReader
 
 class VisitorTest {
     private val visitor: Visitor = mock()
@@ -27,7 +26,7 @@ class VisitorTest {
     }
 
     @Test fun shouldFailUnexpected() {
-        val scanner = Scanner(10, StringReader("a"))
+        val scanner = Scanner("a")
 
         val exception = catchParseException { scanner.expect("b") }
 

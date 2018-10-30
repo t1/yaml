@@ -83,8 +83,8 @@ open class AbstractYamlTest {
     interface ThenIsExpectedDocument {
         @Test fun thenDocumentIsExpected() {
             rethrow()
-            assertThat(document!!.isEmpty).isEqualTo(expected!!.isEmpty)
-            assertThat(document!!.hasDirectives()).isEqualTo(expected!!.hasDirectives())
+            assertThat(document!!.isEmpty).describedAs("isEmpty").isEqualTo(expected!!.isEmpty)
+            assertThat(document!!.hasDirectives()).describedAs("hasDirectives").isEqualTo(expected!!.hasDirectives())
             assertThat(document).isEqualTo(expected)
         }
     }

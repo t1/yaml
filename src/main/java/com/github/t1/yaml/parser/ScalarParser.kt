@@ -7,23 +7,9 @@ import com.github.t1.yaml.model.Scalar.Style
 import com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED
 import com.github.t1.yaml.model.Scalar.Style.PLAIN
 import com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED
-import com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_START
-import com.github.t1.yaml.parser.Marker.BLOCK_MAPPING_VALUE
-import com.github.t1.yaml.parser.Marker.BLOCK_SEQUENCE_START
-import com.github.t1.yaml.parser.Marker.INDENTED_COMMENT
 import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
 import com.github.t1.yaml.parser.ScalarParser.Mode.NORMAL
 import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
-import com.github.t1.yaml.parser.YamlTokens.`c-collect-entry`
-import com.github.t1.yaml.parser.YamlTokens.`c-comment`
-import com.github.t1.yaml.parser.YamlTokens.`c-double-quote`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-end`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-start`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
-import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
-import com.github.t1.yaml.parser.YamlTokens.`c-single-quote`
-import com.github.t1.yaml.parser.YamlTokens.`s-space`
-import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.spaces
 
 internal class ScalarParser private constructor(
@@ -72,8 +58,7 @@ internal class ScalarParser private constructor(
         while (next.more()) {
             // spaces before a comment or a block mapping value are not part of string scalar
             val spaceCount = next.peekWhile(`s-space`).length
-            val then = next.peekAfter(spaceCount)
-            if (then != null && then(COMMENT)) break
+            if (next.matchesAfter(spaceCount, `c-comment`)) break
             val spaces = spaces(spaceCount)
             next.expect(spaces)
             if (next.peek(`c-comment`) || next.peek(BLOCK_MAPPING_VALUE)) break
@@ -96,7 +81,7 @@ internal class ScalarParser private constructor(
     }
 
     private fun checkValidPlainScalarContinue() {
-        for (token in listOf<Token>(`c-sequence-start`, BLOCK_SEQUENCE_START, `c-mapping-start`, BLOCK_MAPPING_START))
+        for (token in listOf(`c-sequence-start`, BLOCK_SEQUENCE_START, `c-mapping-start`, BLOCK_MAPPING_START))
             if (next.peek(token))
                 throw YamlParseException("Expected a scalar node to continue with scalar values but found $token $next")
     }
