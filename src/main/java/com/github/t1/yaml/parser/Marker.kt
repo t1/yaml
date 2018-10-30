@@ -2,6 +2,11 @@
 
 package com.github.t1.yaml.parser
 
+import com.github.t1.yaml.parser.YamlTokens.`c-comment`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-key`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
+import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.Match
 import com.github.t1.yaml.tools.Scanner

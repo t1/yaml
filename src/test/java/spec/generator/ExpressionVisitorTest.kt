@@ -88,7 +88,7 @@ class ExpressionVisitorTest {
         val inOrder = inOrder(visitor, sub)
         inOrder.verify(visitor).visit(expression)
         inOrder.verify(sub).visit(literal)
-        inOrder.verify(sub).leave(expression)
+        inOrder.verify(visitor).leave(expression)
     }
 
 
@@ -120,7 +120,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).visit(expression)
         inOrder.verify(sub).visit(literal1)
         inOrder.verify(sub).visit(literal2)
-        inOrder.verify(sub).leave(expression)
+        inOrder.verify(visitor).leave(expression)
     }
 
 
@@ -156,7 +156,7 @@ class ExpressionVisitorTest {
         inOrder.verify(sub).visit(literal1)
         inOrder.verify(sub).visit(literal2)
         inOrder.verify(sub).visit(literal3)
-        inOrder.verify(sub).leave(expression)
+        inOrder.verify(visitor).leave(expression)
     }
 
 
@@ -188,7 +188,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).visit(expression)
         inOrder.verify(sub).visit(literal1)
         inOrder.verify(sub).visit(literal2)
-        inOrder.verify(sub).leave(expression)
+        inOrder.verify(visitor).leave(expression)
     }
 
 
@@ -220,7 +220,7 @@ class ExpressionVisitorTest {
         inOrder.verify(visitor).visit(expression)
         inOrder.verify(sub).visit(literal1)
         inOrder.verify(sub).visit(literal2)
-        inOrder.verify(sub).leave(expression)
+        inOrder.verify(visitor).leave(expression)
     }
 
     @Test fun visitSwitch() {
@@ -263,7 +263,7 @@ class ExpressionVisitorTest {
         inOrder.verify(sub).visit(value1)
         inOrder.verify(sub).visit(key2)
         inOrder.verify(sub).visit(value2)
-        inOrder.verify(sub).leave(expression)
+        inOrder.verify(visitor).leave(expression)
     }
 
     @Test fun visitUnbalancedSwitch() {

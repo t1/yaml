@@ -13,16 +13,16 @@ abstract class Expression {
 
     abstract class Visitor {
         ///////////// no subexpression
-        open fun visit(expression: NullExpression) {}
 
+        open fun visit(expression: NullExpression) {}
         open fun visit(codePoint: CodePointExpression) {}
         open fun visit(literal: LiteralExpression) {}
         open fun visit(reference: ReferenceExpression) {}
 
 
         ///////////// fixed number of subexpressions
-        open fun visit(repeated: RepeatedExpression): Visitor = this
 
+        open fun visit(repeated: RepeatedExpression): Visitor = this
         open fun leave(repeated: RepeatedExpression) {}
 
         open fun visit(range: RangeExpression): Visitor = this
@@ -30,8 +30,8 @@ abstract class Expression {
 
 
         ///////////// arbitrary number of subexpressions
-        open fun visit(minus: MinusExpression): Visitor = this
 
+        open fun visit(minus: MinusExpression): Visitor = this
         open fun leave(minus: MinusExpression) {}
 
         open fun visit(alternatives: AlternativesExpression): Visitor = this
@@ -102,7 +102,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             expressions.forEach { it.guide(sub) }
-            sub.leave(this)
+            visitor.leave(this)
         }
 
         companion object {
@@ -118,7 +118,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             expressions.forEach { it.guide(sub) }
-            sub.leave(this)
+            visitor.leave(this)
         }
 
         companion object {
@@ -142,7 +142,7 @@ abstract class Expression {
             val sub = visitor.visit(this)
             left.guide(sub)
             right.guide(sub)
-            sub.leave(this)
+            visitor.leave(this)
         }
     }
 
@@ -172,7 +172,7 @@ abstract class Expression {
             val sub = visitor.visit(this)
             minuend.guide(sub)
             subtrahends.forEach { it.guide(sub) }
-            sub.leave(this)
+            visitor.leave(this)
         }
 
         companion object {
@@ -186,7 +186,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             expression.guide(sub)
-            sub.leave(this)
+            visitor.leave(this)
         }
     }
 
@@ -228,7 +228,7 @@ abstract class Expression {
                 if (expressions.size > i)
                     expressions[i].guide(sub)
             }
-            sub.leave(this)
+            visitor.leave(this)
         }
     }
 

@@ -9,6 +9,16 @@ import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
 import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
 import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
+import com.github.t1.yaml.parser.YamlTokens.`b-break`
+import com.github.t1.yaml.parser.YamlTokens.`c-collect-entry`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-key`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-start`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
+import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.symbol
 
 internal class NodeParser(private val next: YamlScanner) {

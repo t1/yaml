@@ -260,6 +260,21 @@ class YamlSymbolGeneratorTest {
             "    `foo`('\\t' or (' ' .. \"\\uDBFF\\uDFFF\")),\n"))
     }
 
+    @Test fun shouldGenerateAlternativeOfSequenceAndReferenceProduction() {
+        val production = production(alt(seq(ref("a"), ref("b")), ref("a"), ref("b")))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     *   [->a + ->b ||\n" +
+            "     *    ->a ||\n" +
+            "     *    ->b]\n" +
+            "     */\n" +
+            "    `foo`((`a` + `b`) or `a` or `b`),\n"))
+    }
+
     @Disabled @Test fun shouldGenerateMinusRefProduction() {
         val production = production(MinusExpression(ref("c-printable")).minus(ref("b-char")).minus(ref("c-byte-order-mark")))
 
@@ -282,10 +297,19 @@ class YamlSymbolGeneratorTest {
     private fun range(min: CodePoint, max: CodePoint) = RangeExpression(codePoint(min), codePoint(max))
     private fun ref(ref: String) = ReferenceExpression(ref)
 
-    private fun seq(e1: Expression, e2: Expression, e3: Expression) = SequenceExpression.of(e1, seq(e2, e3))
-    private fun seq(e1: Expression, e2: Expression) = SequenceExpression.of(e1, e2)
+    private fun seq(e1: Expression, e2: Expression, vararg more: Expression): SequenceExpression {
+        var out = SequenceExpression.of(e1, e2)
+        for (e in more)
+            out = SequenceExpression.of(out, e)
+        return out
+    }
 
-    private fun alt(left: Expression, right: Expression) = AlternativesExpression.of(left, right)
+    private fun alt(e1: Expression, e2: Expression, vararg more: Expression): AlternativesExpression {
+        var out = AlternativesExpression.of(e1, e2)
+        for (e in more)
+            out = AlternativesExpression.of(out, e)
+        return out
+    }
 
     private fun generate(vararg productions: Production): String {
         val writer = StringWriter()
@@ -299,7 +323,7 @@ class YamlSymbolGeneratorTest {
 
     private fun source(body: String): String {
         return YamlSymbolGenerator.PREFIX +
-            "enum class FooParser(override val predicates: List<(CodePoint) -> Boolean>) : Token {\n" +
+            "enum class FooParser(private val token: Token) : Token {\n" +
             body +
             YamlSymbolGenerator.SUFFIX
     }

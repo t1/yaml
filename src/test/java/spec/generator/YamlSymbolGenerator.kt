@@ -16,16 +16,24 @@ import java.nio.file.Paths
 
 class YamlSymbolGenerator(private val spec: Spec) {
     companion object {
+        @JvmStatic fun main(args: Array<String>) {
+            val spec = SpecLoader().load()
+            YamlSymbolGenerator(spec).generateCode()
+        }
+
         private val SOURCE_FILE = Paths.get("src/main/java/com/github/t1/yaml/parser/YamlTokens.kt")
+
         val PREFIX = "" +
             "package com.github.t1.yaml.parser\n" +
             "\n" +
             "import com.github.t1.yaml.tools.CodePoint\n" +
             "import com.github.t1.yaml.tools.CodePointRange\n" +
-            "import com.github.t1.yaml.tools.Symbol\n" +
+            "import com.github.t1.yaml.tools.Match\n" +
+            "import com.github.t1.yaml.tools.Scanner\n" +
             "import com.github.t1.yaml.tools.Token\n" +
             "import com.github.t1.yaml.tools.symbol\n" +
             "import com.github.t1.yaml.tools.toCodePointRange\n" +
+            "import com.github.t1.yaml.tools.undefined\n" +
             "import javax.annotation.Generated\n" +
             "\n" +
             "/**\n" +
@@ -47,12 +55,13 @@ class YamlSymbolGenerator(private val spec: Spec) {
         const val SUFFIX = "" +
             "    ;\n" +
             "\n" +
+            "\n" +
+            "    @Deprecated(\"not yet generated\") constructor() : this(undefined)\n" +
             "    constructor(codePoint: Char) : this(symbol(codePoint))\n" +
-            "    constructor(symbol: Symbol) : this(listOf(symbol.predicate))\n" +
-            "    constructor(token: Token) : this(token.predicates)\n" +
             "    constructor(range: CharRange) : this(range.toCodePointRange())\n" +
             "    constructor(range: CodePointRange) : this(symbol(range))\n" +
-            "    @Deprecated(\"missing production visitor\") constructor() : this(listOf())\n" +
+            "\n" +
+            "    override fun match(scanner: Scanner): Match = this.token.match(scanner)\n" +
             "}\n" +
             "\n" +
             "private infix fun Char.or(that: Char) = symbol(this) or symbol(that)\n" +
@@ -65,11 +74,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)\n" +
             "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
             "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n"
-
-        @JvmStatic fun main(args: Array<String>) {
-            val spec = SpecLoader().load()
-            YamlSymbolGenerator(spec).generateCode()
-        }
     }
 
     private fun generateCode() {
@@ -89,7 +93,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
         fun write(productions: List<Production>) {
             append(PREFIX +
-                "enum class $className(override val predicates: List<(CodePoint) -> Boolean>) : Token {\n")
+                "enum class $className(private val token: Token) : Token {\n")
 
             for (production in productions) {
                 ProductionWriter(production).write()
@@ -105,8 +109,8 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     "     * ${production.toString().replace("\n", "\n     * ")}\n" +
                     "     */\n" +
                     "    `$methodName`(")
-                if (production.counter in setOf(28, 37, 81, 87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 185, 188, 196, 198))
-                    append("/* TODO not generated */")
+                if (production.counter in setOf(27, 37, 81, 87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 159, 161, 185, 188, 196, 198))
+                    append("undefined /* TODO not generated */")
                 else
                     production.expression.guide(this)
                 append("),\n")
@@ -155,6 +159,27 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     if (!alternatives.isFirst(codePoint))
                         append(" or ")
                     append(string(codePoint)) // TODO this@ProductionWriter.visit(codePoint)
+                }
+
+                override fun visit(sequence: SequenceExpression): Visitor {
+                    append("(")
+                    return object : Visitor() {
+                        override fun visit(codePoint: CodePointExpression) {
+                            if (!sequence.isFirst(codePoint))
+                                append(" + ")
+                            append("'${codePoint.codePoint.escaped}'")
+                        }
+
+                        override fun visit(reference: ReferenceExpression) {
+                            if (!sequence.isFirst(reference))
+                                append(" + ")
+                            this@ProductionWriter.visit(reference)
+                        }
+                    }
+                }
+
+                override fun leave(sequence: SequenceExpression) {
+                    append(")")
                 }
             }
 
