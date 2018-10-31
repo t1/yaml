@@ -38,14 +38,14 @@ enum class YamlTokens(private val token: Token) : Token {
      *    [<[][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] ||
      *    [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
      */
-    `c-printable`('\t' or '\n' or '\r' or (' ' .. '~') or '\u0085' or (' ' .. '퟿') or ('' .. '�') or ("\uD800\uDC00" .. "\uDBFF\uDFFF")),
+    `c-printable`('\t' or '\n' or '\r' or (' '..'~') or '\u0085' or (' '..'퟿') or (''..'�') or ("\uD800\uDC00".."\uDBFF\uDFFF")),
 
     /**
      * `2` : nb-json:
      *   [<[\t][CHARACTER TABULATION][0x9]> ||
      *    [<[ ][SPACE][0x20]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
      */
-    `nb-json`('\t' or (' ' .. "\uDBFF\uDFFF")),
+    `nb-json`('\t' or (' '.."\uDBFF\uDFFF")),
 
     /**
      * `3` : c-byte-order-mark:
@@ -269,7 +269,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `35` : ns-dec-digit:
      *   [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]
      */
-    `ns-dec-digit`('0' .. '9'),
+    `ns-dec-digit`('0'..'9'),
 
     /**
      * `36` : ns-hex-digit:
@@ -277,14 +277,14 @@ enum class YamlTokens(private val token: Token) : Token {
      *    [<[A][LATIN CAPITAL LETTER A][0x41]>-<[F][LATIN CAPITAL LETTER F][0x46]>] ||
      *    [<[a][LATIN SMALL LETTER A][0x61]>-<[f][LATIN SMALL LETTER F][0x66]>]]
      */
-    `ns-hex-digit`(`ns-dec-digit` or ('A' .. 'F') or ('a' .. 'f')),
+    `ns-hex-digit`(`ns-dec-digit` or ('A'..'F') or ('a'..'f')),
 
     /**
      * `37` : ns-ascii-letter:
      *   [[<[A][LATIN CAPITAL LETTER A][0x41]>-<[Z][LATIN CAPITAL LETTER Z][0x5a]>] ||
      *    [<[a][LATIN SMALL LETTER A][0x61]>-<[z][LATIN SMALL LETTER Z][0x7a]>]]
      */
-    `ns-ascii-letter`(undefined /* TODO not generated */),
+    `ns-ascii-letter`(('A'..'Z') or ('a'..'z')),
 
     /**
      * `38` : ns-word-char:
@@ -1482,11 +1482,12 @@ enum class YamlTokens(private val token: Token) : Token {
 
 private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
 private infix fun Char.or(that: Token) = symbol(this) or that
+private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))
 private infix fun Token.or(that: String): Token = or(symbol(that))
 private infix fun Token.or(that: Char): Token = or(symbol(that))
-private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this) .. CodePoint.of(that))
-private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this) .. CodePoint.of(that))
-private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this) .. CodePoint.of(that))
+private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this)..CodePoint.of(that))
+private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
+private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
 private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
 private infix operator fun Token.plus(that: Char) = this + symbol(that)
 private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))

@@ -6,11 +6,12 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
-import spec.generator.Expression.LiteralExpression
+import spec.generator.Expression.LabelExpression
 import spec.generator.Expression.MinusExpression
 import spec.generator.Expression.RangeExpression
 import spec.generator.Expression.ReferenceExpression
 import spec.generator.Expression.SequenceExpression
+import spec.generator.Expression.SwitchExpression
 import java.io.StringWriter
 import java.util.Arrays.asList
 
@@ -73,34 +74,29 @@ class YamlSymbolGeneratorTest {
             "    `foo`('0' .. '9'),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateOneCharLiteralProduction() {
-        val production = production(LiteralExpression("x"))
+    @Disabled @Test fun shouldGenerateSwitchProduction() {
+        val production = production(switch(
+            "c = foo1" to "bar1",
+            "c = foo2" to "bar2",
+            "c = foo3" to "bar3",
+            "c = foo4" to "bar4"
+        ))
 
         val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
-            "     *   <x>\n" +
+            "     *   <foo1> ⇒ <bar1>\n" +
+            "     *   <foo2> ⇒ <bar2>\n" +
+            "     *   <foo3> ⇒ <bar3>\n" +
+            "     *   <foo4> ⇒ <bar4>\n" +
             "     */\n" +
-            "    `foo`(something with x),\n"))
+            "    `foo`(something with foo and bar),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateThreeCharLiteralProduction() {
-        val production = production(LiteralExpression("bar"))
-
-        val written = generate(production)
-
-        assertThat(written).isEqualTo(source("\n" +
-            "    /**\n" +
-            "     * `0` : foo:\n" +
-            "     *   <bar>\n" +
-            "     */\n" +
-            "    `foo`(something with bar),\n"))
-    }
-
-    @Disabled @Test fun shouldGenerateLiteralProductionWithOneArg() {
-        val production = Production(0, "foo", "n", LiteralExpression("baz"))
+    @Disabled @Test fun shouldGenerateProductionWithOneArg() {
+        val production = Production(0, "foo", "n", LabelExpression("baz"))
 
         val written = generate(production)
 
@@ -114,8 +110,8 @@ class YamlSymbolGeneratorTest {
             "    }\n"))
     }
 
-    @Disabled @Test fun shouldGenerateLiteralProductionWithLessArg() {
-        val production = Production(0, "foo", "<n", LiteralExpression("bar"))
+    @Disabled @Test fun shouldGenerateProductionWithLessArg() {
+        val production = Production(0, "foo", "<n", LabelExpression("bar"))
 
         val written = generate(production)
 
@@ -129,8 +125,8 @@ class YamlSymbolGeneratorTest {
             "    }\n"))
     }
 
-    @Disabled @Test fun shouldGenerateLiteralProductionWithLessEqArg() {
-        val production = Production(0, "foo", "≤n", LiteralExpression("bar"))
+    @Disabled @Test fun shouldGenerateProductionWithLessEqArg() {
+        val production = Production(0, "foo", "≤n", LabelExpression("bar"))
 
         val written = generate(production)
 
@@ -144,8 +140,8 @@ class YamlSymbolGeneratorTest {
             "    }\n"))
     }
 
-    @Disabled @Test fun shouldGenerateLiteralProductionWithTwoArgs() {
-        val production = Production(0, "foo", "c,n", LiteralExpression("bar"))
+    @Disabled @Test fun shouldGenerateProductionWithTwoArgs() {
+        val production = Production(0, "foo", "c,n", LabelExpression("bar"))
 
         val written = generate(production)
 
@@ -159,8 +155,8 @@ class YamlSymbolGeneratorTest {
             "    }\n"))
     }
 
-    @Disabled @Test fun shouldGenerateLiteralProductionWithMinus() {
-        val production = Production(0, "c-foo", null, LiteralExpression("bar"))
+    @Disabled @Test fun shouldGenerateProductionWithMinus() {
+        val production = Production(0, "c-foo", null, LabelExpression("bar"))
 
         val written = generate(production)
 
@@ -174,8 +170,8 @@ class YamlSymbolGeneratorTest {
             "    }\n"))
     }
 
-    @Disabled @Test fun shouldGenerateLiteralProductionWithPlus() {
-        val production = Production(0, "c+foo", null, LiteralExpression("bar"))
+    @Disabled @Test fun shouldGenerateProductionWithPlus() {
+        val production = Production(0, "c+foo", null, LabelExpression("bar"))
 
         val written = generate(production)
 
@@ -188,7 +184,6 @@ class YamlSymbolGeneratorTest {
             "        return next.accept(\"bar\") ? \"bar\" : null;\n" +
             "    }\n"))
     }
-
 
     @Test fun shouldGenerateRefProduction() {
         val production = production(ref("bar"))
@@ -217,6 +212,7 @@ class YamlSymbolGeneratorTest {
             "     */\n" +
             "    `foo`(`ref1` or `ref2`),\n"))
     }
+
 
     @Test fun shouldGenerateAlternativeCodePointsProduction() {
         val production = production(alt(codePoint('a'), codePoint('b')))
@@ -310,6 +306,14 @@ class YamlSymbolGeneratorTest {
             out = AlternativesExpression.of(out, e)
         return out
     }
+
+    private fun switch(vararg pairs: Pair<String, String>): SwitchExpression {
+        val out = SwitchExpression()
+        for (pair in pairs)
+            out.addCase(LabelExpression(pair.first)).merge(LabelExpression(pair.second))
+        return out
+    }
+
 
     private fun generate(vararg productions: Production): String {
         val writer = StringWriter()

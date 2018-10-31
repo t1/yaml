@@ -4,7 +4,7 @@ import com.github.t1.yaml.tools.CodePoint
 import org.jsoup.nodes.Node
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
-import spec.generator.Expression.LiteralExpression
+import spec.generator.Expression.LabelExpression
 import spec.generator.Expression.MinusExpression
 import spec.generator.Expression.NullExpression
 import spec.generator.Expression.RangeExpression
@@ -163,15 +163,11 @@ class NodeExpressionParser(nodes: List<Node>) {
         return switchExpression
     }
 
-    private fun switchLabel(): LiteralExpression {
-        return readLiteralUntil { next.peek("⇒") }
-    }
+    private fun switchLabel(): LabelExpression = readUntil { next.peek("⇒") }
 
-    private fun switchValue(): LiteralExpression {
-        return readLiteralUntil { next.isElement("br") || next.end() }
-    }
+    private fun switchValue(): LabelExpression = readUntil { next.isElement("br") || next.end() }
 
-    private fun readLiteralUntil(end: () -> Boolean): LiteralExpression {
+    private fun readUntil(end: () -> Boolean): LabelExpression {
         val out = StringBuilder()
         while (!end())
             when {
@@ -179,9 +175,9 @@ class NodeExpressionParser(nodes: List<Node>) {
                 isVar -> out.append(readVar()).append(" ")
                 isHref -> out.append(href()).append(" ")
                 next.isText -> out.appendCodePoint(next.read().value)
-                else -> throw AssertionError("unexpected switch literal $next")
+                else -> throw AssertionError("unexpected switch label $next")
             }
         skipWhitespaceAndComments()
-        return LiteralExpression(out.toString().trim { it <= ' ' })
+        return LabelExpression(out.toString().trim { it <= ' ' })
     }
 }

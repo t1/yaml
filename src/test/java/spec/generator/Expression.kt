@@ -16,7 +16,7 @@ abstract class Expression {
 
         open fun visit(expression: NullExpression) {}
         open fun visit(codePoint: CodePointExpression) {}
-        open fun visit(literal: LiteralExpression) {}
+        open fun visit(label: LabelExpression) {}
         open fun visit(reference: ReferenceExpression) {}
 
 
@@ -131,8 +131,8 @@ abstract class Expression {
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class LiteralExpression(private val literal: String) : Expression() {
-        override fun toString(): String = "<$literal>"
+    open class LabelExpression(private val label: String) : Expression() {
+        override fun toString(): String = "<$label>"
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 

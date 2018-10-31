@@ -66,6 +66,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "\n" +
             "private infix fun Char.or(that: Char) = symbol(this) or symbol(that)\n" +
             "private infix fun Char.or(that: Token) = symbol(this) or that\n" +
+            "private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))\n" +
             "private infix fun Token.or(that: String): Token = or(symbol(that))\n" +
             "private infix fun Token.or(that: Char): Token = or(symbol(that))\n" +
             "private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this) .. CodePoint.of(that))\n" +
@@ -109,7 +110,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     "     * ${production.toString().replace("\n", "\n     * ")}\n" +
                     "     */\n" +
                     "    `$methodName`(")
-                if (production.counter in setOf(37, 81, 87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 159, 161, 185, 188, 196, 198))
+                if (production.counter in setOf(81, 87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 159, 161, 185, 188, 196, 198))
                     append("undefined /* TODO not generated */")
                 else
                     production.expression.guide(this)
