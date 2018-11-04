@@ -1,12 +1,16 @@
+@file:Suppress("unused", "FunctionName")
+
 package com.github.t1.yaml.parser
 
+import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointRange
+import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
-import com.github.t1.yaml.tools.Scanner
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.symbol
 import com.github.t1.yaml.tools.toCodePointRange
+import com.github.t1.yaml.tools.token
 import com.github.t1.yaml.tools.undefined
 import javax.annotation.Generated
 
@@ -24,7 +28,7 @@ import javax.annotation.Generated
  * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.
  */
 @Generated("spec.generator.YamlSymbolGenerator")
-@Suppress("unused", "EnumEntryName", "NonAsciiCharacters")
+@Suppress("EnumEntryName", "NonAsciiCharacters")
 enum class YamlTokens(private val token: Token) : Token {
 
     /**
@@ -481,12 +485,6 @@ enum class YamlTokens(private val token: Token) : Token {
     `c-ns-esc-char`(),
 
     /**
-     * `63` : s-indent (n):
-     *   (->s-space × n)
-     */
-    `s-indent(n)`(),
-
-    /**
      * `64` : s-indent (<n):
      *   (->s-space × m)
      */
@@ -517,7 +515,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `68` : s-block-line-prefix (n):
      *   ->s-indent(n)
      */
-    `s-block-line-prefix(n)`(`s-indent(n)`),
+    `s-block-line-prefix(n)`(),
 
     /**
      * `69` : s-flow-line-prefix (n):
@@ -603,7 +601,7 @@ enum class YamlTokens(private val token: Token) : Token {
      *   [->s-l-comments + ->s-flow-line-prefix(n) ||
      *    ->s-separate-in-line]
      */
-    `s-separate-lines(n)`(undefined /* TODO not generated */),
+    `s-separate-lines(n)`((`s-l-comments` + `s-flow-line-prefix(n)`) or `s-separate-in-line`),
 
     /**
      * `82` : l-directive:
@@ -1477,10 +1475,20 @@ enum class YamlTokens(private val token: Token) : Token {
     constructor(range: CharRange) : this(range.toCodePointRange())
     constructor(range: CodePointRange) : this(symbol(range))
 
-    override fun match(scanner: Scanner): Match = this.token.match(scanner)
+    override fun match(reader: CodePointReader): Match = this.token.match(reader)
+}
+
+/**
+ * `63` : s-indent (n):
+ *   (->s-space × n)
+ */
+fun `s-indent`(n: Int): Token {
+    val spaces = `s-space` * n
+    return token("s-indent") { spaces.match(it) }
 }
 
 private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
+
 private infix fun Char.or(that: Token) = symbol(this) or that
 private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))
 private infix fun Token.or(that: String): Token = or(symbol(that))

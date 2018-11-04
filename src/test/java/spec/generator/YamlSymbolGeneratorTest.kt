@@ -10,6 +10,7 @@ import spec.generator.Expression.LabelExpression
 import spec.generator.Expression.MinusExpression
 import spec.generator.Expression.RangeExpression
 import spec.generator.Expression.ReferenceExpression
+import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
 import java.io.StringWriter
@@ -72,6 +73,19 @@ class YamlSymbolGeneratorTest {
             "     *   [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]\n" +
             "     */\n" +
             "    `foo`('0' .. '9'),\n"))
+    }
+
+    @Test fun shouldGenerateRepeatProduction() {
+        val production = production(RepeatedExpression(ref("x"), "4"))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     *   (->x × 4)\n" +
+            "     */\n" +
+            "    `foo`(`x` * 4),\n"))
     }
 
     @Disabled @Test fun shouldGenerateSwitchProduction() {

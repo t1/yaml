@@ -18,37 +18,20 @@ open class Scanner(private val reader: CodePointReader) {
     fun expect(string: String): Scanner = expect(token(string))
 
     fun expect(token: Token): Scanner {
-        val match = match(token)
+        val match = reader.mark { token.match(reader) }
         if (!match.matches)
-            throw ParseException("expected $token but got ${match.codePoints.joinToString { it.info }} at $positionInfo")
-        skip(match.length)
+            throw ParseException("expected $token but got ${reader.mark { reader.read().info }} at $positionInfo")
+        reader.read(match.codePoints.size)
         return this
     }
 
-    fun peek(token: Token): Boolean = match(token).matches
-
-    fun match(token: Token) = token.match(this)
+    fun peek(token: Token): Boolean = mark { token.match(reader).matches }
 
     fun peek(): CodePoint = peek(1)[0]
 
     fun peek(count: Int): List<CodePoint> = mark { reader.read(count) }
 
-    fun peekWhile(token: Token) = peekUntil(!token) ?: ""
-
-    fun peekUntil(token: Token): String? {
-        val out = StringBuilder()
-        val found: Boolean = mark {
-            while (true) {
-                val match = token.match(this)
-                if (match.matches) return@mark true
-                skip(1)
-                if (end()) return@mark false
-                match.codePoints.forEach { c -> out.append(c) }
-            }
-            @Suppress("UNREACHABLE_CODE") throw UnsupportedOperationException("unreachable") // Kotlin 1.2.71 limitation
-        }
-        return if (found) out.toString() else null
-    }
+    fun peekWhile(token: Token) = mark { reader.readWhile { reader -> token.match(reader).codePoints } }
 
     fun peekAfter(count: Int): CodePoint? {
         val peek = peek(count + 1)
@@ -58,7 +41,7 @@ open class Scanner(private val reader: CodePointReader) {
     fun matchesAfter(count: Int, token: Token): Boolean {
         val then = peekAfter(count) ?: return false
         // TODO there must be a more elegant way
-        return token.match(Scanner(CodePointReader(then.toString()))).matches
+        return token.match(CodePointReader(then.toString())).matches
     }
 
     fun accept(string: String): Boolean = accept(token(string))

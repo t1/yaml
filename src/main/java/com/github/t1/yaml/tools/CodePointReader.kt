@@ -14,9 +14,14 @@ class CodePointReader(private val reader: Reader) {
     constructor(string: String) : this(StringReader(string))
 
     data class Position(
+        /** the zero-based code point position in the stream */
         val totalPosition: Long = 0,
+        /** the one-based line number in the reading stream */
         val lineNumber: Long = 1,
-        val linePosition: Long = 1
+        /** the one-based position withing the current line */
+        val linePosition: Long = 1,
+        /** end-of-file, i.e. have we read beyond the last code point in the stream */
+        val isEof: Boolean = false
     ) {
         operator fun rem(nl: Boolean): Position = copy(
             totalPosition = this.totalPosition + 1,
@@ -46,9 +51,35 @@ class CodePointReader(private val reader: Reader) {
 
     fun read(): CodePoint {
         val codePoint = reads.peek().read()
-        if (!codePoint.isEof)
-            position %= codePoint.isNl
+        if (codePoint.isEof) position = position.copy(isEof = true)
+        else position %= codePoint.isNl
         return codePoint
+    }
+
+    fun readWhile(predicate: (CodePointReader) -> List<CodePoint>): List<CodePoint> {
+        val out = mutableListOf<CodePoint>()
+        while (!position.isEof) {
+            val match = mark { predicate(this) }
+            if (match.isEmpty()) break
+            read(match.size)
+            out.addAll(match)
+        }
+        return out
+    }
+
+    /** Read [CodePoint]s until the predicate returns a match and return the code points before that. If EOF is reached, return an empty list. */
+    fun readUntil(predicate: (CodePointReader) -> List<CodePoint>): List<CodePoint> {
+        val out = mutableListOf<CodePoint>()
+        mark {
+            while (!position.isEof) {
+                val match = mark { predicate(this) }
+                if (!match.isEmpty()) break
+                out.addAll(read(1))
+            }
+            if (position.isEof) out.clear()
+        }
+        read(out.size)
+        return out
     }
 
     abstract inner class Read {

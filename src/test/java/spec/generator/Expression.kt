@@ -6,7 +6,7 @@ import java.util.ArrayList
 
 import java.util.stream.Collectors.joining
 import kotlin.reflect.KClass
-import kotlin.reflect.primaryConstructor
+import kotlin.reflect.full.primaryConstructor
 
 abstract class Expression {
     abstract fun guide(visitor: Visitor)
@@ -181,7 +181,7 @@ abstract class Expression {
         }
     }
 
-    open class RepeatedExpression(private val expression: Expression, private val repetitions: String) : Expression() {
+    open class RepeatedExpression(val expression: Expression, val repetitions: String) : Expression() {
         override fun toString(): String = "($expression × $repetitions)"
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)

@@ -8,35 +8,40 @@ import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
 import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
 import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
-import com.github.t1.yaml.tools.Scanner
 import com.github.t1.yaml.tools.Symbol
 import com.github.t1.yaml.tools.Token
+import com.github.t1.yaml.tools.token
 
 val WS = Symbol("whitespace") { it: CodePoint -> it.isWhitespace }
 
-val INDENTED_COMMENT = object : Token {
-    override fun toString() = "indented comment"
-    override fun match(scanner: Scanner): Match {
-        val spaces = scanner.peekWhile(`s-space`)
-        return if (scanner.matchesAfter(spaces.length, `c-comment`)) Match(true, CodePoint.allOf("$spaces#")) else Match(false)
-    }
+val INDENTED_COMMENT = token("indented comment") { reader ->
+    val spaces = reader.readWhile(`s-space`)
+    return@token if (`c-comment`.match(reader).matches) Match(true, CodePoint.allOf("$spaces#")) else Match(false)
+}
+
+private fun CodePointReader.readWhile(token: Token): List<CodePoint> = this.readWhile {
+    val match = token.match(this)
+    return@readWhile if (match.matches) match.codePoints else listOf()
+}
+
+private fun CodePointReader.readUntil(token: Token): List<CodePoint> = this.readUntil {
+    val match = token.match(this)
+    return@readUntil if (match.matches) match.codePoints else listOf()
 }
 
 val BLOCK_SEQUENCE_START = `c-sequence-entry` + WS describedAs "BLOCK_SEQUENCE_START"
 
-val BLOCK_MAPPING_START = object : Token {
-    override fun toString() = "BLOCK_MAPPING_START"
-    override fun match(scanner: Scanner): Match {
-        val mappingKey = scanner.match(`c-mapping-key`)
-        if (mappingKey.matches)
-            return mappingKey
-        val string = scanner.peekUntil(BLOCK_MAPPING_VALUE)
-        return if (string == null || string.isEmpty() || string.contains("\n"))
-            Match(false)
-        else
-            Match(true, CodePoint.allOf(string))
-    }
+val BLOCK_MAPPING_START = token("BLOCK_MAPPING_START") { reader ->
+    val mappingKey = reader.mark { `c-mapping-key`.match(reader) } // TODO this is bullshit
+    if (mappingKey.matches)
+        return@token mappingKey
+    val string = reader.mark { reader.readUntil(BLOCK_MAPPING_VALUE) }
+    return@token if (string.isEmpty() || string.contains(CodePoint.of("\n")))
+        Match(false)
+    else
+        Match(true, string)
 }
 
 val BLOCK_MAPPING_VALUE = `c-mapping-value` + WS describedAs "BLOCK_MAPPING_VALUE"

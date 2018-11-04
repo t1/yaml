@@ -65,17 +65,16 @@ internal class ScalarParser private constructor(
 
     private fun plain(): String {
         val builder = StringBuilder()
-        while (next.more()) {
+        while (next.more() && !next.peek(`b-break`)) {
             // spaces before a comment or a block mapping value are not part of string scalar
-            val spaceCount = next.peekWhile(`s-space`).length
-            if (next.matchesAfter(spaceCount, `c-comment`)) break
-            val spaces = spaces(spaceCount)
+            val spaces = spaces(next.peekWhile(`s-space`).size)
+            if (next.matchesAfter(spaces.length, `c-comment`)) break
             next.expect(spaces)
             if (next.peek(`c-comment`) || next.peek(BLOCK_MAPPING_VALUE)) break
             builder.append(spaces)
+            if (next.peek().isEof) break
             if (mode == KEY && next.peek(`c-mapping-value`)) break
             if (mode == VALUE && (next.peek(`c-collect-entry`) || next.peek(`c-mapping-end`))) break
-            if (!next.more() || next.peek(`b-break`)) break
             builder.appendCodePoint(next.read().value)
         }
         return builder.toString()

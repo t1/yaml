@@ -2,41 +2,48 @@ package com.github.t1.yaml.tools
 
 /** A sequence of [CodePoint]s to be matched in a [Scanner] */
 interface Token {
-    fun match(scanner: Scanner): Match
+    fun match(reader: CodePointReader): Match
 
-    operator fun plus(that: Token) = object : Token {
-        override fun toString() = "${this@Token} + $that"
-        override fun match(scanner: Scanner): Match {
-            // TODO this is too limiting: the right token could be something other than a symbol
-            val left = this@Token.match(scanner)
-            if (!left.matches) return left
-            val thatSymbol = that as Symbol
-            val then = scanner.peekAfter(left.length) ?: return left.copy(matches = false)
-            return if (thatSymbol.predicate(then))
-                left.copy(codePoints = left.codePoints + then)
-            else
-                left.copy(matches = false)
+    operator fun plus(that: Token) = token("${this@Token} + $that") { reader ->
+        val totalMatch = reader.mark {
+            val match = this.match(reader) // the `and` method doesn't short-circuit
+            if (!match.matches) match else match and that.match(reader)
         }
+        if (totalMatch.matches)
+            reader.read(totalMatch.codePoints.size).apply { require(this == totalMatch.codePoints) { "expected ${totalMatch.codePoints} but got $this" } }
+        return@token totalMatch
     }
 
-    infix fun or(that: Token) = object : Token {
-        override fun toString(): String = "${this@Token} or $that"
-        override fun match(scanner: Scanner) = this@Token.match(scanner) or that.match(scanner)
+    operator fun times(n: Int): Token {
+        var out = this
+        repeat(n - 1) { out += this }
+        return out
     }
 
-    operator fun minus(that: Token) = object : Token {
-        override fun toString() = "$this minus $that"
-        override fun match(scanner: Scanner) = this@Token.match(scanner) and !that.match(scanner) }
-
-    operator fun not() = object : Token {
-        override fun match(scanner: Scanner) = !this@Token.match(scanner)
-        override fun toString() = "!${this@Token}"
+    infix fun or(that: Token) = token("${this@Token} or $that") { reader ->
+        val thisMatch = reader.mark { this@Token.match(reader) }
+        if (thisMatch.matches) {
+            reader.read(thisMatch.codePoints.size)
+            return@token thisMatch
+        }
+        val thatMatch = reader.mark { that.match(reader) }
+        if (thatMatch.matches) {
+            reader.read(thatMatch.codePoints.size)
+            return@token thatMatch
+        }
+        return@token Match(matches = false)
     }
 
-    infix fun describedAs(description: String) = object : Token {
-        override fun match(scanner: Scanner) = this@Token.match(scanner)
-        override fun toString() = description
+    operator fun minus(that: Token) = token("$this minus $that") { reader ->
+        val match = reader.mark { this@Token.match(reader) }
+        if (!match.matches) return@token match
+        reader.read(match.codePoints.size)
+        match and !that.match(reader)
     }
+
+    operator fun not() = token("!${this@Token}") { !this@Token.match(it) }
+
+    infix fun describedAs(description: String) = token(description) { this@Token.match(it) }
 }
 
 data class Match(
@@ -44,8 +51,6 @@ data class Match(
     /** The code points until the non-match or the total match */
     val codePoints: List<CodePoint> = listOf()
 ) {
-    val length: Int get() = codePoints.size
-
     infix fun or(that: Match) = when {
         this.matches -> this
         that.matches -> that
@@ -53,7 +58,7 @@ data class Match(
     }
 
     infix fun and(that: Match) = when {
-        this.matches && that.matches -> this
+        this.matches && that.matches -> Match(matches = true, codePoints = this.codePoints + that.codePoints)
         else -> Match(false)
     }
 
@@ -61,25 +66,23 @@ data class Match(
 }
 
 fun token(string: String) = token(CodePoint.allOf(string))
-fun token(codePoints: List<CodePoint>) = token(
-    description = codePoints.joinToString { codePoint -> codePoint.info },
-    predicates = codePoints.map { codePoint -> { that: CodePoint -> that == codePoint } }
-)
-fun token(description: String, predicates: List<(CodePoint) -> Boolean>) = object : Token {
-    override fun toString(): String = description
+fun token(codePoints: List<CodePoint>): Token {
+    if (codePoints.isEmpty()) return empty
+    var out: Token = symbol(codePoints[0])
+    for (i in 1 until codePoints.size)
+        out += symbol(codePoints[i])
+    return out
+}
 
-    override fun match(scanner: Scanner): Match {
-        val codePoints = scanner.peek(predicates.size)
-        assert(predicates.size == codePoints.size)
-        for (i in predicates.indices)
-            if (!predicates[i](codePoints[i]))
-                return Match(matches = false, codePoints = codePoints.subList(0, i + 1))
-        return Match(true, codePoints)
-    }
+val empty = token("empty") { Match(matches = true) }
+
+fun token(description: String, match: (CodePointReader) -> Match) = object : Token {
+    override fun toString() = description
+    override fun match(reader: CodePointReader): Match = match(reader)
 }
 
 @Suppress("ClassName") object undefined : Token {
-    override fun match(scanner: Scanner): Match = throw UnsupportedOperationException("undefined token")
+    override fun match(reader: CodePointReader): Match = throw UnsupportedOperationException("undefined token")
 }
 
 fun symbol(char: Char) = symbol(CodePoint.of(char))
@@ -89,9 +92,8 @@ fun symbol(range: CodePointRange) = Symbol("between ${range.start} and ${range.e
 
 /** A [Token] matching a single [CodePoint] */
 data class Symbol(val description: String, val predicate: (CodePoint) -> Boolean) : Token {
-    override fun match(scanner: Scanner) = scanner.peek(1)[0].run {
-        Match(predicate(this), listOf(this))
+    override fun toString() = description
+    override fun match(reader: CodePointReader) = reader.read().run {
+        if (predicate(this)) Match(matches = true, codePoints = listOf(this)) else Match(matches = false)
     }
-
-    override fun toString() = "<$description>"
 }

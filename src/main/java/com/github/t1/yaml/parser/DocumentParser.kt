@@ -11,27 +11,25 @@ import com.github.t1.yaml.parser.YamlTokens.`c-directives-end`
 import com.github.t1.yaml.parser.YamlTokens.`c-document-end`
 import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import java.io.Reader
-import java.util.Optional
 
 class DocumentParser(reader: Reader) {
 
     private val next: YamlScanner = YamlScanner(reader)
     private var document: Document? = null
 
-    fun document(): Optional<Document> {
+    fun document(): Document? {
         this.document = Document()
 
         next.accept(`c-byte-order-mark`)
 
-        if (next.end())
-            return Optional.empty()
+        if (next.end()) return null
 
         directives()
         prefixComments()
         node()
         documentEnd()
 
-        return Optional.of(document!!)
+        return document
     }
 
     private fun directives() {
@@ -62,9 +60,8 @@ class DocumentParser(reader: Reader) {
 
 
     private fun node() {
-        val parser = NodeParser(next)
         if (next.more())
-            document!!.node(parser.node())
+            document!!.node(NodeParser(next).node())
     }
 
     private fun documentEnd() {

@@ -229,9 +229,9 @@ class ScalarTest : AbstractYamlTest() {
 
     @Nested inner class givenPlainScalarWithComment : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "dummy-string # dummy-comment"
-            expected = Document(node = Scalar().line("dummy-string")
-                .comment(Comment(indent = 1, text = "dummy-comment")))
+            input = "foo # bar"
+            expected = Document(node = Scalar().line("foo")
+                .comment(Comment(indent = 1, text = "bar")))
         }
     }
 

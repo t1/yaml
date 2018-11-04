@@ -28,8 +28,8 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "\n" +
             "import com.github.t1.yaml.tools.CodePoint\n" +
             "import com.github.t1.yaml.tools.CodePointRange\n" +
+            "import com.github.t1.yaml.tools.CodePointReader\n" +
             "import com.github.t1.yaml.tools.Match\n" +
-            "import com.github.t1.yaml.tools.Scanner\n" +
             "import com.github.t1.yaml.tools.Token\n" +
             "import com.github.t1.yaml.tools.symbol\n" +
             "import com.github.t1.yaml.tools.toCodePointRange\n" +
@@ -110,7 +110,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     "     * ${production.toString().replace("\n", "\n     * ")}\n" +
                     "     */\n" +
                     "    `$methodName`(")
-                if (production.counter in setOf(81, 87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 159, 161, 185, 188, 196, 198))
+                if (production.counter in setOf(87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 159, 161, 185, 188, 196, 198))
                     append("undefined /* TODO not generated */")
                 else
                     production.expression.guide(this)
@@ -192,7 +192,16 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 }
             }
 
-            override fun visit(repeated: RepeatedExpression) = object : Visitor() {}
+            override fun visit(repeated: RepeatedExpression) = object : Visitor() {
+                override fun visit(reference: ReferenceExpression) {
+                    this@ProductionWriter.visit(reference)
+                }
+            }
+
+            override fun leave(repeated: RepeatedExpression) {
+                append(" * ${repeated.repetitions}")
+            }
+
             override fun visit(range: RangeExpression): Visitor {
                 append(string(range.left as CodePointExpression)) // TODO range.left.guide(this)
                 append(" .. ")

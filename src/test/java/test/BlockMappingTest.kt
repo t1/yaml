@@ -13,30 +13,30 @@ import org.junit.jupiter.api.Nested
 class BlockMappingTest : AbstractYamlTest() {
     @Nested inner class givenBlockMapping : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "sky: blue\nsea: green"
+            input = "sky: blue\ntree: green"
             expected = Document(node = Mapping()
                 .entry("sky", "blue")
-                .entry("sea", "green")
+                .entry("tree", "green")
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithSpaceInKey : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "sky high: blue\nsea deep: green"
+            input = "sky high: blue\ntree deep: green"
             expected = Document(node = Mapping()
                 .entry("sky high", "blue")
-                .entry("sea deep", "green")
+                .entry("tree deep", "green")
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithColonInKey : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "sky:high: blue\nsea:deep: green"
+            input = "sky:high: blue\ntree:deep: green"
             expected = Document(node = Mapping()
                 .entry("sky:high", "blue")
-                .entry("sea:deep", "green")
+                .entry("tree:deep", "green")
             )
         }
     }
@@ -45,41 +45,41 @@ class BlockMappingTest : AbstractYamlTest() {
         @BeforeEach fun setup() {
             input = "sky: high\n" +
                 "  blue\n" +
-                "sea: low\n" +
+                "tree: low\n" +
                 "  green"
             expected = Document(node = Mapping()
                 .entry("sky", Scalar().line("high").line("blue"))
-                .entry("sea", Scalar().line("low").line("green"))
+                .entry("tree", Scalar().line("low").line("green"))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithDoubleQuotedKey : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "\"sky\": blue\n\"sea\": green"
+            input = "\"sky\": blue\n\"tree\": green"
             expected = Document(node = Mapping()
                 .entry(Scalar().doubleQuoted().line("sky"), "blue")
-                .entry(Scalar().doubleQuoted().line("sea"), "green")
+                .entry(Scalar().doubleQuoted().line("tree"), "green")
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithDoubleQuotedValue : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "sky: \"blue\"\nsea: \"green\""
+            input = "sky: \"blue\"\ntree: \"green\""
             expected = Document(node = Mapping()
                 .entry("sky", Scalar().doubleQuoted().line("blue"))
-                .entry("sea", Scalar().doubleQuoted().line("green"))
+                .entry("tree", Scalar().doubleQuoted().line("green"))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithDoubleQuotedKeyAndValue : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "\"sky\": \"blue\"\n\"sea\": \"green\""
+            input = "\"sky\": \"blue\"\n\"tree\": \"green\""
             expected = Document(node = Mapping()
                 .entry(Scalar().doubleQuoted().line("sky"), Scalar().doubleQuoted().line("blue"))
-                .entry(Scalar().doubleQuoted().line("sea"), Scalar().doubleQuoted().line("green"))
+                .entry(Scalar().doubleQuoted().line("tree"), Scalar().doubleQuoted().line("green"))
             )
         }
     }
@@ -88,31 +88,31 @@ class BlockMappingTest : AbstractYamlTest() {
         @BeforeEach fun setup() {
             input = "sky: 'high\n" +
                 "blue'\n" +
-                "sea: 'low\n" +
+                "tree: 'low\n" +
                 "green'"
             expected = Document(node = Mapping()
                 .entry("sky", Scalar().singleQuoted().line("high\nblue"))
-                .entry("sea", Scalar().singleQuoted().line("low\ngreen"))
+                .entry("tree", Scalar().singleQuoted().line("low\ngreen"))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithSingleQuotedKey : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "'sky': blue\n'sea': green"
+            input = "'sky': blue\n'tree': green"
             expected = Document(node = Mapping()
                 .entry(Scalar().singleQuoted().line("sky"), "blue")
-                .entry(Scalar().singleQuoted().line("sea"), "green")
+                .entry(Scalar().singleQuoted().line("tree"), "green")
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithSingleQuotedValue : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "sky: 'blue'\nsea: 'green'"
+            input = "sky: 'blue'\ntree: 'green'"
             expected = Document(node = Mapping()
                 .entry("sky", Scalar().singleQuoted().line("blue"))
-                .entry("sea", Scalar().singleQuoted().line("green"))
+                .entry("tree", Scalar().singleQuoted().line("green"))
             )
         }
     }
@@ -121,61 +121,61 @@ class BlockMappingTest : AbstractYamlTest() {
         @BeforeEach fun setup() {
             input = "sky: \"high\n" +
                 "blue\"\n" +
-                "sea: \"low\n" +
+                "tree: \"low\n" +
                 "green\""
             expected = Document(node = Mapping()
                 .entry("sky", Scalar().doubleQuoted().line("high\nblue"))
-                .entry("sea", Scalar().doubleQuoted().line("low\ngreen"))
+                .entry("tree", Scalar().doubleQuoted().line("low\ngreen"))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithSingleQuotedKeyAndValue : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "'sky': 'blue'\n'sea': 'green'"
+            input = "'sky': 'blue'\n'tree': 'green'"
             expected = Document(node = Mapping()
                 .entry(Scalar().singleQuoted().line("sky"), Scalar().singleQuoted().line("blue"))
-                .entry(Scalar().singleQuoted().line("sea"), Scalar().singleQuoted().line("green"))
+                .entry(Scalar().singleQuoted().line("tree"), Scalar().singleQuoted().line("green"))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithSpacesInSingleQuotedKeyAndValue : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "' sky high ': ' light blue '\n' sea deep ': ' dark green '"
+            input = "' sky high ': ' light blue '\n' tree deep ': ' dark green '"
             expected = Document(node = Mapping()
                 .entry(Scalar().singleQuoted().line(" sky high "), Scalar().singleQuoted().line(" light blue "))
-                .entry(Scalar().singleQuoted().line(" sea deep "), Scalar().singleQuoted().line(" dark green "))
+                .entry(Scalar().singleQuoted().line(" tree deep "), Scalar().singleQuoted().line(" dark green "))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithMarkedKeys : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "? sky: blue\n? sea: green"
+            input = "? sky: blue\n? tree: green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line("sky"), value = Scalar().line("blue")))
-                .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line("sea"), value = Scalar().line("green")))
+                .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line("tree"), value = Scalar().line("green")))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithFirstKeyMarked : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "? sky: blue\nsea: green"
+            input = "? sky: blue\ntree: green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line("sky"), value = Scalar().line("blue")))
-                .entry(Mapping.Entry(hasMarkedKey = false, key = Scalar().line("sea"), value = Scalar().line("green")))
+                .entry(Mapping.Entry(hasMarkedKey = false, key = Scalar().line("tree"), value = Scalar().line("green")))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithLastKeyMarked : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "sky: blue\n? sea: green"
+            input = "sky: blue\n? tree: green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(hasMarkedKey = false, key = Scalar().line("sky"), value = Scalar().line("blue")))
-                .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line("sea"), value = Scalar().line("green")))
+                .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line("tree"), value = Scalar().line("green")))
             )
         }
     }
@@ -184,11 +184,11 @@ class BlockMappingTest : AbstractYamlTest() {
         @BeforeEach fun setup() {
             input = "sky:\n" +
                 "  blue\n" +
-                "sea:\n" +
+                "tree:\n" +
                 "  green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(hasNlAfterKey = true, key = Scalar().line("sky"), value = Scalar().line("blue")))
-                .entry(Mapping.Entry(hasNlAfterKey = true, key = Scalar().line("sea"), value = Scalar().line("green")))
+                .entry(Mapping.Entry(hasNlAfterKey = true, key = Scalar().line("tree"), value = Scalar().line("green")))
             )
         }
     }
@@ -197,10 +197,10 @@ class BlockMappingTest : AbstractYamlTest() {
         @BeforeEach fun setup() {
             input = "sky:\n" +
                 "  blue\n" +
-                "sea: green"
+                "tree: green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(hasNlAfterKey = true, key = Scalar().line("sky"), value = Scalar().line("blue")))
-                .entry(Mapping.Entry(hasNlAfterKey = false, key = Scalar().line("sea"), value = Scalar().line("green")))
+                .entry(Mapping.Entry(hasNlAfterKey = false, key = Scalar().line("tree"), value = Scalar().line("green")))
             )
         }
     }
@@ -208,51 +208,51 @@ class BlockMappingTest : AbstractYamlTest() {
     @Nested inner class givenBlockMappingWithNewLineAfterLastKey : SingleDocument() {
         @BeforeEach fun setup() {
             input = "sky: blue\n" +
-                "sea:\n" +
+                "tree:\n" +
                 "  green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(hasNlAfterKey = false, key = Scalar().line("sky"), value = Scalar().line("blue")))
-                .entry(Mapping.Entry(hasNlAfterKey = true, key = Scalar().line("sea"), value = Scalar().line("green")))
+                .entry(Mapping.Entry(hasNlAfterKey = true, key = Scalar().line("tree"), value = Scalar().line("green")))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithIndentedKeys : SingleDocument() {
         @BeforeEach fun setup() {
-            input = " sky: blue\n" + " sea: green"
+            input = " sky: blue\n" + " tree: green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(key = Scalar().line(Line().indent(1).text("sky")), value = Scalar().line("blue")))
-                .entry(Mapping.Entry(key = Scalar().line(Line().indent(1).text("sea")), value = Scalar().line("green")))
+                .entry(Mapping.Entry(key = Scalar().line(Line().indent(1).text("tree")), value = Scalar().line("green")))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithIndentedValues : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "sky:   blue\nsea:     green"
+            input = "sky:   blue\ntree:     green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(key = Scalar().line("sky"), value = Scalar().line(Line().indent(2).text("blue"))))
-                .entry(Mapping.Entry(key = Scalar().line("sea"), value = Scalar().line(Line().indent(4).text("green"))))
+                .entry(Mapping.Entry(key = Scalar().line("tree"), value = Scalar().line(Line().indent(4).text("green"))))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithIndentedKeysAndValues : SingleDocument() {
         @BeforeEach fun setup() {
-            input = " sky:   blue\n" + " sea:     green"
+            input = " sky:   blue\n" + " tree:     green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(key = Scalar().line(Line().indent(1).text("sky")), value = Scalar().line(Line().indent(2).text("blue"))))
-                .entry(Mapping.Entry(key = Scalar().line(Line().indent(1).text("sea")), value = Scalar().line(Line().indent(4).text("green"))))
+                .entry(Mapping.Entry(key = Scalar().line(Line().indent(1).text("tree")), value = Scalar().line(Line().indent(4).text("green"))))
             )
         }
     }
 
     @Nested inner class givenBlockMappingWithIndentedMarkedKeysAndValues : SingleDocument() {
         @BeforeEach fun setup() {
-            input = "?  sky:   blue\n?    sea:     green"
+            input = "?  sky:   blue\n?    tree:     green"
             expected = Document(node = Mapping()
                 .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line(Line().indent(1).text("sky")), value = Scalar().line(Line().indent(2).text("blue"))))
-                .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line(Line().indent(3).text("sea")), value = Scalar().line(Line().indent(4).text("green"))))
+                .entry(Mapping.Entry(hasMarkedKey = true, key = Scalar().line(Line().indent(3).text("tree")), value = Scalar().line(Line().indent(4).text("green"))))
             )
         }
     }
@@ -262,7 +262,7 @@ class BlockMappingTest : AbstractYamlTest() {
             input = "sky:\n" +
                 "  color: blue\n" +
                 "  depth: high\n" +
-                "sea:\n" +
+                "tree:\n" +
                 "  color: green\n" +
                 "  depth: deep"
             expected = Document(node = Mapping()
@@ -270,7 +270,7 @@ class BlockMappingTest : AbstractYamlTest() {
                     .entry("color", "blue")
                     .entry("depth", "high")
                 ))
-                .entry(Mapping.Entry(key = Scalar().line("sea"), hasNlAfterKey = true, value = Mapping()
+                .entry(Mapping.Entry(key = Scalar().line("tree"), hasNlAfterKey = true, value = Mapping()
                     .entry("color", "green")
                     .entry("depth", "deep")
                 ))
@@ -286,7 +286,7 @@ class BlockMappingTest : AbstractYamlTest() {
                 "    depth: high\n" +
                 "  size:\n" +
                 "    width: 100%\n" +
-                "sea:\n" +
+                "tree:\n" +
                 "  properties:\n" +
                 "    color: green\n" +
                 "    depth: deep"
@@ -300,7 +300,7 @@ class BlockMappingTest : AbstractYamlTest() {
                     )
                     )
                 ))
-                .entry(Mapping.Entry(key = Scalar().line("sea"), hasNlAfterKey = true, value = Mapping()
+                .entry(Mapping.Entry(key = Scalar().line("tree"), hasNlAfterKey = true, value = Mapping()
                     .entry(Mapping.Entry(key = Scalar().line("properties"), hasNlAfterKey = true, value = Mapping()
                         .entry("color", "green")
                         .entry("depth", "deep")))
@@ -317,7 +317,7 @@ class BlockMappingTest : AbstractYamlTest() {
                 "    depth: high\n" +
                 "  -\n" +
                 "    foo: bar\n" +
-                "sea:\n" +
+                "tree:\n" +
                 "  color: green\n" +
                 "  depth: deep"
             expected = Document(node = Mapping()
@@ -328,7 +328,7 @@ class BlockMappingTest : AbstractYamlTest() {
                     .item(Item(nl = true, node = Mapping()
                         .entry("foo", "bar")))
                 ))
-                .entry(Mapping.Entry(key = Scalar().line("sea"), hasNlAfterKey = true, value = Mapping()
+                .entry(Mapping.Entry(key = Scalar().line("tree"), hasNlAfterKey = true, value = Mapping()
                     .entry("color", "green")
                     .entry("depth", "deep")
                 ))

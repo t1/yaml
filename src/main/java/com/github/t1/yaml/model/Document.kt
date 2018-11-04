@@ -28,8 +28,8 @@ data class Document(
     }
 
     fun node(node: Node): Document {
-        assert(this.node == null) { "Already has node" }
-        this.node = Objects.requireNonNull(node)
+        assert(this.node == null) { "Already has node ${this.node}" }
+        this.node = node
         return this
     }
 
