@@ -1,9 +1,9 @@
 package spec.generator
 
 import com.github.t1.yaml.tools.CodePoint
+import com.nhaarman.mockitokotlin2.given
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
@@ -67,7 +67,7 @@ class ExpressionVisitorTest {
     @Test fun visitRepeated() {
         val label = LabelExpression("foo")
         val expression = RepeatedExpression(label, "4")
-        `when`(visitor.visit(expression)).thenReturn(visitor)
+        given(visitor.visit(expression)).willReturn(visitor)
 
         expression.guide(visitor)
 
@@ -81,7 +81,7 @@ class ExpressionVisitorTest {
         val label = LabelExpression("foo")
         val expression = RepeatedExpression(label, "4")
         val sub = mock(Visitor::class.java)
-        `when`(visitor.visit(expression)).thenReturn(sub)
+        given(visitor.visit(expression)).willReturn(sub)
 
         expression.guide(visitor)
 
@@ -96,7 +96,7 @@ class ExpressionVisitorTest {
         val label1 = LabelExpression("foo")
         val label2 = LabelExpression("bar")
         val expression = RangeExpression(label1, label2)
-        `when`(visitor.visit(expression)).thenReturn(visitor)
+        given(visitor.visit(expression)).willReturn(visitor)
 
         expression.guide(visitor)
 
@@ -112,7 +112,7 @@ class ExpressionVisitorTest {
         val label2 = LabelExpression("bar")
         val expression = RangeExpression(label1, label2)
         val sub = mock(Visitor::class.java)
-        `when`(visitor.visit(expression)).thenReturn(sub)
+        given(visitor.visit(expression)).willReturn(sub)
 
         expression.guide(visitor)
 
@@ -129,7 +129,7 @@ class ExpressionVisitorTest {
         val label2 = LabelExpression("bar")
         val label3 = LabelExpression("baz")
         val expression = MinusExpression.of(label1, label2).minus(label3)
-        `when`(visitor.visit(expression)).thenReturn(visitor)
+        given(visitor.visit(expression)).willReturn(visitor)
 
         expression.guide(visitor)
 
@@ -147,7 +147,7 @@ class ExpressionVisitorTest {
         val label3 = LabelExpression("baz")
         val expression = MinusExpression.of(label1, label2).minus(label3)
         val sub = mock(Visitor::class.java)
-        `when`(visitor.visit(expression)).thenReturn(sub)
+        given(visitor.visit(expression)).willReturn(sub)
 
         expression.guide(visitor)
 
@@ -164,7 +164,7 @@ class ExpressionVisitorTest {
         val label1 = LabelExpression("foo")
         val label2 = LabelExpression("bar")
         val expression = AlternativesExpression.of(label1, label2)
-        `when`(visitor.visit(expression)).thenReturn(visitor)
+        given(visitor.visit(expression)).willReturn(visitor)
 
         expression.guide(visitor)
 
@@ -180,7 +180,7 @@ class ExpressionVisitorTest {
         val label2 = LabelExpression("bar")
         val expression = AlternativesExpression.of(label1, label2)
         val sub = mock(Visitor::class.java)
-        `when`(visitor.visit(expression)).thenReturn(sub)
+        given(visitor.visit(expression)).willReturn(sub)
 
         expression.guide(visitor)
 
@@ -196,7 +196,7 @@ class ExpressionVisitorTest {
         val label1 = LabelExpression("foo")
         val label2 = LabelExpression("bar")
         val expression = SequenceExpression.of(label1, label2)
-        `when`(visitor.visit(expression)).thenReturn(visitor)
+        given(visitor.visit(expression)).willReturn(visitor)
 
         expression.guide(visitor)
 
@@ -212,7 +212,7 @@ class ExpressionVisitorTest {
         val label2 = LabelExpression("bar")
         val expression = SequenceExpression.of(label1, label2)
         val sub = mock(Visitor::class.java)
-        `when`(visitor.visit(expression)).thenReturn(sub)
+        given(visitor.visit(expression)).willReturn(sub)
 
         expression.guide(visitor)
 
@@ -231,7 +231,7 @@ class ExpressionVisitorTest {
         val expression = SwitchExpression()
             .addCase(key1).merge(value1)
             .addCase(key2).merge(value2)
-        `when`(visitor.visit(expression)).thenReturn(visitor)
+        given(visitor.visit(expression)).willReturn(visitor)
 
         expression.guide(visitor)
 
@@ -253,7 +253,7 @@ class ExpressionVisitorTest {
             .addCase(key1).merge(value1)
             .addCase(key2).merge(value2)
         val sub = mock(Visitor::class.java)
-        `when`(visitor.visit(expression)).thenReturn(sub)
+        given(visitor.visit(expression)).willReturn(sub)
 
         expression.guide(visitor)
 
@@ -273,7 +273,7 @@ class ExpressionVisitorTest {
         val expression = SwitchExpression()
             .addCase(key1).merge(value1)
             .addCase(key2)
-        `when`(visitor.visit(expression)).thenReturn(visitor)
+        given(visitor.visit(expression)).willReturn(visitor)
 
         expression.guide(visitor)
 
@@ -297,10 +297,10 @@ class ExpressionVisitorTest {
         val sequence2 = SequenceExpression.of(label3, minus)
         val alternatives = AlternativesExpression.of(sequence1, sequence2)
 
-        `when`(visitor.visit(minus)).thenReturn(visitor)
-        `when`(visitor.visit(sequence1)).thenReturn(visitor)
-        `when`(visitor.visit(sequence2)).thenReturn(visitor)
-        `when`(visitor.visit(alternatives)).thenReturn(visitor)
+        given(visitor.visit(minus)).willReturn(visitor)
+        given(visitor.visit(sequence1)).willReturn(visitor)
+        given(visitor.visit(sequence2)).willReturn(visitor)
+        given(visitor.visit(alternatives)).willReturn(visitor)
 
         alternatives.guide(visitor)
 

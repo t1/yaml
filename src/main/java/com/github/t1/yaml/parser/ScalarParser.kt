@@ -55,12 +55,10 @@ internal class ScalarParser private constructor(
         return scalar
     }
 
-    private fun text(): String {
-        return when (scalar.style) {
-            PLAIN -> plain()
-            SINGLE_QUOTED -> singleQuoted()
-            DOUBLE_QUOTED -> doubleQuoted()
-        }
+    private fun text(): String = when (scalar.style) {
+        PLAIN -> plain()
+        SINGLE_QUOTED -> singleQuoted()
+        DOUBLE_QUOTED -> doubleQuoted()
     }
 
     private fun plain(): String {

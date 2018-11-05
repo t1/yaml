@@ -1,77 +1,55 @@
-`1` : c-printable:
-  [<[\t][CHARACTER TABULATION][0x9]> ||
+Production(counter=1, name=c-printable, args=[], expression=[<[\t][CHARACTER TABULATION][0x9]> ||
    <[\n][LINE FEED (LF)][0xa]> ||
    <[\r][CARRIAGE RETURN (CR)][0xd]> ||
    [<[ ][SPACE][0x20]>-<[~][TILDE][0x7e]>] ||
    <[\u0085][NEXT LINE (NEL)][0x85]> ||
    [<[ ][NO-BREAK SPACE][0xa0]>-<[퟿][?][0xd7ff]>] ||
    [<[][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] ||
-   [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
+   [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]])
 
-`2` : nb-json:
-  [<[\t][CHARACTER TABULATION][0x9]> ||
-   [<[ ][SPACE][0x20]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
+Production(counter=2, name=nb-json, args=[], expression=[<[\t][CHARACTER TABULATION][0x9]> ||
+   [<[ ][SPACE][0x20]>-<[\uDBFF\uDFFF][?][0x10ffff]>]])
 
-`3` : c-byte-order-mark:
-  <[\uFEFF][ZERO WIDTH NO-BREAK SPACE][0xfeff]>
+Production(counter=3, name=c-byte-order-mark, args=[], expression=<[\uFEFF][ZERO WIDTH NO-BREAK SPACE][0xfeff]>)
 
-`4` : c-sequence-entry:
-  <[-][HYPHEN-MINUS][0x2d]>
+Production(counter=4, name=c-sequence-entry, args=[], expression=<[-][HYPHEN-MINUS][0x2d]>)
 
-`5` : c-mapping-key:
-  <[?][QUESTION MARK][0x3f]>
+Production(counter=5, name=c-mapping-key, args=[], expression=<[?][QUESTION MARK][0x3f]>)
 
-`6` : c-mapping-value:
-  <[:][COLON][0x3a]>
+Production(counter=6, name=c-mapping-value, args=[], expression=<[:][COLON][0x3a]>)
 
-`7` : c-collect-entry:
-  <[,][COMMA][0x2c]>
+Production(counter=7, name=c-collect-entry, args=[], expression=<[,][COMMA][0x2c]>)
 
-`8` : c-sequence-start:
-  <[[][LEFT SQUARE BRACKET][0x5b]>
+Production(counter=8, name=c-sequence-start, args=[], expression=<[[][LEFT SQUARE BRACKET][0x5b]>)
 
-`9` : c-sequence-end:
-  <[]][RIGHT SQUARE BRACKET][0x5d]>
+Production(counter=9, name=c-sequence-end, args=[], expression=<[]][RIGHT SQUARE BRACKET][0x5d]>)
 
-`10` : c-mapping-start:
-  <[{][LEFT CURLY BRACKET][0x7b]>
+Production(counter=10, name=c-mapping-start, args=[], expression=<[{][LEFT CURLY BRACKET][0x7b]>)
 
-`11` : c-mapping-end:
-  <[}][RIGHT CURLY BRACKET][0x7d]>
+Production(counter=11, name=c-mapping-end, args=[], expression=<[}][RIGHT CURLY BRACKET][0x7d]>)
 
-`12` : c-comment:
-  <[#][NUMBER SIGN][0x23]>
+Production(counter=12, name=c-comment, args=[], expression=<[#][NUMBER SIGN][0x23]>)
 
-`13` : c-anchor:
-  <[&][AMPERSAND][0x26]>
+Production(counter=13, name=c-anchor, args=[], expression=<[&][AMPERSAND][0x26]>)
 
-`14` : c-alias:
-  <[*][ASTERISK][0x2a]>
+Production(counter=14, name=c-alias, args=[], expression=<[*][ASTERISK][0x2a]>)
 
-`15` : c-tag:
-  <[!][EXCLAMATION MARK][0x21]>
+Production(counter=15, name=c-tag, args=[], expression=<[!][EXCLAMATION MARK][0x21]>)
 
-`16` : c-literal:
-  <[|][VERTICAL LINE][0x7c]>
+Production(counter=16, name=c-literal, args=[], expression=<[|][VERTICAL LINE][0x7c]>)
 
-`17` : c-folded:
-  <[>][GREATER-THAN SIGN][0x3e]>
+Production(counter=17, name=c-folded, args=[], expression=<[>][GREATER-THAN SIGN][0x3e]>)
 
-`18` : c-single-quote:
-  <[\'][APOSTROPHE][0x27]>
+Production(counter=18, name=c-single-quote, args=[], expression=<[\'][APOSTROPHE][0x27]>)
 
-`19` : c-double-quote:
-  <["][QUOTATION MARK][0x22]>
+Production(counter=19, name=c-double-quote, args=[], expression=<["][QUOTATION MARK][0x22]>)
 
-`20` : c-directive:
-  <[%][PERCENT SIGN][0x25]>
+Production(counter=20, name=c-directive, args=[], expression=<[%][PERCENT SIGN][0x25]>)
 
-`21` : c-reserved:
-  [<[@][COMMERCIAL AT][0x40]> ||
-   <[`][GRAVE ACCENT][0x60]>]
+Production(counter=21, name=c-reserved, args=[], expression=[<[@][COMMERCIAL AT][0x40]> ||
+   <[`][GRAVE ACCENT][0x60]>])
 
-`22` : c-indicator:
-  [->c-sequence-entry ||
+Production(counter=22, name=c-indicator, args=[], expression=[->c-sequence-entry ||
    ->c-mapping-key ||
    ->c-mapping-value ||
    ->c-collect-entry ||
@@ -88,71 +66,54 @@
    ->c-single-quote ||
    ->c-double-quote ||
    ->c-directive ||
-   ->c-reserved]
+   ->c-reserved])
 
-`23` : c-flow-indicator:
-  [->c-collect-entry ||
+Production(counter=23, name=c-flow-indicator, args=[], expression=[->c-collect-entry ||
    ->c-sequence-start ||
    ->c-sequence-end ||
    ->c-mapping-start ||
-   ->c-mapping-end]
+   ->c-mapping-end])
 
-`24` : b-line-feed:
-  <[\n][LINE FEED (LF)][0xa]>
+Production(counter=24, name=b-line-feed, args=[], expression=<[\n][LINE FEED (LF)][0xa]>)
 
-`25` : b-carriage-return:
-  <[\r][CARRIAGE RETURN (CR)][0xd]>
+Production(counter=25, name=b-carriage-return, args=[], expression=<[\r][CARRIAGE RETURN (CR)][0xd]>)
 
-`26` : b-char:
-  [->b-line-feed ||
-   ->b-carriage-return]
+Production(counter=26, name=b-char, args=[], expression=[->b-line-feed ||
+   ->b-carriage-return])
 
-`27` : nb-char:
-  ->c-printable - ->b-char - ->c-byte-order-mark
+Production(counter=27, name=nb-char, args=[], expression=->c-printable - ->b-char - ->c-byte-order-mark)
 
-`28` : b-break:
-  [->b-carriage-return + ->b-line-feed ||
+Production(counter=28, name=b-break, args=[], expression=[->b-carriage-return + ->b-line-feed ||
    ->b-carriage-return ||
-   ->b-line-feed]
+   ->b-line-feed])
 
-`29` : b-as-line-feed:
-  ->b-break
+Production(counter=29, name=b-as-line-feed, args=[], expression=->b-break)
 
-`30` : b-non-content:
-  ->b-break
+Production(counter=30, name=b-non-content, args=[], expression=->b-break)
 
-`31` : s-space:
-  <[ ][SPACE][0x20]>
+Production(counter=31, name=s-space, args=[], expression=<[ ][SPACE][0x20]>)
 
-`32` : s-tab:
-  <[\t][CHARACTER TABULATION][0x9]>
+Production(counter=32, name=s-tab, args=[], expression=<[\t][CHARACTER TABULATION][0x9]>)
 
-`33` : s-white:
-  [->s-space ||
-   ->s-tab]
+Production(counter=33, name=s-white, args=[], expression=[->s-space ||
+   ->s-tab])
 
-`34` : ns-char:
-  ->nb-char - ->s-white
+Production(counter=34, name=ns-char, args=[], expression=->nb-char - ->s-white)
 
-`35` : ns-dec-digit:
-  [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]
+Production(counter=35, name=ns-dec-digit, args=[], expression=[<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>])
 
-`36` : ns-hex-digit:
-  [->ns-dec-digit ||
+Production(counter=36, name=ns-hex-digit, args=[], expression=[->ns-dec-digit ||
    [<[A][LATIN CAPITAL LETTER A][0x41]>-<[F][LATIN CAPITAL LETTER F][0x46]>] ||
-   [<[a][LATIN SMALL LETTER A][0x61]>-<[f][LATIN SMALL LETTER F][0x66]>]]
+   [<[a][LATIN SMALL LETTER A][0x61]>-<[f][LATIN SMALL LETTER F][0x66]>]])
 
-`37` : ns-ascii-letter:
-  [[<[A][LATIN CAPITAL LETTER A][0x41]>-<[Z][LATIN CAPITAL LETTER Z][0x5a]>] ||
-   [<[a][LATIN SMALL LETTER A][0x61]>-<[z][LATIN SMALL LETTER Z][0x7a]>]]
+Production(counter=37, name=ns-ascii-letter, args=[], expression=[[<[A][LATIN CAPITAL LETTER A][0x41]>-<[Z][LATIN CAPITAL LETTER Z][0x5a]>] ||
+   [<[a][LATIN SMALL LETTER A][0x61]>-<[z][LATIN SMALL LETTER Z][0x7a]>]])
 
-`38` : ns-word-char:
-  [->ns-dec-digit ||
+Production(counter=38, name=ns-word-char, args=[], expression=[->ns-dec-digit ||
    ->ns-ascii-letter ||
-   <[-][HYPHEN-MINUS][0x2d]>]
+   <[-][HYPHEN-MINUS][0x2d]>])
 
-`39` : ns-uri-char:
-  <[%][PERCENT SIGN][0x25]> + ->ns-hex-digit + [->ns-hex-digit ||
+Production(counter=39, name=ns-uri-char, args=[], expression=<[%][PERCENT SIGN][0x25]> + ->ns-hex-digit + [->ns-hex-digit ||
    ->ns-word-char ||
    <[#][NUMBER SIGN][0x23]> ||
    <[;][SEMICOLON][0x3b]> ||
@@ -174,77 +135,54 @@
    <[(][LEFT PARENTHESIS][0x28]> ||
    <[)][RIGHT PARENTHESIS][0x29]> ||
    <[[][LEFT SQUARE BRACKET][0x5b]> ||
-   <[]][RIGHT SQUARE BRACKET][0x5d]>]
+   <[]][RIGHT SQUARE BRACKET][0x5d]>])
 
-`40` : ns-tag-char:
-  ->ns-uri-char - ->c-tag - ->c-flow-indicator
+Production(counter=40, name=ns-tag-char, args=[], expression=->ns-uri-char - ->c-tag - ->c-flow-indicator)
 
-`41` : c-escape:
-  <[\\][REVERSE SOLIDUS][0x5c]>
+Production(counter=41, name=c-escape, args=[], expression=<[\\][REVERSE SOLIDUS][0x5c]>)
 
-`42` : ns-esc-null:
-  <[0][DIGIT ZERO][0x30]>
+Production(counter=42, name=ns-esc-null, args=[], expression=<[0][DIGIT ZERO][0x30]>)
 
-`43` : ns-esc-bell:
-  <[a][LATIN SMALL LETTER A][0x61]>
+Production(counter=43, name=ns-esc-bell, args=[], expression=<[a][LATIN SMALL LETTER A][0x61]>)
 
-`44` : ns-esc-backspace:
-  <[b][LATIN SMALL LETTER B][0x62]>
+Production(counter=44, name=ns-esc-backspace, args=[], expression=<[b][LATIN SMALL LETTER B][0x62]>)
 
-`45` : ns-esc-horizontal-tab:
-  [<[t][LATIN SMALL LETTER T][0x74]> ||
-   <[\t][CHARACTER TABULATION][0x9]>]
+Production(counter=45, name=ns-esc-horizontal-tab, args=[], expression=[<[t][LATIN SMALL LETTER T][0x74]> ||
+   <[\t][CHARACTER TABULATION][0x9]>])
 
-`46` : ns-esc-line-feed:
-  <[n][LATIN SMALL LETTER N][0x6e]>
+Production(counter=46, name=ns-esc-line-feed, args=[], expression=<[n][LATIN SMALL LETTER N][0x6e]>)
 
-`47` : ns-esc-vertical-tab:
-  <[v][LATIN SMALL LETTER V][0x76]>
+Production(counter=47, name=ns-esc-vertical-tab, args=[], expression=<[v][LATIN SMALL LETTER V][0x76]>)
 
-`48` : ns-esc-form-feed:
-  <[f][LATIN SMALL LETTER F][0x66]>
+Production(counter=48, name=ns-esc-form-feed, args=[], expression=<[f][LATIN SMALL LETTER F][0x66]>)
 
-`49` : ns-esc-carriage-return:
-  <[r][LATIN SMALL LETTER R][0x72]>
+Production(counter=49, name=ns-esc-carriage-return, args=[], expression=<[r][LATIN SMALL LETTER R][0x72]>)
 
-`50` : ns-esc-escape:
-  <[e][LATIN SMALL LETTER E][0x65]>
+Production(counter=50, name=ns-esc-escape, args=[], expression=<[e][LATIN SMALL LETTER E][0x65]>)
 
-`51` : ns-esc-space:
-  <[ ][SPACE][0x20]>
+Production(counter=51, name=ns-esc-space, args=[], expression=<[ ][SPACE][0x20]>)
 
-`52` : ns-esc-double-quote:
-  ->c-double-quote
+Production(counter=52, name=ns-esc-double-quote, args=[], expression=->c-double-quote)
 
-`53` : ns-esc-slash:
-  <[/][SOLIDUS][0x2f]>
+Production(counter=53, name=ns-esc-slash, args=[], expression=<[/][SOLIDUS][0x2f]>)
 
-`54` : ns-esc-backslash:
-  ->c-escape
+Production(counter=54, name=ns-esc-backslash, args=[], expression=->c-escape)
 
-`55` : ns-esc-next-line:
-  <[N][LATIN CAPITAL LETTER N][0x4e]>
+Production(counter=55, name=ns-esc-next-line, args=[], expression=<[N][LATIN CAPITAL LETTER N][0x4e]>)
 
-`56` : ns-esc-non-breaking-space:
-  <[_][LOW LINE][0x5f]>
+Production(counter=56, name=ns-esc-non-breaking-space, args=[], expression=<[_][LOW LINE][0x5f]>)
 
-`57` : ns-esc-line-separator:
-  <[L][LATIN CAPITAL LETTER L][0x4c]>
+Production(counter=57, name=ns-esc-line-separator, args=[], expression=<[L][LATIN CAPITAL LETTER L][0x4c]>)
 
-`58` : ns-esc-paragraph-separator:
-  <[P][LATIN CAPITAL LETTER P][0x50]>
+Production(counter=58, name=ns-esc-paragraph-separator, args=[], expression=<[P][LATIN CAPITAL LETTER P][0x50]>)
 
-`59` : ns-esc-8-bit:
-  <[x][LATIN SMALL LETTER X][0x78]> + (->ns-hex-digit × 2)
+Production(counter=59, name=ns-esc-8-bit, args=[], expression=<[x][LATIN SMALL LETTER X][0x78]> + (->ns-hex-digit × 2))
 
-`60` : ns-esc-16-bit:
-  <[u][LATIN SMALL LETTER U][0x75]> + (->ns-hex-digit × 4)
+Production(counter=60, name=ns-esc-16-bit, args=[], expression=<[u][LATIN SMALL LETTER U][0x75]> + (->ns-hex-digit × 4))
 
-`61` : ns-esc-32-bit:
-  <[U][LATIN CAPITAL LETTER U][0x55]> + (->ns-hex-digit × 8)
+Production(counter=61, name=ns-esc-32-bit, args=[], expression=<[U][LATIN CAPITAL LETTER U][0x55]> + (->ns-hex-digit × 8))
 
-`62` : c-ns-esc-char:
-  ->c-escape + [->ns-esc-null ||
+Production(counter=62, name=c-ns-esc-char, args=[], expression=->c-escape + [->ns-esc-null ||
    ->ns-esc-bell ||
    ->ns-esc-backspace ||
    ->ns-esc-horizontal-tab ||
@@ -263,548 +201,399 @@
    ->ns-esc-paragraph-separator ||
    ->ns-esc-8-bit ||
    ->ns-esc-16-bit ||
-   ->ns-esc-32-bit]
+   ->ns-esc-32-bit])
 
-`63` : s-indent (n):
-  (->s-space × n)
+Production(counter=63, name=s-indent, args=[n], expression=(->s-space × n))
 
-`64` : s-indent (<n):
-  (->s-space × m)
+Production(counter=64, name=s-indent, args=[<n], expression=(->s-space × m /* Where m < n */))
 
-`65` : s-indent (≤n):
-  (->s-space × m)
+Production(counter=65, name=s-indent, args=[≤n], expression=(->s-space × m /* Where m ≤ n */))
 
-`66` : s-separate-in-line:
-  (->s-white × +)
+Production(counter=66, name=s-separate-in-line, args=[], expression=(->s-white × +))
 
-`67` : s-line-prefix (n,c):
-  <c = block-out> ⇒ <->s-block-line-prefix(n)>
+Production(counter=67, name=s-line-prefix, args=[n, c], expression=<c = block-out> ⇒ <->s-block-line-prefix(n)>
   <c = block-in> ⇒ <->s-block-line-prefix(n)>
   <c = flow-out> ⇒ <->s-flow-line-prefix(n)>
-  <c = flow-in> ⇒ <->s-flow-line-prefix(n)>
+  <c = flow-in> ⇒ <->s-flow-line-prefix(n)>)
 
-`68` : s-block-line-prefix (n):
-  ->s-indent(n)
+Production(counter=68, name=s-block-line-prefix, args=[n], expression=->s-indent(n))
 
-`69` : s-flow-line-prefix (n):
-  ->s-indent(n) + (->s-separate-in-line × ?)
+Production(counter=69, name=s-flow-line-prefix, args=[n], expression=->s-indent(n) + (->s-separate-in-line × ?))
 
-`70` : l-empty (n,c):
-  [->s-line-prefix(n,c) ||
-   ->s-indent(n)] + ->b-as-line-feed
+Production(counter=70, name=l-empty, args=[n, c], expression=[->s-line-prefix(n,c) ||
+   ->s-indent(n)] + ->b-as-line-feed)
 
-`71` : b-l-trimmed (n,c):
-  ->b-non-content + (->l-empty(n,c) × +)
+Production(counter=71, name=b-l-trimmed, args=[n, c], expression=->b-non-content + (->l-empty(n,c) × +))
 
-`72` : b-as-space:
-  ->b-break
+Production(counter=72, name=b-as-space, args=[], expression=->b-break)
 
-`73` : b-l-folded (n,c):
-  [->b-l-trimmed(n,c) ||
-   ->b-as-space]
+Production(counter=73, name=b-l-folded, args=[n, c], expression=[->b-l-trimmed(n,c) ||
+   ->b-as-space])
 
-`74` : s-flow-folded (n):
-  (->s-separate-in-line × ?) + ->b-l-folded(n,c) + ->s-flow-line-prefix(n)
+Production(counter=74, name=s-flow-folded, args=[n], expression=(->s-separate-in-line × ?) + ->b-l-folded(n,c) + ->s-flow-line-prefix(n))
 
-`75` : c-nb-comment-text:
-  ->c-comment + (->nb-char × *)
+Production(counter=75, name=c-nb-comment-text, args=[], expression=->c-comment + (->nb-char × *))
 
-`76` : b-comment:
-  ->b-non-content
+Production(counter=76, name=b-comment, args=[], expression=->b-non-content)
 
-`77` : s-b-comment:
-  (->s-separate-in-line + (->c-nb-comment-text × ?) × ?) + ->b-comment
+Production(counter=77, name=s-b-comment, args=[], expression=(->s-separate-in-line + (->c-nb-comment-text × ?) × ?) + ->b-comment)
 
-`78` : l-comment:
-  ->s-separate-in-line + (->c-nb-comment-text × ?) + ->b-comment
+Production(counter=78, name=l-comment, args=[], expression=->s-separate-in-line + (->c-nb-comment-text × ?) + ->b-comment)
 
-`79` : s-l-comments:
-  ->s-b-comment + (->l-comment × *)
+Production(counter=79, name=s-l-comments, args=[], expression=->s-b-comment + (->l-comment × *))
 
-`80` : s-separate (n,c):
-  <c = block-out> ⇒ <->s-separate-lines(n)>
+Production(counter=80, name=s-separate, args=[n, c], expression=<c = block-out> ⇒ <->s-separate-lines(n)>
   <c = block-in> ⇒ <->s-separate-lines(n)>
   <c = flow-out> ⇒ <->s-separate-lines(n)>
   <c = flow-in> ⇒ <->s-separate-lines(n)>
   <c = block-key> ⇒ <->s-separate-in-line>
-  <c = flow-key> ⇒ <->s-separate-in-line>
+  <c = flow-key> ⇒ <->s-separate-in-line>)
 
-`81` : s-separate-lines (n):
-  [->s-l-comments + ->s-flow-line-prefix(n) ||
-   ->s-separate-in-line]
+Production(counter=81, name=s-separate-lines, args=[n], expression=[->s-l-comments + ->s-flow-line-prefix(n) ||
+   ->s-separate-in-line])
 
-`82` : l-directive:
-  ->c-directive + [->ns-yaml-directive ||
+Production(counter=82, name=l-directive, args=[], expression=->c-directive + [->ns-yaml-directive ||
    ->ns-tag-directive ||
-   ->ns-reserved-directive] + ->s-l-comments
+   ->ns-reserved-directive] + ->s-l-comments)
 
-`83` : ns-reserved-directive:
-  ->ns-directive-name + (->s-separate-in-line + ->ns-directive-parameter × *)
+Production(counter=83, name=ns-reserved-directive, args=[], expression=->ns-directive-name + (->s-separate-in-line + ->ns-directive-parameter × *))
 
-`84` : ns-directive-name:
-  (->ns-char × +)
+Production(counter=84, name=ns-directive-name, args=[], expression=(->ns-char × +))
 
-`85` : ns-directive-parameter:
-  (->ns-char × +)
+Production(counter=85, name=ns-directive-parameter, args=[], expression=(->ns-char × +))
 
-`86` : ns-yaml-directive:
-  <[Y][LATIN CAPITAL LETTER Y][0x59]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[M][LATIN CAPITAL LETTER M][0x4d]> + <[L][LATIN CAPITAL LETTER L][0x4c]> + ->s-separate-in-line + ->ns-yaml-version
+Production(counter=86, name=ns-yaml-directive, args=[], expression=<[Y][LATIN CAPITAL LETTER Y][0x59]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[M][LATIN CAPITAL LETTER M][0x4d]> + <[L][LATIN CAPITAL LETTER L][0x4c]> + ->s-separate-in-line + ->ns-yaml-version)
 
-`87` : ns-yaml-version:
-  (->ns-dec-digit × +) + <[.][FULL STOP][0x2e]> + (->ns-dec-digit × +)
+Production(counter=87, name=ns-yaml-version, args=[], expression=(->ns-dec-digit × +) + <[.][FULL STOP][0x2e]> + (->ns-dec-digit × +))
 
-`88` : ns-tag-directive:
-  <[T][LATIN CAPITAL LETTER T][0x54]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[G][LATIN CAPITAL LETTER G][0x47]> + ->s-separate-in-line + ->c-tag-handle + ->s-separate-in-line + ->ns-tag-prefix
+Production(counter=88, name=ns-tag-directive, args=[], expression=<[T][LATIN CAPITAL LETTER T][0x54]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[G][LATIN CAPITAL LETTER G][0x47]> + ->s-separate-in-line + ->c-tag-handle + ->s-separate-in-line + ->ns-tag-prefix)
 
-`89` : c-tag-handle:
-  [->c-named-tag-handle ||
+Production(counter=89, name=c-tag-handle, args=[], expression=[->c-named-tag-handle ||
    ->c-secondary-tag-handle ||
-   ->c-primary-tag-handle]
+   ->c-primary-tag-handle])
 
-`90` : c-primary-tag-handle:
-  ->c-tag
+Production(counter=90, name=c-primary-tag-handle, args=[], expression=->c-tag)
 
-`91` : c-secondary-tag-handle:
-  ->c-tag + ->c-tag
+Production(counter=91, name=c-secondary-tag-handle, args=[], expression=->c-tag + ->c-tag)
 
-`92` : c-named-tag-handle:
-  ->c-tag + (->ns-word-char × +) + ->c-tag
+Production(counter=92, name=c-named-tag-handle, args=[], expression=->c-tag + (->ns-word-char × +) + ->c-tag)
 
-`93` : ns-tag-prefix:
-  [->c-ns-local-tag-prefix ||
-   ->ns-global-tag-prefix]
+Production(counter=93, name=ns-tag-prefix, args=[], expression=[->c-ns-local-tag-prefix ||
+   ->ns-global-tag-prefix])
 
-`94` : c-ns-local-tag-prefix:
-  ->c-tag + (->ns-uri-char × *)
+Production(counter=94, name=c-ns-local-tag-prefix, args=[], expression=->c-tag + (->ns-uri-char × *))
 
-`95` : ns-global-tag-prefix:
-  ->ns-tag-char + (->ns-uri-char × *)
+Production(counter=95, name=ns-global-tag-prefix, args=[], expression=->ns-tag-char + (->ns-uri-char × *))
 
-`96` : c-ns-properties (n,c):
-  [->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) ||
-   ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)]
+Production(counter=96, name=c-ns-properties, args=[n, c], expression=[->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) ||
+   ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)])
 
-`97` : c-ns-tag-property:
-  [->c-verbatim-tag ||
+Production(counter=97, name=c-ns-tag-property, args=[], expression=[->c-verbatim-tag ||
    ->c-ns-shorthand-tag ||
-   ->c-non-specific-tag]
+   ->c-non-specific-tag])
 
-`98` : c-verbatim-tag:
-  ->c-tag + <[<][LESS-THAN SIGN][0x3c]> + (->ns-uri-char × +) + <[>][GREATER-THAN SIGN][0x3e]>
+Production(counter=98, name=c-verbatim-tag, args=[], expression=->c-tag + <[<][LESS-THAN SIGN][0x3c]> + (->ns-uri-char × +) + <[>][GREATER-THAN SIGN][0x3e]>)
 
-`99` : c-ns-shorthand-tag:
-  ->c-tag-handle + (->ns-tag-char × +)
+Production(counter=99, name=c-ns-shorthand-tag, args=[], expression=->c-tag-handle + (->ns-tag-char × +))
 
-`100` : c-non-specific-tag:
-  ->c-tag
+Production(counter=100, name=c-non-specific-tag, args=[], expression=->c-tag)
 
-`101` : c-ns-anchor-property:
-  ->c-anchor + ->ns-anchor-name
+Production(counter=101, name=c-ns-anchor-property, args=[], expression=->c-anchor + ->ns-anchor-name)
 
-`102` : ns-anchor-char:
-  ->ns-char - ->c-flow-indicator
+Production(counter=102, name=ns-anchor-char, args=[], expression=->ns-char - ->c-flow-indicator)
 
-`103` : ns-anchor-name:
-  (->ns-anchor-char × +)
+Production(counter=103, name=ns-anchor-name, args=[], expression=(->ns-anchor-char × +))
 
-`104` : c-ns-alias-node:
-  ->c-alias + ->ns-anchor-name
+Production(counter=104, name=c-ns-alias-node, args=[], expression=->c-alias + ->ns-anchor-name)
 
-`105` : e-scalar:
-  <empty>
+Production(counter=105, name=e-scalar, args=[], expression=<empty>)
 
-`106` : e-node:
-  ->e-scalar
+Production(counter=106, name=e-node, args=[], expression=->e-scalar)
 
-`107` : nb-double-char:
-  [->c-ns-esc-char ||
-   ->nb-json - ->c-escape - ->c-double-quote]
+Production(counter=107, name=nb-double-char, args=[], expression=[->c-ns-esc-char ||
+   ->nb-json - ->c-escape - ->c-double-quote])
 
-`108` : ns-double-char:
-  ->nb-double-char - ->s-white
+Production(counter=108, name=ns-double-char, args=[], expression=->nb-double-char - ->s-white)
 
-`109` : c-double-quoted (n,c):
-  ->c-double-quote + ->nb-double-text(n,c) + ->c-double-quote
+Production(counter=109, name=c-double-quoted, args=[n, c], expression=->c-double-quote + ->nb-double-text(n,c) + ->c-double-quote)
 
-`110` : nb-double-text (n,c):
-  <c = flow-out> ⇒ <->nb-double-multi-line(n)>
+Production(counter=110, name=nb-double-text, args=[n, c], expression=<c = flow-out> ⇒ <->nb-double-multi-line(n)>
   <c = flow-in> ⇒ <->nb-double-multi-line(n)>
   <c = block-key> ⇒ <->nb-double-one-line>
-  <c = flow-key> ⇒ <->nb-double-one-line>
+  <c = flow-key> ⇒ <->nb-double-one-line>)
 
-`111` : nb-double-one-line:
-  (->nb-double-char × *)
+Production(counter=111, name=nb-double-one-line, args=[], expression=(->nb-double-char × *))
 
-`112` : s-double-escaped (n):
-  (->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c) × *) + ->s-flow-line-prefix(n)
+Production(counter=112, name=s-double-escaped, args=[n], expression=(->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c) × *) + ->s-flow-line-prefix(n))
 
-`113` : s-double-break (n):
-  [->s-double-escaped(n) ||
-   ->s-flow-folded(n)]
+Production(counter=113, name=s-double-break, args=[n], expression=[->s-double-escaped(n) ||
+   ->s-flow-folded(n)])
 
-`114` : nb-ns-double-in-line:
-  ((->s-white × *) + ->ns-double-char × *)
+Production(counter=114, name=nb-ns-double-in-line, args=[], expression=((->s-white × *) + ->ns-double-char × *))
 
-`115` : s-double-next-line (n):
-  ->s-double-break(n) + (->ns-double-char + ->nb-ns-double-in-line + [->s-double-next-line(n) ||
-   (->s-white × *)] × ?)
+Production(counter=115, name=s-double-next-line, args=[n], expression=->s-double-break(n) + (->ns-double-char + ->nb-ns-double-in-line + [->s-double-next-line(n) ||
+   (->s-white × *)] × ?))
 
-`116` : nb-double-multi-line (n):
-  ->nb-ns-double-in-line + [->s-double-next-line(n) ||
-   (->s-white × *)]
+Production(counter=116, name=nb-double-multi-line, args=[n], expression=->nb-ns-double-in-line + [->s-double-next-line(n) ||
+   (->s-white × *)])
 
-`117` : c-quoted-quote:
-  ->c-single-quote + ->c-single-quote
+Production(counter=117, name=c-quoted-quote, args=[], expression=->c-single-quote + ->c-single-quote)
 
-`118` : nb-single-char:
-  [->c-quoted-quote ||
-   ->nb-json - ->c-single-quote]
+Production(counter=118, name=nb-single-char, args=[], expression=[->c-quoted-quote ||
+   ->nb-json - ->c-single-quote])
 
-`119` : ns-single-char:
-  ->nb-single-char - ->s-white
+Production(counter=119, name=ns-single-char, args=[], expression=->nb-single-char - ->s-white)
 
-`120` : c-single-quoted (n,c):
-  ->c-single-quote + ->nb-single-text(n,c) + ->c-single-quote
+Production(counter=120, name=c-single-quoted, args=[n, c], expression=->c-single-quote + ->nb-single-text(n,c) + ->c-single-quote)
 
-`121` : nb-single-text (n,c):
-  <c = flow-out> ⇒ <->nb-single-multi-line(n)>
+Production(counter=121, name=nb-single-text, args=[n, c], expression=<c = flow-out> ⇒ <->nb-single-multi-line(n)>
   <c = flow-in> ⇒ <->nb-single-multi-line(n)>
   <c = block-key> ⇒ <->nb-single-one-line>
-  <c = flow-key> ⇒ <->nb-single-one-line>
+  <c = flow-key> ⇒ <->nb-single-one-line>)
 
-`122` : nb-single-one-line:
-  (->nb-single-char × *)
+Production(counter=122, name=nb-single-one-line, args=[], expression=(->nb-single-char × *))
 
-`123` : nb-ns-single-in-line:
-  ((->s-white × *) + ->ns-single-char × *)
+Production(counter=123, name=nb-ns-single-in-line, args=[], expression=((->s-white × *) + ->ns-single-char × *))
 
-`124` : s-single-next-line (n):
-  ->s-flow-folded(n) + (->ns-single-char + ->nb-ns-single-in-line + [->s-single-next-line(n) ||
-   (->s-white × *)] × ?)
+Production(counter=124, name=s-single-next-line, args=[n], expression=->s-flow-folded(n) + (->ns-single-char + ->nb-ns-single-in-line + [->s-single-next-line(n) ||
+   (->s-white × *)] × ?))
 
-`125` : nb-single-multi-line (n):
-  ->nb-ns-single-in-line + [->s-single-next-line(n) ||
-   (->s-white × *)]
+Production(counter=125, name=nb-single-multi-line, args=[n], expression=->nb-ns-single-in-line + [->s-single-next-line(n) ||
+   (->s-white × *)])
 
-`126` : ns-plain-first (c):
-  [->ns-char - ->c-indicator ||
+Production(counter=126, name=ns-plain-first, args=[c], expression=[->ns-char - ->c-indicator ||
    ->c-mapping-key ||
    ->c-mapping-value ||
-   ->c-sequence-entry]
+   ->c-sequence-entry])
 
-`127` : ns-plain-safe (c):
-  <c = flow-out> ⇒ <->ns-plain-safe-out>
+Production(counter=127, name=ns-plain-safe, args=[c], expression=<c = flow-out> ⇒ <->ns-plain-safe-out>
   <c = flow-in> ⇒ <->ns-plain-safe-in>
   <c = block-key> ⇒ <->ns-plain-safe-out>
-  <c = flow-key> ⇒ <->ns-plain-safe-in>
+  <c = flow-key> ⇒ <->ns-plain-safe-in>)
 
-`128` : ns-plain-safe-out:
-  ->ns-char
+Production(counter=128, name=ns-plain-safe-out, args=[], expression=->ns-char)
 
-`129` : ns-plain-safe-in:
-  ->ns-char - ->c-flow-indicator
+Production(counter=129, name=ns-plain-safe-in, args=[], expression=->ns-char - ->c-flow-indicator)
 
-`130` : ns-plain-char (c):
-  ->ns-plain-safe(c) - [->c-mapping-value - ->c-comment ||
+Production(counter=130, name=ns-plain-char, args=[c], expression=->ns-plain-safe(c) - [->c-mapping-value - ->c-comment ||
    ->c-comment ||
-   ->c-mapping-value]
+   ->c-mapping-value])
 
-`131` : ns-plain (n,c):
-  <c = flow-out> ⇒ <->ns-plain-multi-line(n,c)>
+Production(counter=131, name=ns-plain, args=[n, c], expression=<c = flow-out> ⇒ <->ns-plain-multi-line(n,c)>
   <c = flow-in> ⇒ <->ns-plain-multi-line(n,c)>
   <c = block-key> ⇒ <->ns-plain-one-line(c)>
-  <c = flow-key> ⇒ <->ns-plain-one-line(c)>
+  <c = flow-key> ⇒ <->ns-plain-one-line(c)>)
 
-`132` : nb-ns-plain-in-line (c):
-  ((->s-white × *) + ->ns-plain-char(c) × *)
+Production(counter=132, name=nb-ns-plain-in-line, args=[c], expression=((->s-white × *) + ->ns-plain-char(c) × *))
 
-`133` : ns-plain-one-line (c):
-  ->ns-plain-first(c) + ->nb-ns-plain-in-line(c)
+Production(counter=133, name=ns-plain-one-line, args=[c], expression=->ns-plain-first(c) + ->nb-ns-plain-in-line(c))
 
-`134` : s-ns-plain-next-line (n,c):
-  ->s-flow-folded(n) + ->ns-plain-char(c) + ->nb-ns-plain-in-line(c)
+Production(counter=134, name=s-ns-plain-next-line, args=[n, c], expression=->s-flow-folded(n) + ->ns-plain-char(c) + ->nb-ns-plain-in-line(c))
 
-`135` : ns-plain-multi-line (n,c):
-  ->ns-plain-one-line(c) + (->s-ns-plain-next-line(n,c) × *)
+Production(counter=135, name=ns-plain-multi-line, args=[n, c], expression=->ns-plain-one-line(c) + (->s-ns-plain-next-line(n,c) × *))
 
-`136` : in-flow (c):
-  <c = flow-out> ⇒ <flow-in>
+Production(counter=136, name=in-flow, args=[c], expression=<c = flow-out> ⇒ <flow-in>
   <c = flow-in> ⇒ <flow-in>
   <c = block-key> ⇒ <flow-key>
-  <c = flow-key> ⇒ <flow-key>
+  <c = flow-key> ⇒ <flow-key>)
 
-`137` : c-flow-sequence (n,c):
-  ->c-sequence-start + (->s-separate(n,c) × ?) + ->ns-s-flow-seq-entries(n,c) + ->in-flow(c) + (->ns-s-flow-seq-entries(n,c) × ?) + ->c-sequence-end
+Production(counter=137, name=c-flow-sequence, args=[n, c], expression=->c-sequence-start + (->s-separate(n,c) × ?) + ->ns-s-flow-seq-entries(n,c) + ->in-flow(c) + (->ns-s-flow-seq-entries(n,c) × ?) + ->c-sequence-end)
 
-`138` : ns-s-flow-seq-entries (n,c):
-  ->ns-flow-seq-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c) × ?) × ?)
+Production(counter=138, name=ns-s-flow-seq-entries, args=[n, c], expression=->ns-flow-seq-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c) × ?) × ?))
 
-`139` : ns-flow-seq-entry (n,c):
-  [->ns-flow-pair(n,c) ||
-   ->ns-flow-node(n,c)]
+Production(counter=139, name=ns-flow-seq-entry, args=[n, c], expression=[->ns-flow-pair(n,c) ||
+   ->ns-flow-node(n,c)])
 
-`140` : c-flow-mapping (n,c):
-  ->c-mapping-start + (->s-separate(n,c) × ?) + ->ns-s-flow-map-entries(n,c) + ->in-flow(c) + (->ns-s-flow-map-entries(n,c) × ?) + ->c-mapping-end
+Production(counter=140, name=c-flow-mapping, args=[n, c], expression=->c-mapping-start + (->s-separate(n,c) × ?) + ->ns-s-flow-map-entries(n,c) + ->in-flow(c) + (->ns-s-flow-map-entries(n,c) × ?) + ->c-mapping-end)
 
-`141` : ns-s-flow-map-entries (n,c):
-  ->ns-flow-map-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c) × ?) × ?)
+Production(counter=141, name=ns-s-flow-map-entries, args=[n, c], expression=->ns-flow-map-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c) × ?) × ?))
 
-`142` : ns-flow-map-entry (n,c):
-  [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) ||
-   ->ns-flow-map-implicit-entry(n,c)]
+Production(counter=142, name=ns-flow-map-entry, args=[n, c], expression=[->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) ||
+   ->ns-flow-map-implicit-entry(n,c)])
 
-`143` : ns-flow-map-explicit-entry (n,c):
-  [->ns-flow-map-implicit-entry(n,c) ||
-   ->e-node + ->e-node]
+Production(counter=143, name=ns-flow-map-explicit-entry, args=[n, c], expression=[->ns-flow-map-implicit-entry(n,c) ||
+   ->e-node + ->e-node])
 
-`144` : ns-flow-map-implicit-entry (n,c):
-  [->ns-flow-map-yaml-key-entry(n,c) ||
+Production(counter=144, name=ns-flow-map-implicit-entry, args=[n, c], expression=[->ns-flow-map-yaml-key-entry(n,c) ||
    ->c-ns-flow-map-empty-key-entry(n,c) ||
-   ->c-ns-flow-map-json-key-entry(n,c)]
+   ->c-ns-flow-map-json-key-entry(n,c)])
 
-`145` : ns-flow-map-yaml-key-entry (n,c):
-  ->ns-flow-yaml-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-separate-value(n,c) ||
-   ->e-node]
+Production(counter=145, name=ns-flow-map-yaml-key-entry, args=[n, c], expression=->ns-flow-yaml-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-separate-value(n,c) ||
+   ->e-node])
 
-`146` : c-ns-flow-map-empty-key-entry (n,c):
-  ->e-node + ->c-ns-flow-map-separate-value(n,c)
+Production(counter=146, name=c-ns-flow-map-empty-key-entry, args=[n, c], expression=->e-node + ->c-ns-flow-map-separate-value(n,c))
 
-`147` : c-ns-flow-map-separate-value (n,c):
-  ->c-mapping-value + [->s-separate(n,c) + ->ns-flow-node(n,c) ||
-   ->e-node]
+Production(counter=147, name=c-ns-flow-map-separate-value, args=[n, c], expression=->c-mapping-value + [->s-separate(n,c) + ->ns-flow-node(n,c) ||
+   ->e-node])
 
-`148` : c-ns-flow-map-json-key-entry (n,c):
-  ->c-flow-json-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-adjacent-value(n,c) ||
-   ->e-node]
+Production(counter=148, name=c-ns-flow-map-json-key-entry, args=[n, c], expression=->c-flow-json-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-adjacent-value(n,c) ||
+   ->e-node])
 
-`149` : c-ns-flow-map-adjacent-value (n,c):
-  ->c-mapping-value + [(->s-separate(n,c) × ?) + ->ns-flow-node(n,c) ||
-   ->e-node]
+Production(counter=149, name=c-ns-flow-map-adjacent-value, args=[n, c], expression=->c-mapping-value + [(->s-separate(n,c) × ?) + ->ns-flow-node(n,c) ||
+   ->e-node])
 
-`150` : ns-flow-pair (n,c):
-  [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) ||
-   ->ns-flow-pair-entry(n,c)]
+Production(counter=150, name=ns-flow-pair, args=[n, c], expression=[->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) ||
+   ->ns-flow-pair-entry(n,c)])
 
-`151` : ns-flow-pair-entry (n,c):
-  [->ns-flow-pair-yaml-key-entry(n,c) ||
+Production(counter=151, name=ns-flow-pair-entry, args=[n, c], expression=[->ns-flow-pair-yaml-key-entry(n,c) ||
    ->c-ns-flow-map-empty-key-entry(n,c) ||
-   ->c-ns-flow-pair-json-key-entry(n,c)]
+   ->c-ns-flow-pair-json-key-entry(n,c)])
 
-`152` : ns-flow-pair-yaml-key-entry (n,c):
-  ->ns-s-implicit-yaml-key(c) + ->c-ns-flow-map-separate-value(n,c)
+Production(counter=152, name=ns-flow-pair-yaml-key-entry, args=[n, c], expression=->ns-s-implicit-yaml-key(c) + ->c-ns-flow-map-separate-value(n,c))
 
-`153` : c-ns-flow-pair-json-key-entry (n,c):
-  ->c-s-implicit-json-key(c) + ->c-ns-flow-map-adjacent-value(n,c)
+Production(counter=153, name=c-ns-flow-pair-json-key-entry, args=[n, c], expression=->c-s-implicit-json-key(c) + ->c-ns-flow-map-adjacent-value(n,c))
 
-`154` : ns-s-implicit-yaml-key (c):
-  ->ns-flow-yaml-node(n,c) + (->s-separate-in-line × ?)
+Production(counter=154, name=ns-s-implicit-yaml-key, args=[c], expression=->ns-flow-yaml-node(n,c) + (->s-separate-in-line × ?))
 
-`155` : c-s-implicit-json-key (c):
-  ->c-flow-json-node(n,c) + (->s-separate-in-line × ?)
+Production(counter=155, name=c-s-implicit-json-key, args=[c], expression=->c-flow-json-node(n,c) + (->s-separate-in-line × ?))
 
-`156` : ns-flow-yaml-content (n,c):
-  ->ns-plain(n,c)
+Production(counter=156, name=ns-flow-yaml-content, args=[n, c], expression=->ns-plain(n,c))
 
-`157` : c-flow-json-content (n,c):
-  [->c-flow-sequence(n,c) ||
+Production(counter=157, name=c-flow-json-content, args=[n, c], expression=[->c-flow-sequence(n,c) ||
    ->c-flow-mapping(n,c) ||
    ->c-single-quoted(n,c) ||
-   ->c-double-quoted(n,c)]
+   ->c-double-quoted(n,c)])
 
-`158` : ns-flow-content (n,c):
-  [->ns-flow-yaml-content(n,c) ||
-   ->c-flow-json-content(n,c)]
+Production(counter=158, name=ns-flow-content, args=[n, c], expression=[->ns-flow-yaml-content(n,c) ||
+   ->c-flow-json-content(n,c)])
 
-`159` : ns-flow-yaml-node (n,c):
-  [->c-ns-alias-node ||
+Production(counter=159, name=ns-flow-yaml-node, args=[n, c], expression=[->c-ns-alias-node ||
    ->ns-flow-yaml-content(n,c) ||
    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-yaml-content(n,c) ||
-   ->e-scalar]]
+   ->e-scalar]])
 
-`160` : c-flow-json-node (n,c):
-  (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + ->c-flow-json-content(n,c)
+Production(counter=160, name=c-flow-json-node, args=[n, c], expression=(->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + ->c-flow-json-content(n,c))
 
-`161` : ns-flow-node (n,c):
-  [->c-ns-alias-node ||
+Production(counter=161, name=ns-flow-node, args=[n, c], expression=[->c-ns-alias-node ||
    ->ns-flow-content(n,c) ||
    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-content(n,c) ||
-   ->e-scalar]]
+   ->e-scalar]])
 
-`162` : c-b-block-header (m,t):
-  [->c-indentation-indicator(m) + ->c-chomping-indicator(t) ||
-   ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment
+Production(counter=162, name=c-b-block-header, args=[m, t], expression=[->c-indentation-indicator(m) + ->c-chomping-indicator(t) ||
+   ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment)
 
-`163` : c-indentation-indicator (m):
-  ->ns-dec-digit ⇒ <m =->ns-dec-digit - #x30>
-  <> ⇒ <m = auto-detect()>
+Production(counter=163, name=c-indentation-indicator, args=[m], expression=->ns-dec-digit ⇒ <m =->ns-dec-digit - #x30>
+  <> ⇒ <m = auto-detect()>)
 
-`164` : c-chomping-indicator (t):
-  <[-][HYPHEN-MINUS][0x2d]> ⇒ <t = strip>
+Production(counter=164, name=c-chomping-indicator, args=[t], expression=<[-][HYPHEN-MINUS][0x2d]> ⇒ <t = strip>
   <<[+][PLUS SIGN][0x2b]>> ⇒ <t = keep>
-  <> ⇒ <t = clip>
+  <> ⇒ <t = clip>)
 
-`165` : b-chomped-last (t):
-  <t = strip> ⇒ <->b-non-content | /* End of file */>
+Production(counter=165, name=b-chomped-last, args=[t], expression=<t = strip> ⇒ <->b-non-content | /* End of file */>
   <t = clip> ⇒ <->b-as-line-feed | /* End of file */>
-  <t = keep> ⇒ <->b-as-line-feed | /* End of file */>
+  <t = keep> ⇒ <->b-as-line-feed | /* End of file */>)
 
-`166` : l-chomped-empty (n,t):
-  <t = strip> ⇒ <->l-strip-empty(n)>
+Production(counter=166, name=l-chomped-empty, args=[n, t], expression=<t = strip> ⇒ <->l-strip-empty(n)>
   <t = clip> ⇒ <->l-strip-empty(n)>
-  <t = keep> ⇒ <->l-keep-empty(n)>
+  <t = keep> ⇒ <->l-keep-empty(n)>)
 
-`167` : l-strip-empty (n):
-  (->s-indent(n) + ->b-non-content × *) + (->l-trail-comments(n) × ?)
+Production(counter=167, name=l-strip-empty, args=[n], expression=(->s-indent(n) + ->b-non-content × *) + (->l-trail-comments(n) × ?))
 
-`168` : l-keep-empty (n):
-  (->l-empty(n,c) × *) + (->l-trail-comments(n) × ?)
+Production(counter=168, name=l-keep-empty, args=[n], expression=(->l-empty(n,c) × *) + (->l-trail-comments(n) × ?))
 
-`169` : l-trail-comments (n):
-  ->s-indent(n) + ->c-nb-comment-text + ->b-comment + (->l-comment × *)
+Production(counter=169, name=l-trail-comments, args=[n], expression=->s-indent(n) + ->c-nb-comment-text + ->b-comment + (->l-comment × *))
 
-`170` : c-l+literal (n):
-  ->c-literal + ->c-b-block-header(m,t) + ->l-literal-content(n,t)
+Production(counter=170, name=c-l+literal, args=[n], expression=->c-literal + ->c-b-block-header(m,t) + ->l-literal-content(n,t))
 
-`171` : l-nb-literal-text (n):
-  (->l-empty(n,c) × *) + ->s-indent(n) + (->nb-char × +)
+Production(counter=171, name=l-nb-literal-text, args=[n], expression=(->l-empty(n,c) × *) + ->s-indent(n) + (->nb-char × +))
 
-`172` : b-nb-literal-next (n):
-  ->b-as-line-feed + ->l-nb-literal-text(n)
+Production(counter=172, name=b-nb-literal-next, args=[n], expression=->b-as-line-feed + ->l-nb-literal-text(n))
 
-`173` : l-literal-content (n,t):
-  (->l-nb-literal-text(n) + (->b-nb-literal-next(n) × *) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
+Production(counter=173, name=l-literal-content, args=[n, t], expression=(->l-nb-literal-text(n) + (->b-nb-literal-next(n) × *) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t))
 
-`174` : c-l+folded (n):
-  ->c-folded + ->c-b-block-header(m,t) + ->l-folded-content(n,t)
+Production(counter=174, name=c-l+folded, args=[n], expression=->c-folded + ->c-b-block-header(m,t) + ->l-folded-content(n,t))
 
-`175` : s-nb-folded-text (n):
-  ->s-indent(n) + ->ns-char + (->nb-char × *)
+Production(counter=175, name=s-nb-folded-text, args=[n], expression=->s-indent(n) + ->ns-char + (->nb-char × *))
 
-`176` : l-nb-folded-lines (n):
-  ->s-nb-folded-text(n) + (->b-l-folded(n,c) + ->s-nb-folded-text(n) × *)
+Production(counter=176, name=l-nb-folded-lines, args=[n], expression=->s-nb-folded-text(n) + (->b-l-folded(n,c) + ->s-nb-folded-text(n) × *))
 
-`177` : s-nb-spaced-text (n):
-  ->s-indent(n) + ->s-white + (->nb-char × *)
+Production(counter=177, name=s-nb-spaced-text, args=[n], expression=->s-indent(n) + ->s-white + (->nb-char × *))
 
-`178` : b-l-spaced (n):
-  ->b-as-line-feed + (->l-empty(n,c) × *)
+Production(counter=178, name=b-l-spaced, args=[n], expression=->b-as-line-feed + (->l-empty(n,c) × *))
 
-`179` : l-nb-spaced-lines (n):
-  ->s-nb-spaced-text(n) + (->b-l-spaced(n) + ->s-nb-spaced-text(n) × *)
+Production(counter=179, name=l-nb-spaced-lines, args=[n], expression=->s-nb-spaced-text(n) + (->b-l-spaced(n) + ->s-nb-spaced-text(n) × *))
 
-`180` : l-nb-same-lines (n):
-  (->l-empty(n,c) × *) + [->l-nb-folded-lines(n) ||
-   ->l-nb-spaced-lines(n)]
+Production(counter=180, name=l-nb-same-lines, args=[n], expression=(->l-empty(n,c) × *) + [->l-nb-folded-lines(n) ||
+   ->l-nb-spaced-lines(n)])
 
-`181` : l-nb-diff-lines (n):
-  ->l-nb-same-lines(n) + (->b-as-line-feed + ->l-nb-same-lines(n) × *)
+Production(counter=181, name=l-nb-diff-lines, args=[n], expression=->l-nb-same-lines(n) + (->b-as-line-feed + ->l-nb-same-lines(n) × *))
 
-`182` : l-folded-content (n,t):
-  (->l-nb-diff-lines(n) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
+Production(counter=182, name=l-folded-content, args=[n, t], expression=(->l-nb-diff-lines(n) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t))
 
-`183` : l+block-sequence (n):
-  (->s-indent(n) + ->c-l-block-seq-entry(n) × +)
+Production(counter=183, name=l+block-sequence, args=[n], expression=(->s-indent(n) + ->c-l-block-seq-entry(n) × +))
 
-`184` : c-l-block-seq-entry (n):
-  ->c-sequence-entry + ->s-l+block-indented(n,c)
+Production(counter=184, name=c-l-block-seq-entry, args=[n], expression=->c-sequence-entry + ->s-l+block-indented(n,c))
 
-`185` : s-l+block-indented (n,c):
-  [->s-indent(n) + [->ns-l-compact-sequence(n) ||
+Production(counter=185, name=s-l+block-indented, args=[n, c], expression=[->s-indent(n) + [->ns-l-compact-sequence(n) ||
    ->ns-l-compact-mapping(n)] ||
    ->s-l+block-node(n,c) ||
-   ->e-node + ->s-l-comments]
+   ->e-node + ->s-l-comments])
 
-`186` : ns-l-compact-sequence (n):
-  ->c-l-block-seq-entry(n) + (->s-indent(n) + ->c-l-block-seq-entry(n) × *)
+Production(counter=186, name=ns-l-compact-sequence, args=[n], expression=->c-l-block-seq-entry(n) + (->s-indent(n) + ->c-l-block-seq-entry(n) × *))
 
-`187` : l+block-mapping (n):
-  (->s-indent(n) + ->ns-l-block-map-entry(n) × +)
+Production(counter=187, name=l+block-mapping, args=[n], expression=(->s-indent(n) + ->ns-l-block-map-entry(n) × +))
 
-`188` : ns-l-block-map-entry (n):
-  [->c-l-block-map-explicit-entry(n) ||
-   ->ns-l-block-map-implicit-entry(n)]
+Production(counter=188, name=ns-l-block-map-entry, args=[n], expression=[->c-l-block-map-explicit-entry(n) ||
+   ->ns-l-block-map-implicit-entry(n)])
 
-`189` : c-l-block-map-explicit-entry (n):
-  ->c-l-block-map-explicit-key(n) + [->l-block-map-explicit-value(n) ||
-   ->e-node]
+Production(counter=189, name=c-l-block-map-explicit-entry, args=[n], expression=->c-l-block-map-explicit-key(n) + [->l-block-map-explicit-value(n) ||
+   ->e-node])
 
-`190` : c-l-block-map-explicit-key (n):
-  ->c-mapping-key + ->s-l+block-indented(n,c)
+Production(counter=190, name=c-l-block-map-explicit-key, args=[n], expression=->c-mapping-key + ->s-l+block-indented(n,c))
 
-`191` : l-block-map-explicit-value (n):
-  ->s-indent(n) + ->c-mapping-value + ->s-l+block-indented(n,c)
+Production(counter=191, name=l-block-map-explicit-value, args=[n], expression=->s-indent(n) + ->c-mapping-value + ->s-l+block-indented(n,c))
 
-`192` : ns-l-block-map-implicit-entry (n):
-  [->ns-s-block-map-implicit-key ||
-   ->e-node] + ->c-l-block-map-implicit-value(n)
+Production(counter=192, name=ns-l-block-map-implicit-entry, args=[n], expression=[->ns-s-block-map-implicit-key ||
+   ->e-node] + ->c-l-block-map-implicit-value(n))
 
-`193` : ns-s-block-map-implicit-key:
-  [->c-s-implicit-json-key(c) ||
-   ->ns-s-implicit-yaml-key(c)]
+Production(counter=193, name=ns-s-block-map-implicit-key, args=[], expression=[->c-s-implicit-json-key(c) ||
+   ->ns-s-implicit-yaml-key(c)])
 
-`194` : c-l-block-map-implicit-value (n):
-  ->c-mapping-value + [->s-l+block-node(n,c) ||
-   ->e-node + ->s-l-comments]
+Production(counter=194, name=c-l-block-map-implicit-value, args=[n], expression=->c-mapping-value + [->s-l+block-node(n,c) ||
+   ->e-node + ->s-l-comments])
 
-`195` : ns-l-compact-mapping (n):
-  ->ns-l-block-map-entry(n) + (->s-indent(n) + ->ns-l-block-map-entry(n) × *)
+Production(counter=195, name=ns-l-compact-mapping, args=[n], expression=->ns-l-block-map-entry(n) + (->s-indent(n) + ->ns-l-block-map-entry(n) × *))
 
-`196` : s-l+block-node (n,c):
-  [->s-l+block-in-block(n,c) ||
-   ->s-l+flow-in-block(n)]
+Production(counter=196, name=s-l+block-node, args=[n, c], expression=[->s-l+block-in-block(n,c) ||
+   ->s-l+flow-in-block(n)])
 
-`197` : s-l+flow-in-block (n):
-  ->s-separate(n,c) + ->ns-flow-node(n,c) + ->s-l-comments
+Production(counter=197, name=s-l+flow-in-block, args=[n], expression=->s-separate(n,c) + ->ns-flow-node(n,c) + ->s-l-comments)
 
-`198` : s-l+block-in-block (n,c):
-  [->s-l+block-scalar(n,c) ||
-   ->s-l+block-collection(n,c)]
+Production(counter=198, name=s-l+block-in-block, args=[n, c], expression=[->s-l+block-scalar(n,c) ||
+   ->s-l+block-collection(n,c)])
 
-`199` : s-l+block-scalar (n,c):
-  ->s-separate(n,c) + (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + [->c-l+literal(n) ||
-   ->c-l+folded(n)]
+Production(counter=199, name=s-l+block-scalar, args=[n, c], expression=->s-separate(n,c) + (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + [->c-l+literal(n) ||
+   ->c-l+folded(n)])
 
-`200` : s-l+block-collection (n,c):
-  (->s-separate(n,c) + ->c-ns-properties(n,c) × ?) + ->s-l-comments + ->l+block-sequence(n) + ->seq-spaces(n,c) + [->l+block-sequence(n) ||
-   ->l+block-mapping(n)]
+Production(counter=200, name=s-l+block-collection, args=[n, c], expression=(->s-separate(n,c) + ->c-ns-properties(n,c) × ?) + ->s-l-comments + ->l+block-sequence(n) + ->seq-spaces(n,c) + [->l+block-sequence(n) ||
+   ->l+block-mapping(n)])
 
-`201` : seq-spaces (n,c):
-  <c = block-out> ⇒ <n-1>
-  <c = block-in> ⇒ <n>
+Production(counter=201, name=seq-spaces, args=[n, c], expression=<c = block-out> ⇒ <n-1>
+  <c = block-in> ⇒ <n>)
 
-`202` : l-document-prefix:
-  (->c-byte-order-mark × ?) + (->l-comment × *)
+Production(counter=202, name=l-document-prefix, args=[], expression=(->c-byte-order-mark × ?) + (->l-comment × *))
 
-`203` : c-directives-end:
-  <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]>
+Production(counter=203, name=c-directives-end, args=[], expression=<[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]>)
 
-`204` : c-document-end:
-  <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]>
+Production(counter=204, name=c-document-end, args=[], expression=<[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]>)
 
-`205` : l-document-suffix:
-  ->c-document-end + ->s-l-comments
+Production(counter=205, name=l-document-suffix, args=[], expression=->c-document-end + ->s-l-comments)
 
-`206` : c-forbidden:
-  [->c-directives-end ||
+Production(counter=206, name=c-forbidden, args=[], expression=[->c-directives-end ||
    ->c-document-end] + [->b-char ||
-   ->s-white]
+   ->s-white])
 
-`207` : l-bare-document:
-  ->s-l+block-node(n,c)
+Production(counter=207, name=l-bare-document, args=[], expression=->s-l+block-node(n,c))
 
-`208` : l-explicit-document:
-  ->c-directives-end + [->l-bare-document ||
-   ->e-node + ->s-l-comments]
+Production(counter=208, name=l-explicit-document, args=[], expression=->c-directives-end + [->l-bare-document ||
+   ->e-node + ->s-l-comments])
 
-`209` : l-directive-document:
-  (->l-directive × +) + ->l-explicit-document
+Production(counter=209, name=l-directive-document, args=[], expression=(->l-directive × +) + ->l-explicit-document)
 
-`210` : l-any-document:
-  [->l-directive-document ||
+Production(counter=210, name=l-any-document, args=[], expression=[->l-directive-document ||
    ->l-explicit-document ||
-   ->l-bare-document]
+   ->l-bare-document])
 
-`211` : l-yaml-stream:
-  (->l-document-prefix × *) + (->l-any-document × ?) + ((->l-document-suffix × +) + (->l-document-prefix × *) + [(->l-any-document × ?) ||
-   (->l-document-prefix × *) + (->l-explicit-document × ?)] × *)
+Production(counter=211, name=l-yaml-stream, args=[], expression=(->l-document-prefix × *) + (->l-any-document × ?) + ((->l-document-suffix × +) + (->l-document-prefix × *) + [(->l-any-document × ?) ||
+   (->l-document-prefix × *) + (->l-explicit-document × ?)] × *))
 

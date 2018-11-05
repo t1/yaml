@@ -158,8 +158,8 @@ class YamlSymbolGenerator(private val spec: Spec) {
             private val onlyArgOrEmpty: String get() = production.args.takeIf { it.size == 1 }?.get(0) ?: ""
 
             private fun writeArgs() = production.args.forEach {
-                val variable = if (it.startsWith("<") || it.startsWith("≤")) it.substring(1) else it
-                write(when (variable) {
+                val pureVariableName = if (it.startsWith("<") || it.startsWith("≤")) it.substring(1) else it
+                write(when (pureVariableName) {
                     "n" -> "n: Int"
                     else -> "/* TODO arg $it */"
                 })

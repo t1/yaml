@@ -69,8 +69,7 @@ import org.junit.jupiter.api.Test
     }
 
     @Disabled("anchor/alias")
-    @Test
-    fun spec_5_6_Node_Property_Indicators() {
+    @Test fun spec_5_6_Node_Property_Indicators() {
         parseAndCheck("" +
             "anchored: !local &anchor value\n" +
             "alias: *anchor", "" +
@@ -85,8 +84,7 @@ import org.junit.jupiter.api.Test
     }
 
     @Disabled("Flow and literal scalars")
-    @Test
-    fun spec_5_7_Block_Scalar_Indicators() {
+    @Test fun spec_5_7_Block_Scalar_Indicators() {
         parseAndCheck("" +
             "literal: |\n" +
             "  some\n" +
@@ -125,8 +123,7 @@ import org.junit.jupiter.api.Test
     }
 
     @Disabled("ERROR: Reserved indicators can't start a plain scalar.")
-    @Test
-    fun spec_5_10_Invalid_use_of_Reserved_Indicators() {
+    @Test fun spec_5_10_Invalid_use_of_Reserved_Indicators() {
         parseAndCheck("" +
             "commercial-at: @text\n" +
             "grave-accent: `text", "")
@@ -182,8 +179,7 @@ import org.junit.jupiter.api.Test
     @Disabled("ERROR:\n" +
         "- c is an invalid escaped character.\n" +
         "- q and - are invalid hex digits.")
-    @Test
-    fun spec_5_14_Invalid_Escaped_Characters() {
+    @Test fun spec_5_14_Invalid_Escaped_Characters() {
         parseAndCheck("" +
             "Bad escapes:\n" +
             "  \"\\c\n" +
