@@ -17,8 +17,8 @@ class Spec(val productions: List<Production>) {
         }
         for (production in productions) {
             production.expression.guide(object : Expression.Visitor() {
-                override fun visit(expression: ReferenceExpression) {
-                    val ref = expression.ref
+                override fun visit(reference: ReferenceExpression) {
+                    val ref = reference.ref
                     if (index[ref] == null) production.references.remove(ref)
                     else production.references[ref] = index[ref]!!
                 }
@@ -33,15 +33,10 @@ class Spec(val productions: List<Production>) {
 data class Production(
     val counter: Int,
     val name: String,
-    val args: String?,
+    val args: List<String>,
     val expression: Expression) {
 
     val references = mutableMapOf<String, Production>()
 
-    val key: String get() = name + if (args == null) "" else "($args)"
-
-    override fun toString(): String {
-        return ("`" + counter + "` : " + name + (if (args == null) "" else " ($args)") + ":\n"
-            + "  " + expression)
-    }
+    val key: String get() = name + args
 }

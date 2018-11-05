@@ -1,6 +1,10 @@
 package spec.generator
 
+import com.github.t1.yaml.parser.`s-indent≤`
+import com.github.t1.yaml.parser.`s-indent≪`
 import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.yaml.tools.CodePointReader
+import com.github.t1.yaml.tools.Match
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -17,10 +21,68 @@ import java.io.StringWriter
 import java.util.Arrays.asList
 
 class YamlSymbolGeneratorTest {
+    @Test fun shouldMatchIndentLess() {
+        fun indent(n: Int, string: String) = `s-indent≪`(n).match(CodePointReader(string))
+
+        assertThat(indent(0, "")).isEqualTo(Match(matches = false))
+        assertThat(indent(0, " ")).isEqualTo(Match(matches = false))
+        assertThat(indent(0, "  ")).isEqualTo(Match(matches = false))
+        assertThat(indent(0, "   ")).isEqualTo(Match(matches = false))
+
+        assertThat(indent(1, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(1, " ")).isEqualTo(Match(matches = false))
+        assertThat(indent(1, "  ")).isEqualTo(Match(matches = false))
+        assertThat(indent(1, "   ")).isEqualTo(Match(matches = false))
+
+        assertThat(indent(2, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(2, " ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf(" ")))
+        assertThat(indent(2, "  ")).isEqualTo(Match(matches = false))
+        assertThat(indent(2, "   ")).isEqualTo(Match(matches = false))
+
+        assertThat(indent(3, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(3, " ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf(" ")))
+        assertThat(indent(3, "  ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("  ")))
+        assertThat(indent(3, "   ")).isEqualTo(Match(matches = false))
+
+        assertThat(indent(4, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(4, " ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf(" ")))
+        assertThat(indent(4, "  ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("  ")))
+        assertThat(indent(4, "   ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("   ")))
+    }
+
+    @Test fun shouldMatchIndentLessOrEq() {
+        fun indent(n: Int, string: String) = `s-indent≤`(n).match(CodePointReader(string))
+
+        assertThat(indent(0, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(0, " ")).isEqualTo(Match(matches = false))
+        assertThat(indent(0, "  ")).isEqualTo(Match(matches = false))
+        assertThat(indent(0, "   ")).isEqualTo(Match(matches = false))
+
+        assertThat(indent(1, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(1, " ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf(" ")))
+        assertThat(indent(1, "  ")).isEqualTo(Match(matches = false))
+        assertThat(indent(1, "   ")).isEqualTo(Match(matches = false))
+
+        assertThat(indent(2, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(2, " ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf(" ")))
+        assertThat(indent(2, "  ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("  ")))
+        assertThat(indent(2, "   ")).isEqualTo(Match(matches = false))
+
+        assertThat(indent(3, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(3, " ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf(" ")))
+        assertThat(indent(3, "  ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("  ")))
+        assertThat(indent(3, "   ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("   ")))
+
+        assertThat(indent(4, "")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("")))
+        assertThat(indent(4, " ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf(" ")))
+        assertThat(indent(4, "  ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("  ")))
+        assertThat(indent(4, "   ")).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf("   ")))
+    }
+
     @Test fun shouldGenerateEmptySource() {
         val written = generate()
 
-        assertThat(written).isEqualTo(source(""))
+        assertThat(written).isEqualTo(enumSource(""))
     }
 
     @Test fun shouldGenerateCodePointProduction() {
@@ -28,7 +90,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   <[x][LATIN SMALL LETTER X][0x78]>\n" +
@@ -41,7 +103,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   <[\\uD801\\uDC28][DESERET SMALL LETTER LONG I][0x10428]>\n" +
@@ -54,7 +116,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   <[a][LATIN SMALL LETTER A][0x61]> + <[b][LATIN SMALL LETTER B][0x62]> + <[c][LATIN SMALL LETTER C][0x63]>\n" +
@@ -67,12 +129,12 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]\n" +
             "     */\n" +
-            "    `foo`('0' .. '9'),\n"))
+            "    `foo`('0'..'9'),\n"))
     }
 
     @Test fun shouldGenerateRepeatProduction() {
@@ -80,7 +142,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   (->x × 4)\n" +
@@ -98,7 +160,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   <foo1> ⇒ <bar1>\n" +
@@ -109,57 +171,64 @@ class YamlSymbolGeneratorTest {
             "    `foo`(something with foo and bar),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateProductionWithOneArg() {
-        val production = Production(0, "foo", "n", LabelExpression("baz"))
+    @Test fun shouldGenerateProductionWithOneArg() {
+        val production = Production(0, "foo", listOf("n"), RepeatedExpression(ref("bar"), "n"))
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
-            "    /**\n" +
-            "     * `0` : foo [n]:\n" +
-            "     *   <baz>\n" +
-            "     */\n" +
-            "    `foo(`int n) {\n" +
-            "        return next.accept(\"baz\") ? \"baz\" : null;\n" +
-            "    }\n"))
+        assertThat(written).isEqualTo(factoryFunSource("\n" +
+            "/**\n" +
+            " * `0` : foo (n):\n" +
+            " *   (->bar × n)\n" +
+            " */\n" +
+            "fun `foo`(n: Int): Token {\n" +
+            "    val token = `bar` * n\n" +
+            "    return token(\"foo(\$n)\") { token.match(it) }\n" +
+            "}\n"))
     }
 
-    @Disabled @Test fun shouldGenerateProductionWithLessArg() {
-        val production = Production(0, "foo", "<n", LabelExpression("bar"))
+    @Test fun shouldGenerateProductionWithLessArg() {
+        val production = Production(0, "foo", listOf("<n"), RepeatedExpression(ref("bar"), "m", "Where m < n"))
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
-            "    /**\n" +
-            "     * `0` : foo [<n]:\n" +
-            "     *   <bar>\n" +
-            "     */\n" +
-            "    `foo_less`(int n) {\n" +
-            "        return next.accept(\"bar\") ? \"bar\" : null;\n" +
-            "    }\n"))
+        assertThat(written).isEqualTo(factoryFunSource("\n" +
+            "/**\n" +
+            " * `0` : foo (<n):\n" +
+            " *   (->bar × m /* Where m < n */)\n" +
+            " */\n" +
+            "fun `foo≪`(n: Int) = token(\"foo(<\$n)\") { reader ->\n" +
+            "    val match = reader.mark { reader.readWhile { reader -> `bar`.match(reader).codePoints } }\n" +
+            "    if (match.size >= n) return@token Match(matches = false)\n" +
+            "    reader.read(match.size)\n" +
+            "    return@token Match(matches = true, codePoints = match)\n" +
+            "}\n"))
     }
 
-    @Disabled @Test fun shouldGenerateProductionWithLessEqArg() {
-        val production = Production(0, "foo", "≤n", LabelExpression("bar"))
+    @Test fun shouldGenerateProductionWithLessEqArg() {
+        val production = Production(0, "foo", listOf("≤n"), RepeatedExpression(ref("bar"), "m", "Where m ≤ n"))
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
-            "    /**\n" +
-            "     * `0` : foo [≤n]:\n" +
-            "     *   <bar>\n" +
-            "     */\n" +
-            "    `foo_less`Eq(int n) {\n" +
-            "        return next.accept(\"bar\") ? \"bar\" : null;\n" +
-            "    }\n"))
+        assertThat(written).isEqualTo(factoryFunSource("\n" +
+            "/**\n" +
+            " * `0` : foo (≤n):\n" +
+            " *   (->bar × m /* Where m ≤ n */)\n" +
+            " */\n" +
+            "fun `foo≤`(n: Int) = token(\"foo(≤\$n)\") { reader ->\n" +
+            "    val match = reader.mark { reader.readWhile { reader -> `bar`.match(reader).codePoints } }\n" +
+            "    if (match.size > n) return@token Match(matches = false)\n" +
+            "    reader.read(match.size)\n" +
+            "    return@token Match(matches = true, codePoints = match)\n" +
+            "}\n"))
     }
 
     @Disabled @Test fun shouldGenerateProductionWithTwoArgs() {
-        val production = Production(0, "foo", "c,n", LabelExpression("bar"))
+        val production = Production(0, "foo", listOf("c", "n"), LabelExpression("bar"))
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo [c,n]:\n" +
             "     *   <bar>\n" +
@@ -170,11 +239,11 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateProductionWithMinus() {
-        val production = Production(0, "c-foo", null, LabelExpression("bar"))
+        val production = Production(0, "c-foo", listOf(), LabelExpression("bar"))
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : c-foo:\n" +
             "     *   <bar>\n" +
@@ -185,11 +254,11 @@ class YamlSymbolGeneratorTest {
     }
 
     @Disabled @Test fun shouldGenerateProductionWithPlus() {
-        val production = Production(0, "c+foo", null, LabelExpression("bar"))
+        val production = Production(0, "c+foo", listOf(), LabelExpression("bar"))
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : c+foo:\n" +
             "     *   <bar>\n" +
@@ -204,7 +273,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   ->bar\n" +
@@ -218,7 +287,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   [->ref1 ||\n" +
@@ -233,7 +302,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   [<[a][LATIN SMALL LETTER A][0x61]> ||\n" +
@@ -247,7 +316,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   [->ref1 ||\n" +
@@ -261,13 +330,13 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   [<[\\t][CHARACTER TABULATION][0x9]> ||\n" +
             "     *    [<[ ][SPACE][0x20]>-<[\\uDBFF\\uDFFF][?][0x10ffff]>]]\n" +
             "     */\n" +
-            "    `foo`('\\t' or (' ' .. \"\\uDBFF\\uDFFF\")),\n"))
+            "    `foo`('\\t' or (' '..\"\\uDBFF\\uDFFF\")),\n"))
     }
 
     @Test fun shouldGenerateAlternativeOfSequenceAndReferenceProduction() {
@@ -275,7 +344,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   [->a + ->b ||\n" +
@@ -290,7 +359,7 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(production)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : foo:\n" +
             "     *   ->a - ->b - ->c\n" +
@@ -298,7 +367,7 @@ class YamlSymbolGeneratorTest {
             "    `foo`(`a` - `b` - `c`),\n"))
     }
 
-    private fun production(expression: Expression) = Production(0, "foo", null, expression)
+    private fun production(expression: Expression) = Production(0, "foo", listOf(), expression)
 
     private fun codePoint(char: Char) = codePoint(CodePoint.of(char))
     private fun codePoint(codePoint: CodePoint) = CodePointExpression(codePoint)
@@ -339,10 +408,17 @@ class YamlSymbolGeneratorTest {
         return writer.toString()
     }
 
-    private fun source(body: String): String {
+    private fun enumSource(body: String): String {
         return YamlSymbolGenerator.PREFIX +
             "enum class FooParser(private val token: Token) : Token {\n" +
             body +
             YamlSymbolGenerator.SUFFIX
+    }
+
+    private fun factoryFunSource(body: String): String {
+        return YamlSymbolGenerator.PREFIX +
+            "enum class FooParser(private val token: Token) : Token {\n" +
+            YamlSymbolGenerator.SUFFIX +
+            body
     }
 }

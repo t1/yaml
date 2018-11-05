@@ -181,8 +181,8 @@ abstract class Expression {
         }
     }
 
-    open class RepeatedExpression(val expression: Expression, val repetitions: String) : Expression() {
-        override fun toString(): String = "($expression × $repetitions)"
+    open class RepeatedExpression(val expression: Expression, val repetitions: String, val comment: String? = null) : Expression() {
+        override fun toString(): String = "($expression × $repetitions${if (comment == null) "" else " /* $comment */"})"
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             expression.guide(sub)

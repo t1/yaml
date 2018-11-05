@@ -46,7 +46,7 @@ class ExpressionVisitorTest {
     }
 
 
-    @Test fun visitlabel() {
+    @Test fun visitLabel() {
         val expression = LabelExpression("foo")
 
         expression.guide(visitor)

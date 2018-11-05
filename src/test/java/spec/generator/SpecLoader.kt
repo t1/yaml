@@ -24,14 +24,13 @@ class SpecLoader {
 
     fun parse(set: Element): Production {
         val counter = parseCounter(set)
-
         val argsMatcher = lhsMatcher(set)
-        val name = argsMatcher.group("name")
-        val args = argsMatcher.group("args")
-
-        val expression = expression(set, counter, name)
-
-        return Production(counter, name, args, expression)
+        return Production(
+            counter = counter,
+            name = argsMatcher.group("name"),
+            args = argsMatcher.group("args")?.split(",") ?: listOf(),
+            expression = expression(set, counter, argsMatcher.group("name"))
+        )
     }
 
     private fun expression(set: Element, counter: Int, name: String): Expression {

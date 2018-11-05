@@ -24,8 +24,11 @@ class YamlSymbolGenerator(private val spec: Spec) {
         private val SOURCE_FILE = Paths.get("src/main/java/com/github/t1/yaml/parser/YamlTokens.kt")
 
         val PREFIX = "" +
+            "@file:Suppress(\"unused\", \"FunctionName\", \"NonAsciiCharacters\")\n" +
+            "\n" +
             "package com.github.t1.yaml.parser\n" +
             "\n" +
+            "import com.github.t1.yaml.parser.YamlTokens.`s-space`\n" +
             "import com.github.t1.yaml.tools.CodePoint\n" +
             "import com.github.t1.yaml.tools.CodePointRange\n" +
             "import com.github.t1.yaml.tools.CodePointReader\n" +
@@ -33,6 +36,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.tools.Token\n" +
             "import com.github.t1.yaml.tools.symbol\n" +
             "import com.github.t1.yaml.tools.toCodePointRange\n" +
+            "import com.github.t1.yaml.tools.token\n" +
             "import com.github.t1.yaml.tools.undefined\n" +
             "import javax.annotation.Generated\n" +
             "\n" +
@@ -50,7 +54,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             " * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.\n" +
             " */\n" +
             "@Generated(\"${YamlSymbolGenerator::class.qualifiedName}\")\n" +
-            "@Suppress(\"unused\", \"EnumEntryName\", \"NonAsciiCharacters\")\n"
+            "@Suppress(\"EnumEntryName\")\n"
 
         const val SUFFIX = "" +
             "    ;\n" +
@@ -61,7 +65,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "    constructor(range: CharRange) : this(range.toCodePointRange())\n" +
             "    constructor(range: CodePointRange) : this(symbol(range))\n" +
             "\n" +
-            "    override fun match(scanner: Scanner): Match = this.token.match(scanner)\n" +
+            "    override fun match(reader: CodePointReader): Match = this.token.match(reader)\n" +
             "}\n" +
             "\n" +
             "private infix fun Char.or(that: Char) = symbol(this) or symbol(that)\n" +
@@ -69,9 +73,9 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))\n" +
             "private infix fun Token.or(that: String): Token = or(symbol(that))\n" +
             "private infix fun Token.or(that: Char): Token = or(symbol(that))\n" +
-            "private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this) .. CodePoint.of(that))\n" +
-            "private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this) .. CodePoint.of(that))\n" +
-            "private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this) .. CodePoint.of(that))\n" +
+            "private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this)..CodePoint.of(that))\n" +
+            "private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))\n" +
+            "private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))\n" +
             "private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)\n" +
             "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
             "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n"
@@ -90,104 +94,182 @@ class YamlSymbolGenerator(private val spec: Spec) {
     }
 
     class SourceCodeGenerator(private val className: String, private val out: Writer) {
-        private fun append(string: String) = out.append(string)
+        private fun write(string: String) = out.append(string)
 
         fun write(productions: List<Production>) {
-            append(PREFIX +
+            write(PREFIX +
                 "enum class $className(private val token: Token) : Token {\n")
 
-            for (production in productions) {
+            for (production in productions.filter { production -> production.args.isEmpty() }) {
                 ProductionWriter(production).write()
             }
 
-            append(SUFFIX)
+            write(SUFFIX)
+
+            for (production in productions.filter { production -> !production.args.isEmpty() }) {
+                if (production.counter < 66)
+                    ProductionWriter(production).write()
+            }
         }
 
         private inner class ProductionWriter(val production: Production) : Visitor() {
             fun write() {
-                append("\n" +
-                    "    /**\n" +
-                    "     * ${production.toString().replace("\n", "\n     * ")}\n" +
-                    "     */\n" +
-                    "    `$methodName`(")
-                if (production.counter in setOf(87, 89, 93, 96, 97, 98, 126, 139, 142, 143, 144, 150, 151, 159, 161, 185, 188, 196, 198))
-                    append("undefined /* TODO not generated */")
-                else
-                    production.expression.guide(this)
-                append("),\n")
+                val indent = if (production.args.isEmpty()) "    " else ""
+                write("\n" +
+                    indent + "/**\n" +
+                    indent + " * ${production.asComment().replace("\n", "\n$indent * ")}\n" +
+                    indent + " */\n")
+                when {
+                    production.counter in setOf(66, 84, 85, 87, 89, 93, 97, 98, 103, 111, 114, 122, 123, 126, 139, 142, 193, 207, 210) ->
+                        write("    /* TODO not generated */\n")
+                    production.args.isEmpty() -> writeEnumEntry()
+                    else -> writeFactoryFun()
+                }
             }
+
+            private fun Production.asComment(): String {
+                return ("`" + counter + "` : " + name + (if (args.isEmpty()) "" else " (${args.joinToString(", ")})") + ":\n"
+                    + "  " + expression)
+            }
+
+            private fun writeEnumEntry() {
+                write("    `${production.name}`(")
+                production.expression.guide(this)
+                write("),\n")
+            }
+
+            private fun writeFactoryFun() {
+                write("fun `${funName()}`(")
+                writeArgs()
+                write(")")
+                when {
+                    onlyArgOrEmpty.startsWith("<") || onlyArgOrEmpty.startsWith("≤") -> writeLessFun(onlyArgOrEmpty[0])
+                    else -> writeRepeatedFun()
+                }
+            }
+
+            private fun funName() = production.name +
+                when { // consider only the first arg for extending the method name... good enough for YAML 1.2
+                    onlyArgOrEmpty.startsWith("<") -> "≪" // '<' is an illegal character for a method name... much-less is not
+                    onlyArgOrEmpty.startsWith("≤") -> "≤"
+                    else -> ""
+                }
+
+            private val onlyArgOrEmpty: String get() = production.args.takeIf { it.size == 1 }?.get(0) ?: ""
+
+            private fun writeArgs() = production.args.forEach {
+                val variable = if (it.startsWith("<") || it.startsWith("≤")) it.substring(1) else it
+                write(when (variable) {
+                    "n" -> "n: Int"
+                    else -> "/* TODO arg $it */"
+                })
+            }
+
+            private fun writeLessFun(comparison: Char) {
+                val repeatedExpression = production.expression as RepeatedExpression
+                require(repeatedExpression.repetitions == "m") { "unexpected repetitions '${repeatedExpression.repetitions}'" }
+                require(repeatedExpression.comment == "Where m $comparison n") { "unexpected repeat comment '${repeatedExpression.comment}'" }
+                write("" +
+                    " = token(\"${production.name}($comparison\$n)\") { reader ->\n" +
+                    "    val match = reader.mark { reader.readWhile { reader -> ")
+                repeatedExpression.expression.guide(this)
+                val negatedComparison = when (comparison) {
+                    '<' -> ">="
+                    '≤' -> ">"
+                    else -> throw UnsupportedOperationException("unsupported comparison: '$comparison'")
+                }
+                write(".match(reader).codePoints } }\n" +
+                    "    if (match.size $negatedComparison n) return@token Match(matches = false)\n" +
+                    "    reader.read(match.size)\n" +
+                    "    return@token Match(matches = true, codePoints = match)\n" +
+                    "}\n")
+            }
+
+            private fun writeRepeatedFun() {
+                write(": Token {\n" +
+                    "    val token = ")
+                production.expression.guide(this)
+                write("\n" +
+                    "    return token(\"${production.name}(${production.args.joinToString(", ") { argVar(it) }})\") { token.match(it) }\n" +
+                    "}\n")
+            }
+
+            /** the arg as Kotlin string template variable */
+            private fun argVar(arg: String) = when {
+                arg.startsWith("<") -> "<\$${arg.substring(1)}"
+                else -> "\$$arg"
+            }
+
 
             private val Expression.isCurrent get() = this === production.expression
 
             private fun ContainerExpression.isFirst(expression: Expression) = this.expressions.first() === expression
 
-            private val methodName get() = production.name + if (production.args == null) "" else "(${production.args.replace("<", "«")})"
-
             override fun visit(codePoint: CodePointExpression) {
                 if (codePoint.isCurrent)
-                    append(string(codePoint))
+                    write(string(codePoint))
             }
 
             override fun visit(reference: ReferenceExpression) {
-                append("`${reference.ref}`")
+                write("`${reference.ref}`")
             }
 
             override fun visit(sequence: SequenceExpression) = object : Visitor() {
                 override fun visit(codePoint: CodePointExpression) {
                     if (!sequence.isFirst(codePoint))
-                        append(" + ")
-                    append("'${codePoint.codePoint.escaped}'")
+                        write(" + ")
+                    write("'${codePoint.codePoint.escaped}'")
                 }
             }
 
             override fun visit(alternatives: AlternativesExpression) = object : Visitor() {
                 override fun visit(reference: ReferenceExpression) {
                     if (!alternatives.isFirst(reference))
-                        append(" or ")
+                        write(" or ")
                     this@ProductionWriter.visit(reference)
                 }
 
                 override fun visit(range: RangeExpression): Visitor {
                     if (!alternatives.isFirst(range))
-                        append(" or ")
-                    append("(")
+                        write(" or ")
+                    write("(")
                     this@ProductionWriter.visit(range)
-                    append(")")
+                    write(")")
                     return object : Visitor() {}
                 }
 
                 override fun visit(codePoint: CodePointExpression) {
                     if (!alternatives.isFirst(codePoint))
-                        append(" or ")
-                    append(string(codePoint)) // TODO this@ProductionWriter.visit(codePoint)
+                        write(" or ")
+                    write(string(codePoint)) // TODO this@ProductionWriter.visit(codePoint)
                 }
 
                 override fun visit(sequence: SequenceExpression): Visitor {
-                    append("(")
+                    write("(")
                     return object : Visitor() {
                         override fun visit(codePoint: CodePointExpression) {
                             if (!sequence.isFirst(codePoint))
-                                append(" + ")
-                            append("'${codePoint.codePoint.escaped}'")
+                                write(" + ")
+                            write("'${codePoint.codePoint.escaped}'")
                         }
 
                         override fun visit(reference: ReferenceExpression) {
                             if (!sequence.isFirst(reference))
-                                append(" + ")
+                                write(" + ")
                             this@ProductionWriter.visit(reference)
                         }
                     }
                 }
 
                 override fun leave(sequence: SequenceExpression) {
-                    append(")")
+                    write(")")
                 }
             }
 
             override fun visit(minus: MinusExpression) = object : Visitor() {
                 override fun visit(reference: ReferenceExpression) {
                     if (reference !== minus.minuend)
-                        append(" - ")
+                        write(" - ")
                     this@ProductionWriter.visit(reference)
                 }
             }
@@ -199,13 +281,13 @@ class YamlSymbolGenerator(private val spec: Spec) {
             }
 
             override fun leave(repeated: RepeatedExpression) {
-                append(" * ${repeated.repetitions}")
+                write(" * ${repeated.repetitions}")
             }
 
             override fun visit(range: RangeExpression): Visitor {
-                append(string(range.left as CodePointExpression)) // TODO range.left.guide(this)
-                append(" .. ")
-                append(string(range.right as CodePointExpression)) // TODO range.right.guide(this)
+                write(string(range.left as CodePointExpression)) // TODO range.left.guide(this)
+                write("..")
+                write(string(range.right as CodePointExpression)) // TODO range.right.guide(this)
                 return this
             }
 

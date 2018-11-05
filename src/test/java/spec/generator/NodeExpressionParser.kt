@@ -68,7 +68,7 @@ class NodeExpressionParser(nodes: List<Node>) {
         if (next.accept("-"))
             expression = MinusExpression.of(expression, expression())
         if (next.accept("×"))
-            expression = RepeatedExpression(expression, repetitions())
+            expression = RepeatedExpression(expression, repetitions(), skipWhitespaceAndComments().trim().takeIf { it.isNotEmpty() })
         if (next.accept("+"))
             expression = RepeatedExpression(expression, "+")
         if (next.accept("?"))
@@ -91,12 +91,14 @@ class NodeExpressionParser(nodes: List<Node>) {
         return expression
     }
 
-    private fun skipWhitespaceAndComments() {
+    private fun skipWhitespaceAndComments(): String {
         var count: Int
+        var comment = ""
         do {
             count = next.count(" ")
             if (next.accept("/*")) {
-                next.readUntilAndSkip("*/")
+                next.accept(" ")
+                comment += next.readUntilAndSkip("*/")
                 count++
             }
             if (isBr) {
@@ -104,6 +106,7 @@ class NodeExpressionParser(nodes: List<Node>) {
                 count++
             }
         } while (count > 0)
+        return comment
     }
 
     private fun hex(): Expression {
@@ -139,9 +142,7 @@ class NodeExpressionParser(nodes: List<Node>) {
 
     private fun repetitions(): String {
         skipWhitespaceAndComments()
-        val repetitions = if (next.isText) next.read().toString() else readVar()
-        skipWhitespaceAndComments()
-        return repetitions
+        return if (next.isText) next.read().toString() else readVar()
     }
 
     private fun readVar(): String {

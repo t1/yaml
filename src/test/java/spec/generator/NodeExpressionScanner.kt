@@ -67,10 +67,11 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
     fun readUntilAndSkip(end: String): String {
         val out = StringBuilder()
         while (more() && !accept(end)) {
-            if (isText)
-                out.append(readUntil(end))
-            else
-                out.append(readElement().html())
+            if (out.isNotEmpty()) out.append(' ')
+            out.append(
+                if (isText) readUntil(end)
+                else readElement().html()
+            )
         }
         return out.toString()
     }

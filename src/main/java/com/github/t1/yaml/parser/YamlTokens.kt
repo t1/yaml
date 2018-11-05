@@ -1,4 +1,4 @@
-@file:Suppress("unused", "FunctionName")
+@file:Suppress("unused", "FunctionName", "NonAsciiCharacters")
 
 package com.github.t1.yaml.parser
 
@@ -28,7 +28,7 @@ import javax.annotation.Generated
  * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.
  */
 @Generated("spec.generator.YamlSymbolGenerator")
-@Suppress("EnumEntryName", "NonAsciiCharacters")
+@Suppress("EnumEntryName")
 enum class YamlTokens(private val token: Token) : Token {
 
     /**
@@ -485,75 +485,16 @@ enum class YamlTokens(private val token: Token) : Token {
     `c-ns-esc-char`(),
 
     /**
-     * `64` : s-indent (<n):
-     *   (->s-space × m)
-     */
-    `s-indent(«n)`(),
-
-    /**
-     * `65` : s-indent (≤n):
-     *   (->s-space × m)
-     */
-    `s-indent(≤n)`(),
-
-    /**
      * `66` : s-separate-in-line:
      *   (->s-white × +)
      */
-    `s-separate-in-line`(),
-
-    /**
-     * `67` : s-line-prefix (n,c):
-     *   <c = block-out> ⇒ <->s-block-line-prefix(n)>
-     *   <c = block-in> ⇒ <->s-block-line-prefix(n)>
-     *   <c = flow-out> ⇒ <->s-flow-line-prefix(n)>
-     *   <c = flow-in> ⇒ <->s-flow-line-prefix(n)>
-     */
-    `s-line-prefix(n,c)`(),
-
-    /**
-     * `68` : s-block-line-prefix (n):
-     *   ->s-indent(n)
-     */
-    `s-block-line-prefix(n)`(),
-
-    /**
-     * `69` : s-flow-line-prefix (n):
-     *   ->s-indent(n) + (->s-separate-in-line × ?)
-     */
-    `s-flow-line-prefix(n)`(),
-
-    /**
-     * `70` : l-empty (n,c):
-     *   [->s-line-prefix(n,c) ||
-     *    ->s-indent(n)] + ->b-as-line-feed
-     */
-    `l-empty(n,c)`(),
-
-    /**
-     * `71` : b-l-trimmed (n,c):
-     *   ->b-non-content + (->l-empty(n,c) × +)
-     */
-    `b-l-trimmed(n,c)`(),
+    /* TODO not generated */
 
     /**
      * `72` : b-as-space:
      *   ->b-break
      */
     `b-as-space`(`b-break`),
-
-    /**
-     * `73` : b-l-folded (n,c):
-     *   [->b-l-trimmed(n,c) ||
-     *    ->b-as-space]
-     */
-    `b-l-folded(n,c)`(`b-l-trimmed(n,c)` or `b-as-space`),
-
-    /**
-     * `74` : s-flow-folded (n):
-     *   (->s-separate-in-line × ?) + ->b-l-folded(n,c) + ->s-flow-line-prefix(n)
-     */
-    `s-flow-folded(n)`(),
 
     /**
      * `75` : c-nb-comment-text:
@@ -586,24 +527,6 @@ enum class YamlTokens(private val token: Token) : Token {
     `s-l-comments`(),
 
     /**
-     * `80` : s-separate (n,c):
-     *   <c = block-out> ⇒ <->s-separate-lines(n)>
-     *   <c = block-in> ⇒ <->s-separate-lines(n)>
-     *   <c = flow-out> ⇒ <->s-separate-lines(n)>
-     *   <c = flow-in> ⇒ <->s-separate-lines(n)>
-     *   <c = block-key> ⇒ <->s-separate-in-line>
-     *   <c = flow-key> ⇒ <->s-separate-in-line>
-     */
-    `s-separate(n,c)`(),
-
-    /**
-     * `81` : s-separate-lines (n):
-     *   [->s-l-comments + ->s-flow-line-prefix(n) ||
-     *    ->s-separate-in-line]
-     */
-    `s-separate-lines(n)`((`s-l-comments` + `s-flow-line-prefix(n)`) or `s-separate-in-line`),
-
-    /**
      * `82` : l-directive:
      *   ->c-directive + [->ns-yaml-directive ||
      *    ->ns-tag-directive ||
@@ -621,13 +544,13 @@ enum class YamlTokens(private val token: Token) : Token {
      * `84` : ns-directive-name:
      *   (->ns-char × +)
      */
-    `ns-directive-name`(),
+    /* TODO not generated */
 
     /**
      * `85` : ns-directive-parameter:
      *   (->ns-char × +)
      */
-    `ns-directive-parameter`(),
+    /* TODO not generated */
 
     /**
      * `86` : ns-yaml-directive:
@@ -639,7 +562,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `87` : ns-yaml-version:
      *   (->ns-dec-digit × +) + <[.][FULL STOP][0x2e]> + (->ns-dec-digit × +)
      */
-    `ns-yaml-version`(undefined /* TODO not generated */),
+    /* TODO not generated */
 
     /**
      * `88` : ns-tag-directive:
@@ -653,7 +576,7 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->c-secondary-tag-handle ||
      *    ->c-primary-tag-handle]
      */
-    `c-tag-handle`(undefined /* TODO not generated */),
+    /* TODO not generated */
 
     /**
      * `90` : c-primary-tag-handle:
@@ -678,7 +601,7 @@ enum class YamlTokens(private val token: Token) : Token {
      *   [->c-ns-local-tag-prefix ||
      *    ->ns-global-tag-prefix]
      */
-    `ns-tag-prefix`(undefined /* TODO not generated */),
+    /* TODO not generated */
 
     /**
      * `94` : c-ns-local-tag-prefix:
@@ -693,25 +616,18 @@ enum class YamlTokens(private val token: Token) : Token {
     `ns-global-tag-prefix`(),
 
     /**
-     * `96` : c-ns-properties (n,c):
-     *   [->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) ||
-     *    ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)]
-     */
-    `c-ns-properties(n,c)`(undefined /* TODO not generated */),
-
-    /**
      * `97` : c-ns-tag-property:
      *   [->c-verbatim-tag ||
      *    ->c-ns-shorthand-tag ||
      *    ->c-non-specific-tag]
      */
-    `c-ns-tag-property`(undefined /* TODO not generated */),
+    /* TODO not generated */
 
     /**
      * `98` : c-verbatim-tag:
      *   ->c-tag + <[<][LESS-THAN SIGN][0x3c]> + (->ns-uri-char × +) + <[>][GREATER-THAN SIGN][0x3e]>
      */
-    `c-verbatim-tag`(undefined /* TODO not generated */),
+    /* TODO not generated */
 
     /**
      * `99` : c-ns-shorthand-tag:
@@ -741,7 +657,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `103` : ns-anchor-name:
      *   (->ns-anchor-char × +)
      */
-    `ns-anchor-name`(),
+    /* TODO not generated */
 
     /**
      * `104` : c-ns-alias-node:
@@ -775,58 +691,16 @@ enum class YamlTokens(private val token: Token) : Token {
     `ns-double-char`(`nb-double-char` - `s-white`),
 
     /**
-     * `109` : c-double-quoted (n,c):
-     *   ->c-double-quote + ->nb-double-text(n,c) + ->c-double-quote
-     */
-    `c-double-quoted(n,c)`(),
-
-    /**
-     * `110` : nb-double-text (n,c):
-     *   <c = flow-out> ⇒ <->nb-double-multi-line(n)>
-     *   <c = flow-in> ⇒ <->nb-double-multi-line(n)>
-     *   <c = block-key> ⇒ <->nb-double-one-line>
-     *   <c = flow-key> ⇒ <->nb-double-one-line>
-     */
-    `nb-double-text(n,c)`(),
-
-    /**
      * `111` : nb-double-one-line:
      *   (->nb-double-char × *)
      */
-    `nb-double-one-line`(),
-
-    /**
-     * `112` : s-double-escaped (n):
-     *   (->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c) × *) + ->s-flow-line-prefix(n)
-     */
-    `s-double-escaped(n)`(),
-
-    /**
-     * `113` : s-double-break (n):
-     *   [->s-double-escaped(n) ||
-     *    ->s-flow-folded(n)]
-     */
-    `s-double-break(n)`(`s-double-escaped(n)` or `s-flow-folded(n)`),
+    /* TODO not generated */
 
     /**
      * `114` : nb-ns-double-in-line:
      *   ((->s-white × *) + ->ns-double-char × *)
      */
-    `nb-ns-double-in-line`(),
-
-    /**
-     * `115` : s-double-next-line (n):
-     *   ->s-double-break(n) + (->ns-double-char + ->nb-ns-double-in-line + [->s-double-next-line(n) ||
-     *    (->s-white × *)] × ?)
-     */
-    `s-double-next-line(n)`(),
-
-    /**
-     * `116` : nb-double-multi-line (n):
-     *   ->nb-ns-double-in-line + [->s-double-next-line(n) ||
-     *    (->s-white × *)]
-     */
-    `nb-double-multi-line(n)`(),
+    /* TODO not generated */
 
     /**
      * `117` : c-quoted-quote:
@@ -848,63 +722,16 @@ enum class YamlTokens(private val token: Token) : Token {
     `ns-single-char`(`nb-single-char` - `s-white`),
 
     /**
-     * `120` : c-single-quoted (n,c):
-     *   ->c-single-quote + ->nb-single-text(n,c) + ->c-single-quote
-     */
-    `c-single-quoted(n,c)`(),
-
-    /**
-     * `121` : nb-single-text (n,c):
-     *   <c = flow-out> ⇒ <->nb-single-multi-line(n)>
-     *   <c = flow-in> ⇒ <->nb-single-multi-line(n)>
-     *   <c = block-key> ⇒ <->nb-single-one-line>
-     *   <c = flow-key> ⇒ <->nb-single-one-line>
-     */
-    `nb-single-text(n,c)`(),
-
-    /**
      * `122` : nb-single-one-line:
      *   (->nb-single-char × *)
      */
-    `nb-single-one-line`(),
+    /* TODO not generated */
 
     /**
      * `123` : nb-ns-single-in-line:
      *   ((->s-white × *) + ->ns-single-char × *)
      */
-    `nb-ns-single-in-line`(),
-
-    /**
-     * `124` : s-single-next-line (n):
-     *   ->s-flow-folded(n) + (->ns-single-char + ->nb-ns-single-in-line + [->s-single-next-line(n) ||
-     *    (->s-white × *)] × ?)
-     */
-    `s-single-next-line(n)`(),
-
-    /**
-     * `125` : nb-single-multi-line (n):
-     *   ->nb-ns-single-in-line + [->s-single-next-line(n) ||
-     *    (->s-white × *)]
-     */
-    `nb-single-multi-line(n)`(),
-
-    /**
-     * `126` : ns-plain-first (c):
-     *   [->ns-char - ->c-indicator ||
-     *    ->c-mapping-key ||
-     *    ->c-mapping-value ||
-     *    ->c-sequence-entry]
-     */
-    `ns-plain-first(c)`(undefined /* TODO not generated */),
-
-    /**
-     * `127` : ns-plain-safe (c):
-     *   <c = flow-out> ⇒ <->ns-plain-safe-out>
-     *   <c = flow-in> ⇒ <->ns-plain-safe-in>
-     *   <c = block-key> ⇒ <->ns-plain-safe-out>
-     *   <c = flow-key> ⇒ <->ns-plain-safe-in>
-     */
-    `ns-plain-safe(c)`(),
+    /* TODO not generated */
 
     /**
      * `128` : ns-plain-safe-out:
@@ -919,488 +746,11 @@ enum class YamlTokens(private val token: Token) : Token {
     `ns-plain-safe-in`(`ns-char` - `c-flow-indicator`),
 
     /**
-     * `130` : ns-plain-char (c):
-     *   ->ns-plain-safe(c) - [->c-mapping-value - ->c-comment ||
-     *    ->c-comment ||
-     *    ->c-mapping-value]
-     */
-    `ns-plain-char(c)`(`ns-plain-safe(c)` - `c-mapping-value` - `c-comment` - `c-comment` - `c-mapping-value`),
-
-    /**
-     * `131` : ns-plain (n,c):
-     *   <c = flow-out> ⇒ <->ns-plain-multi-line(n,c)>
-     *   <c = flow-in> ⇒ <->ns-plain-multi-line(n,c)>
-     *   <c = block-key> ⇒ <->ns-plain-one-line(c)>
-     *   <c = flow-key> ⇒ <->ns-plain-one-line(c)>
-     */
-    `ns-plain(n,c)`(),
-
-    /**
-     * `132` : nb-ns-plain-in-line (c):
-     *   ((->s-white × *) + ->ns-plain-char(c) × *)
-     */
-    `nb-ns-plain-in-line(c)`(),
-
-    /**
-     * `133` : ns-plain-one-line (c):
-     *   ->ns-plain-first(c) + ->nb-ns-plain-in-line(c)
-     */
-    `ns-plain-one-line(c)`(),
-
-    /**
-     * `134` : s-ns-plain-next-line (n,c):
-     *   ->s-flow-folded(n) + ->ns-plain-char(c) + ->nb-ns-plain-in-line(c)
-     */
-    `s-ns-plain-next-line(n,c)`(),
-
-    /**
-     * `135` : ns-plain-multi-line (n,c):
-     *   ->ns-plain-one-line(c) + (->s-ns-plain-next-line(n,c) × *)
-     */
-    `ns-plain-multi-line(n,c)`(),
-
-    /**
-     * `136` : in-flow (c):
-     *   <c = flow-out> ⇒ <flow-in>
-     *   <c = flow-in> ⇒ <flow-in>
-     *   <c = block-key> ⇒ <flow-key>
-     *   <c = flow-key> ⇒ <flow-key>
-     */
-    `in-flow(c)`(),
-
-    /**
-     * `137` : c-flow-sequence (n,c):
-     *   ->c-sequence-start + (->s-separate(n,c) × ?) + ->ns-s-flow-seq-entries(n,c) + ->in-flow(c) + (->ns-s-flow-seq-entries(n,c) × ?) + ->c-sequence-end
-     */
-    `c-flow-sequence(n,c)`(),
-
-    /**
-     * `138` : ns-s-flow-seq-entries (n,c):
-     *   ->ns-flow-seq-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c) × ?) × ?)
-     */
-    `ns-s-flow-seq-entries(n,c)`(),
-
-    /**
-     * `139` : ns-flow-seq-entry (n,c):
-     *   [->ns-flow-pair(n,c) ||
-     *    ->ns-flow-node(n,c)]
-     */
-    `ns-flow-seq-entry(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `140` : c-flow-mapping (n,c):
-     *   ->c-mapping-start + (->s-separate(n,c) × ?) + ->ns-s-flow-map-entries(n,c) + ->in-flow(c) + (->ns-s-flow-map-entries(n,c) × ?) + ->c-mapping-end
-     */
-    `c-flow-mapping(n,c)`(),
-
-    /**
-     * `141` : ns-s-flow-map-entries (n,c):
-     *   ->ns-flow-map-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c) × ?) × ?)
-     */
-    `ns-s-flow-map-entries(n,c)`(),
-
-    /**
-     * `142` : ns-flow-map-entry (n,c):
-     *   [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) ||
-     *    ->ns-flow-map-implicit-entry(n,c)]
-     */
-    `ns-flow-map-entry(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `143` : ns-flow-map-explicit-entry (n,c):
-     *   [->ns-flow-map-implicit-entry(n,c) ||
-     *    ->e-node + ->e-node]
-     */
-    `ns-flow-map-explicit-entry(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `144` : ns-flow-map-implicit-entry (n,c):
-     *   [->ns-flow-map-yaml-key-entry(n,c) ||
-     *    ->c-ns-flow-map-empty-key-entry(n,c) ||
-     *    ->c-ns-flow-map-json-key-entry(n,c)]
-     */
-    `ns-flow-map-implicit-entry(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `145` : ns-flow-map-yaml-key-entry (n,c):
-     *   ->ns-flow-yaml-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-separate-value(n,c) ||
-     *    ->e-node]
-     */
-    `ns-flow-map-yaml-key-entry(n,c)`(),
-
-    /**
-     * `146` : c-ns-flow-map-empty-key-entry (n,c):
-     *   ->e-node + ->c-ns-flow-map-separate-value(n,c)
-     */
-    `c-ns-flow-map-empty-key-entry(n,c)`(),
-
-    /**
-     * `147` : c-ns-flow-map-separate-value (n,c):
-     *   ->c-mapping-value + [->s-separate(n,c) + ->ns-flow-node(n,c) ||
-     *    ->e-node]
-     */
-    `c-ns-flow-map-separate-value(n,c)`(),
-
-    /**
-     * `148` : c-ns-flow-map-json-key-entry (n,c):
-     *   ->c-flow-json-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-adjacent-value(n,c) ||
-     *    ->e-node]
-     */
-    `c-ns-flow-map-json-key-entry(n,c)`(),
-
-    /**
-     * `149` : c-ns-flow-map-adjacent-value (n,c):
-     *   ->c-mapping-value + [(->s-separate(n,c) × ?) + ->ns-flow-node(n,c) ||
-     *    ->e-node]
-     */
-    `c-ns-flow-map-adjacent-value(n,c)`(),
-
-    /**
-     * `150` : ns-flow-pair (n,c):
-     *   [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) ||
-     *    ->ns-flow-pair-entry(n,c)]
-     */
-    `ns-flow-pair(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `151` : ns-flow-pair-entry (n,c):
-     *   [->ns-flow-pair-yaml-key-entry(n,c) ||
-     *    ->c-ns-flow-map-empty-key-entry(n,c) ||
-     *    ->c-ns-flow-pair-json-key-entry(n,c)]
-     */
-    `ns-flow-pair-entry(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `152` : ns-flow-pair-yaml-key-entry (n,c):
-     *   ->ns-s-implicit-yaml-key(c) + ->c-ns-flow-map-separate-value(n,c)
-     */
-    `ns-flow-pair-yaml-key-entry(n,c)`(),
-
-    /**
-     * `153` : c-ns-flow-pair-json-key-entry (n,c):
-     *   ->c-s-implicit-json-key(c) + ->c-ns-flow-map-adjacent-value(n,c)
-     */
-    `c-ns-flow-pair-json-key-entry(n,c)`(),
-
-    /**
-     * `154` : ns-s-implicit-yaml-key (c):
-     *   ->ns-flow-yaml-node(n,c) + (->s-separate-in-line × ?)
-     */
-    `ns-s-implicit-yaml-key(c)`(),
-
-    /**
-     * `155` : c-s-implicit-json-key (c):
-     *   ->c-flow-json-node(n,c) + (->s-separate-in-line × ?)
-     */
-    `c-s-implicit-json-key(c)`(),
-
-    /**
-     * `156` : ns-flow-yaml-content (n,c):
-     *   ->ns-plain(n,c)
-     */
-    `ns-flow-yaml-content(n,c)`(`ns-plain(n,c)`),
-
-    /**
-     * `157` : c-flow-json-content (n,c):
-     *   [->c-flow-sequence(n,c) ||
-     *    ->c-flow-mapping(n,c) ||
-     *    ->c-single-quoted(n,c) ||
-     *    ->c-double-quoted(n,c)]
-     */
-    `c-flow-json-content(n,c)`(`c-flow-sequence(n,c)` or `c-flow-mapping(n,c)` or `c-single-quoted(n,c)` or `c-double-quoted(n,c)`),
-
-    /**
-     * `158` : ns-flow-content (n,c):
-     *   [->ns-flow-yaml-content(n,c) ||
-     *    ->c-flow-json-content(n,c)]
-     */
-    `ns-flow-content(n,c)`(`ns-flow-yaml-content(n,c)` or `c-flow-json-content(n,c)`),
-
-    /**
-     * `159` : ns-flow-yaml-node (n,c):
-     *   [->c-ns-alias-node ||
-     *    ->ns-flow-yaml-content(n,c) ||
-     *    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-yaml-content(n,c) ||
-     *    ->e-scalar]]
-     */
-    `ns-flow-yaml-node(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `160` : c-flow-json-node (n,c):
-     *   (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + ->c-flow-json-content(n,c)
-     */
-    `c-flow-json-node(n,c)`(),
-
-    /**
-     * `161` : ns-flow-node (n,c):
-     *   [->c-ns-alias-node ||
-     *    ->ns-flow-content(n,c) ||
-     *    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-content(n,c) ||
-     *    ->e-scalar]]
-     */
-    `ns-flow-node(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `162` : c-b-block-header (m,t):
-     *   [->c-indentation-indicator(m) + ->c-chomping-indicator(t) ||
-     *    ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment
-     */
-    `c-b-block-header(m,t)`(),
-
-    /**
-     * `163` : c-indentation-indicator (m):
-     *   ->ns-dec-digit ⇒ <m =->ns-dec-digit - #x30>
-     *   <> ⇒ <m = auto-detect()>
-     */
-    `c-indentation-indicator(m)`(),
-
-    /**
-     * `164` : c-chomping-indicator (t):
-     *   <[-][HYPHEN-MINUS][0x2d]> ⇒ <t = strip>
-     *   <<[+][PLUS SIGN][0x2b]>> ⇒ <t = keep>
-     *   <> ⇒ <t = clip>
-     */
-    `c-chomping-indicator(t)`(),
-
-    /**
-     * `165` : b-chomped-last (t):
-     *   <t = strip> ⇒ <->b-non-content | /* End of file */>
-     *   <t = clip> ⇒ <->b-as-line-feed | /* End of file */>
-     *   <t = keep> ⇒ <->b-as-line-feed | /* End of file */>
-     */
-    `b-chomped-last(t)`(),
-
-    /**
-     * `166` : l-chomped-empty (n,t):
-     *   <t = strip> ⇒ <->l-strip-empty(n)>
-     *   <t = clip> ⇒ <->l-strip-empty(n)>
-     *   <t = keep> ⇒ <->l-keep-empty(n)>
-     */
-    `l-chomped-empty(n,t)`(),
-
-    /**
-     * `167` : l-strip-empty (n):
-     *   (->s-indent(n) + ->b-non-content × *) + (->l-trail-comments(n) × ?)
-     */
-    `l-strip-empty(n)`(),
-
-    /**
-     * `168` : l-keep-empty (n):
-     *   (->l-empty(n,c) × *) + (->l-trail-comments(n) × ?)
-     */
-    `l-keep-empty(n)`(),
-
-    /**
-     * `169` : l-trail-comments (n):
-     *   ->s-indent(n) + ->c-nb-comment-text + ->b-comment + (->l-comment × *)
-     */
-    `l-trail-comments(n)`(),
-
-    /**
-     * `170` : c-l+literal (n):
-     *   ->c-literal + ->c-b-block-header(m,t) + ->l-literal-content(n,t)
-     */
-    `c-l+literal(n)`(),
-
-    /**
-     * `171` : l-nb-literal-text (n):
-     *   (->l-empty(n,c) × *) + ->s-indent(n) + (->nb-char × +)
-     */
-    `l-nb-literal-text(n)`(),
-
-    /**
-     * `172` : b-nb-literal-next (n):
-     *   ->b-as-line-feed + ->l-nb-literal-text(n)
-     */
-    `b-nb-literal-next(n)`(),
-
-    /**
-     * `173` : l-literal-content (n,t):
-     *   (->l-nb-literal-text(n) + (->b-nb-literal-next(n) × *) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
-     */
-    `l-literal-content(n,t)`(),
-
-    /**
-     * `174` : c-l+folded (n):
-     *   ->c-folded + ->c-b-block-header(m,t) + ->l-folded-content(n,t)
-     */
-    `c-l+folded(n)`(),
-
-    /**
-     * `175` : s-nb-folded-text (n):
-     *   ->s-indent(n) + ->ns-char + (->nb-char × *)
-     */
-    `s-nb-folded-text(n)`(),
-
-    /**
-     * `176` : l-nb-folded-lines (n):
-     *   ->s-nb-folded-text(n) + (->b-l-folded(n,c) + ->s-nb-folded-text(n) × *)
-     */
-    `l-nb-folded-lines(n)`(),
-
-    /**
-     * `177` : s-nb-spaced-text (n):
-     *   ->s-indent(n) + ->s-white + (->nb-char × *)
-     */
-    `s-nb-spaced-text(n)`(),
-
-    /**
-     * `178` : b-l-spaced (n):
-     *   ->b-as-line-feed + (->l-empty(n,c) × *)
-     */
-    `b-l-spaced(n)`(),
-
-    /**
-     * `179` : l-nb-spaced-lines (n):
-     *   ->s-nb-spaced-text(n) + (->b-l-spaced(n) + ->s-nb-spaced-text(n) × *)
-     */
-    `l-nb-spaced-lines(n)`(),
-
-    /**
-     * `180` : l-nb-same-lines (n):
-     *   (->l-empty(n,c) × *) + [->l-nb-folded-lines(n) ||
-     *    ->l-nb-spaced-lines(n)]
-     */
-    `l-nb-same-lines(n)`(),
-
-    /**
-     * `181` : l-nb-diff-lines (n):
-     *   ->l-nb-same-lines(n) + (->b-as-line-feed + ->l-nb-same-lines(n) × *)
-     */
-    `l-nb-diff-lines(n)`(),
-
-    /**
-     * `182` : l-folded-content (n,t):
-     *   (->l-nb-diff-lines(n) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
-     */
-    `l-folded-content(n,t)`(),
-
-    /**
-     * `183` : l+block-sequence (n):
-     *   (->s-indent(n) + ->c-l-block-seq-entry(n) × +)
-     */
-    `l+block-sequence(n)`(),
-
-    /**
-     * `184` : c-l-block-seq-entry (n):
-     *   ->c-sequence-entry + ->s-l+block-indented(n,c)
-     */
-    `c-l-block-seq-entry(n)`(),
-
-    /**
-     * `185` : s-l+block-indented (n,c):
-     *   [->s-indent(n) + [->ns-l-compact-sequence(n) ||
-     *    ->ns-l-compact-mapping(n)] ||
-     *    ->s-l+block-node(n,c) ||
-     *    ->e-node + ->s-l-comments]
-     */
-    `s-l+block-indented(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `186` : ns-l-compact-sequence (n):
-     *   ->c-l-block-seq-entry(n) + (->s-indent(n) + ->c-l-block-seq-entry(n) × *)
-     */
-    `ns-l-compact-sequence(n)`(),
-
-    /**
-     * `187` : l+block-mapping (n):
-     *   (->s-indent(n) + ->ns-l-block-map-entry(n) × +)
-     */
-    `l+block-mapping(n)`(),
-
-    /**
-     * `188` : ns-l-block-map-entry (n):
-     *   [->c-l-block-map-explicit-entry(n) ||
-     *    ->ns-l-block-map-implicit-entry(n)]
-     */
-    `ns-l-block-map-entry(n)`(undefined /* TODO not generated */),
-
-    /**
-     * `189` : c-l-block-map-explicit-entry (n):
-     *   ->c-l-block-map-explicit-key(n) + [->l-block-map-explicit-value(n) ||
-     *    ->e-node]
-     */
-    `c-l-block-map-explicit-entry(n)`(),
-
-    /**
-     * `190` : c-l-block-map-explicit-key (n):
-     *   ->c-mapping-key + ->s-l+block-indented(n,c)
-     */
-    `c-l-block-map-explicit-key(n)`(),
-
-    /**
-     * `191` : l-block-map-explicit-value (n):
-     *   ->s-indent(n) + ->c-mapping-value + ->s-l+block-indented(n,c)
-     */
-    `l-block-map-explicit-value(n)`(),
-
-    /**
-     * `192` : ns-l-block-map-implicit-entry (n):
-     *   [->ns-s-block-map-implicit-key ||
-     *    ->e-node] + ->c-l-block-map-implicit-value(n)
-     */
-    `ns-l-block-map-implicit-entry(n)`(),
-
-    /**
      * `193` : ns-s-block-map-implicit-key:
      *   [->c-s-implicit-json-key(c) ||
      *    ->ns-s-implicit-yaml-key(c)]
      */
-    `ns-s-block-map-implicit-key`(`c-s-implicit-json-key(c)` or `ns-s-implicit-yaml-key(c)`),
-
-    /**
-     * `194` : c-l-block-map-implicit-value (n):
-     *   ->c-mapping-value + [->s-l+block-node(n,c) ||
-     *    ->e-node + ->s-l-comments]
-     */
-    `c-l-block-map-implicit-value(n)`(),
-
-    /**
-     * `195` : ns-l-compact-mapping (n):
-     *   ->ns-l-block-map-entry(n) + (->s-indent(n) + ->ns-l-block-map-entry(n) × *)
-     */
-    `ns-l-compact-mapping(n)`(),
-
-    /**
-     * `196` : s-l+block-node (n,c):
-     *   [->s-l+block-in-block(n,c) ||
-     *    ->s-l+flow-in-block(n)]
-     */
-    `s-l+block-node(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `197` : s-l+flow-in-block (n):
-     *   ->s-separate(n,c) + ->ns-flow-node(n,c) + ->s-l-comments
-     */
-    `s-l+flow-in-block(n)`(),
-
-    /**
-     * `198` : s-l+block-in-block (n,c):
-     *   [->s-l+block-scalar(n,c) ||
-     *    ->s-l+block-collection(n,c)]
-     */
-    `s-l+block-in-block(n,c)`(undefined /* TODO not generated */),
-
-    /**
-     * `199` : s-l+block-scalar (n,c):
-     *   ->s-separate(n,c) + (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + [->c-l+literal(n) ||
-     *    ->c-l+folded(n)]
-     */
-    `s-l+block-scalar(n,c)`(),
-
-    /**
-     * `200` : s-l+block-collection (n,c):
-     *   (->s-separate(n,c) + ->c-ns-properties(n,c) × ?) + ->s-l-comments + ->l+block-sequence(n) + ->seq-spaces(n,c) + [->l+block-sequence(n) ||
-     *    ->l+block-mapping(n)]
-     */
-    `s-l+block-collection(n,c)`(),
-
-    /**
-     * `201` : seq-spaces (n,c):
-     *   <c = block-out> ⇒ <n-1>
-     *   <c = block-in> ⇒ <n>
-     */
-    `seq-spaces(n,c)`(),
+    /* TODO not generated */
 
     /**
      * `202` : l-document-prefix:
@@ -1438,7 +788,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `207` : l-bare-document:
      *   ->s-l+block-node(n,c)
      */
-    `l-bare-document`(`s-l+block-node(n,c)`),
+    /* TODO not generated */
 
     /**
      * `208` : l-explicit-document:
@@ -1459,7 +809,7 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->l-explicit-document ||
      *    ->l-bare-document]
      */
-    `l-any-document`(`l-directive-document` or `l-explicit-document` or `l-bare-document`),
+    /* TODO not generated */
 
     /**
      * `211` : l-yaml-stream:
@@ -1478,17 +828,7 @@ enum class YamlTokens(private val token: Token) : Token {
     override fun match(reader: CodePointReader): Match = this.token.match(reader)
 }
 
-/**
- * `63` : s-indent (n):
- *   (->s-space × n)
- */
-fun `s-indent`(n: Int): Token {
-    val spaces = `s-space` * n
-    return token("s-indent") { spaces.match(it) }
-}
-
 private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
-
 private infix fun Char.or(that: Token) = symbol(this) or that
 private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))
 private infix fun Token.or(that: String): Token = or(symbol(that))
@@ -1499,3 +839,34 @@ private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(th
 private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
 private infix operator fun Token.plus(that: Char) = this + symbol(that)
 private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
+
+/**
+ * `63` : s-indent (n):
+ *   (->s-space × n)
+ */
+fun `s-indent`(n: Int): Token {
+    val token = `s-space` * n
+    return token("s-indent($n)") { token.match(it) }
+}
+
+/**
+ * `64` : s-indent (<n):
+ *   (->s-space × m /* Where m < n */)
+ */
+fun `s-indent≪`(n: Int) = token("s-indent(<$n)") { reader ->
+    val match = reader.mark { reader.readWhile { reader -> `s-space`.match(reader).codePoints } }
+    if (match.size >= n) return@token Match(matches = false)
+    reader.read(match.size)
+    return@token Match(matches = true, codePoints = match)
+}
+
+/**
+ * `65` : s-indent (≤n):
+ *   (->s-space × m /* Where m ≤ n */)
+ */
+fun `s-indent≤`(n: Int) = token("s-indent(≤$n)") { reader ->
+    val match = reader.mark { reader.readWhile { reader -> `s-space`.match(reader).codePoints } }
+    if (match.size > n) return@token Match(matches = false)
+    reader.read(match.size)
+    return@token Match(matches = true, codePoints = match)
+}
