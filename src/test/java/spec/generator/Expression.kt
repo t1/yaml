@@ -131,7 +131,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class LabelExpression(private val label: String) : Expression() {
+    open class LabelExpression(val label: String) : Expression() {
         override fun toString(): String = "<$label>"
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
@@ -191,18 +191,18 @@ abstract class Expression {
     }
 
     open class SwitchExpression : ContainerExpression() {
-        private val cases: MutableList<Expression> = ArrayList()
+        val cases: MutableList<Expression> = ArrayList()
 
-        open fun balanced(): Boolean = cases.size == expressions.size
+        val balanced: Boolean get() = cases.size == expressions.size
 
         open fun addCase(expression: Expression): SwitchExpression {
-            if (balanced()) cases.add(expression)
+            if (balanced) cases.add(expression)
             else setLastOf(cases, expression)
             return this
         }
 
         override fun merge(expression: Expression): SwitchExpression {
-            if (balanced()) replaceLastWith(expression)
+            if (balanced) replaceLastWith(expression)
             else {
                 assert(cases.size == expressions.size + 1)
                 expressions.add(expression)

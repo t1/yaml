@@ -2,6 +2,10 @@
 
 package com.github.t1.yaml.parser
 
+import com.github.t1.yaml.parser.InOutMode.`block-in`
+import com.github.t1.yaml.parser.InOutMode.`block-out`
+import com.github.t1.yaml.parser.InOutMode.`flow-in`
+import com.github.t1.yaml.parser.InOutMode.`flow-out`
 import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointRange
@@ -870,3 +874,29 @@ fun `s-indent≤`(n: Int) = token("s-indent(≤$n)") { reader ->
     reader.read(match.size)
     return@token Match(matches = true, codePoints = match)
 }
+
+/**
+ * `67` : s-line-prefix (n, c):
+ *   <c = block-out> ⇒ <->s-block-line-prefix(n)>
+ *   <c = block-in> ⇒ <->s-block-line-prefix(n)>
+ *   <c = flow-out> ⇒ <->s-flow-line-prefix(n)>
+ *   <c = flow-in> ⇒ <->s-flow-line-prefix(n)>
+ */
+fun `s-line-prefix`(n: Int, c: InOutMode) = when (c) {
+    `block-out` -> `s-block-line-prefix`(n) describedAs "s-line-prefix($c)"
+    `block-in` -> `s-block-line-prefix`(n) describedAs "s-line-prefix($c)"
+    `flow-out` -> `s-flow-line-prefix`(n) describedAs "s-line-prefix($c)"
+    `flow-in` -> `s-flow-line-prefix`(n) describedAs "s-line-prefix($c)"
+}
+
+/**
+ * `68` : s-block-line-prefix (n):
+ *   ->s-indent(n)
+ */
+fun `s-block-line-prefix`(n: Int) = `s-indent`(n)
+
+/**
+ * `69` : s-flow-line-prefix (n):
+ *   ->s-indent(n) + (->s-separate-in-line × ?)
+ */
+fun `s-flow-line-prefix`(n: Int) = `s-indent`(n)

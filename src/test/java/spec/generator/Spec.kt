@@ -38,5 +38,6 @@ data class Production(
 
     val references = mutableMapOf<String, Production>()
 
-    val key: String get() = name + if (args.isEmpty()) "" else args.joinToString(",", "(", ")")
+    val key: String get() = name + argsKey
+    val argsKey: String get() = if (args.isEmpty()) "" else args.joinToString(",", "(", ")")
 }
