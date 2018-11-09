@@ -845,7 +845,7 @@ private infix operator fun Token.plus(that: Char) = this + symbol(that)
 private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
 
 /**
- * `63` : s-indent (n):
+ * `63` : s-indent(n):
  *   (->s-space × n)
  */
 fun `s-indent`(n: Int): Token {
@@ -854,7 +854,7 @@ fun `s-indent`(n: Int): Token {
 }
 
 /**
- * `64` : s-indent (<n):
+ * `64` : s-indent(<n):
  *   (->s-space × m /* Where m < n */)
  */
 fun `s-indent≪`(n: Int) = token("s-indent(<$n)") { reader ->
@@ -865,7 +865,7 @@ fun `s-indent≪`(n: Int) = token("s-indent(<$n)") { reader ->
 }
 
 /**
- * `65` : s-indent (≤n):
+ * `65` : s-indent(≤n):
  *   (->s-space × m /* Where m ≤ n */)
  */
 fun `s-indent≤`(n: Int) = token("s-indent(≤$n)") { reader ->
@@ -876,11 +876,11 @@ fun `s-indent≤`(n: Int) = token("s-indent(≤$n)") { reader ->
 }
 
 /**
- * `67` : s-line-prefix (n, c):
- *   <c = block-out> ⇒ <->s-block-line-prefix(n)>
- *   <c = block-in> ⇒ <->s-block-line-prefix(n)>
- *   <c = flow-out> ⇒ <->s-flow-line-prefix(n)>
- *   <c = flow-in> ⇒ <->s-flow-line-prefix(n)>
+ * `67` : s-line-prefix(n,c):
+ *   <c = block-out> ⇒ ->s-block-line-prefix(n)
+ *   <c = block-in> ⇒ ->s-block-line-prefix(n)
+ *   <c = flow-out> ⇒ ->s-flow-line-prefix(n)
+ *   <c = flow-in> ⇒ ->s-flow-line-prefix(n)
  */
 fun `s-line-prefix`(n: Int, c: InOutMode) = when (c) {
     `block-out` -> `s-block-line-prefix`(n) describedAs "s-line-prefix($c)"
@@ -890,13 +890,13 @@ fun `s-line-prefix`(n: Int, c: InOutMode) = when (c) {
 }
 
 /**
- * `68` : s-block-line-prefix (n):
+ * `68` : s-block-line-prefix(n):
  *   ->s-indent(n)
  */
 fun `s-block-line-prefix`(n: Int) = `s-indent`(n)
 
 /**
- * `69` : s-flow-line-prefix (n):
+ * `69` : s-flow-line-prefix(n):
  *   ->s-indent(n) + (->s-separate-in-line × ?)
  */
 fun `s-flow-line-prefix`(n: Int) = `s-indent`(n)

@@ -40,4 +40,6 @@ data class Production(
 
     val key: String get() = name + argsKey
     val argsKey: String get() = if (args.isEmpty()) "" else args.joinToString(",", "(", ")")
+
+    override fun toString() = "`$counter` : $key:\n$expression"
 }

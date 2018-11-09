@@ -36,8 +36,7 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
         }
 
     @Suppress("PrivatePropertyName")
-    private val HEX: String
-        get() = hex.toUpperCase()
+    private val HEX: String get() = hex.toUpperCase()
     private val hex: String get() = Integer.toHexString(value)
 
     @Suppress("FunctionName")
@@ -53,6 +52,7 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
     private val isDigit get() = Character.isDigit(value)
     private val isBmpCodePoint get () = Character.isBmpCodePoint(value)
     val isWhitespace get () = Character.isWhitespace(value)
+    val isAlphabetic get () = Character.isAlphabetic(value)
     val isSpaceChar get () = Character.isSpaceChar(value)
 
     /** End Of File */
@@ -70,9 +70,7 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
     /** New-Line */
     val isNl: Boolean get() = value == '\n'.toInt() || value == '\r'.toInt()
 
-    fun appendTo(out: StringBuilder) {
-        out.appendCodePoint(value)
-    }
+    fun appendTo(out: StringBuilder) = out.appendCodePoint(value)!!
 
     operator fun rangeTo(that: CodePoint) = CodePointRange(this, that)
 
@@ -86,11 +84,11 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
             return of(string.codePointAt(0))
         }
 
-        fun allOf(string: String): List<CodePoint> = string.codePoints().asSequence().map { operand -> CodePoint.of(operand) }.toList()
+        fun allOf(string: String): List<CodePoint> = string.codePoints().asSequence().map(Companion::of).toList()
 
         fun decode(text: String): CodePoint = of(Integer.decode(text)!!)
 
-        private val String.codePointCount get(): Int = this.codePointCount(0, length)
+        val String.codePointCount get(): Int = this.codePointCount(0, length)
     }
 }
 

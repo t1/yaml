@@ -6,6 +6,7 @@ import java.util.ArrayList
 
 import java.util.stream.Collectors.joining
 import kotlin.reflect.KClass
+import kotlin.reflect.full.cast
 import kotlin.reflect.full.primaryConstructor
 
 abstract class Expression {
@@ -14,9 +15,8 @@ abstract class Expression {
     abstract class Visitor {
         ///////////// no subexpression
 
-        open fun visit(expression: NullExpression) {}
         open fun visit(codePoint: CodePointExpression) {}
-        open fun visit(label: LabelExpression) {}
+        open fun visit(variable: VariableExpression) {}
         open fun visit(reference: ReferenceExpression) {}
 
 
@@ -27,6 +27,9 @@ abstract class Expression {
 
         open fun visit(range: RangeExpression): Visitor = this
         open fun leave(range: RangeExpression) {}
+
+        open fun visit(equals: EqualsExpression): Visitor = this
+        open fun leave(equals: EqualsExpression) {}
 
 
         ///////////// arbitrary number of subexpressions
@@ -47,11 +50,6 @@ abstract class Expression {
     protected open fun last(): Expression = throw UnsupportedOperationException()
 
     protected open fun replaceLastWith(expression: Expression): Unit = throw UnsupportedOperationException()
-
-    open class NullExpression : Expression() {
-        override fun toString(): String = "<empty>"
-        override fun guide(visitor: Visitor) = visitor.visit(this)
-    }
 
     abstract class ContainerExpression : Expression() {
         val expressions: MutableList<Expression> = ArrayList()
@@ -77,7 +75,7 @@ abstract class Expression {
             fun <T : ContainerExpression> of(left: Expression, right: Expression, type: KClass<T>): T {
                 val result: ContainerExpression
                 try {
-                    result = if (type.java.isInstance(left)) // TODO broken in Kotlin 1.2.71
+                    result = if (type.isInstance(left))
                         left as ContainerExpression
                     else
                         type.primaryConstructor!!.call().add(left)
@@ -87,7 +85,7 @@ abstract class Expression {
                     throw RuntimeException(e)
                 }
 
-                if (type.java.isInstance(right)) // TODO broken in Kotlin 1.2.71
+                if (type.isInstance(right))
                     result.expressions.addAll((right as ContainerExpression).expressions)
                 else result.add(right)
                 return type.cast(result)
@@ -97,7 +95,7 @@ abstract class Expression {
 
     open class AlternativesExpression : ContainerExpression() {
         override fun toString(): String =
-            expressions.stream().map { it.toString() }.collect(joining(" ||\n   ", "[", "]"))
+            expressions.stream().map { it.toString() }.collect(joining(" |\n   ", "[", "]"))
 
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
@@ -131,7 +129,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class LabelExpression(val label: String) : Expression() {
+    open class VariableExpression(val label: String) : Expression() {
         override fun toString(): String = "<$label>"
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
@@ -164,9 +162,7 @@ abstract class Expression {
             return this
         }
 
-        override fun toString(): String {
-            return minuend.toString() + " - " + subtrahends.stream().map { it.toString() }.collect(joining(" - "))
-        }
+        override fun toString() = "($minuend - ${subtrahends.joinToString(" - ")})"
 
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
@@ -190,12 +186,26 @@ abstract class Expression {
         }
     }
 
+    open class EqualsExpression(val left: Expression, val right: Expression) : Expression() {
+        override fun toString(): String = "$left = $right"
+        override fun guide(visitor: Visitor) {
+            val sub = visitor.visit(this)
+            left.guide(sub)
+            right.guide(sub)
+            visitor.leave(this)
+        }
+    }
+
     open class SwitchExpression : ContainerExpression() {
         val cases: MutableList<Expression> = ArrayList()
 
         val balanced: Boolean get() = cases.size == expressions.size
 
-        open fun addCase(expression: Expression): SwitchExpression {
+        override fun add(expression: Expression): SwitchExpression =
+            if (balanced) addCase(expression)
+            else merge(expression)
+
+        fun addCase(expression: Expression): SwitchExpression {
             if (balanced) cases.add(expression)
             else setLastOf(cases, expression)
             return this
@@ -213,13 +223,13 @@ abstract class Expression {
         override fun toString(): String {
             val out = StringBuilder()
             for (i in cases.indices) {
-                if (i > 0)
-                    out.append("\n  ")
-                out.append(cases[i]).append(" ⇒ ")
-                    .append(if (i < expressions.size) expressions[i] else "?")
+                if (i > 0) out.append("\n")
+                out.append("${cases[i]} ⇒ ${expressionOrNull(i) ?: "?"}")
             }
             return out.toString()
         }
+
+        private fun expressionOrNull(i: Int): Expression? = if (i < expressions.size) expressions[i] else null
 
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
@@ -230,6 +240,10 @@ abstract class Expression {
             }
             visitor.leave(this)
         }
+
+        companion object {
+            fun of(left: Expression, right: Expression): SwitchExpression = of(left, right, SwitchExpression::class)
+        }
     }
 
     companion object {
@@ -239,5 +253,3 @@ abstract class Expression {
         }
     }
 }
-
-private fun <T : Any> KClass<T>.cast(result: Any): T = this.java.cast(result) // TODO maybe this will become part of KClass some day

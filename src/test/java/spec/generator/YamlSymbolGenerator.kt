@@ -3,13 +3,13 @@ package spec.generator
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
 import spec.generator.Expression.ContainerExpression
-import spec.generator.Expression.LabelExpression
 import spec.generator.Expression.MinusExpression
 import spec.generator.Expression.RangeExpression
 import spec.generator.Expression.ReferenceExpression
 import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
+import spec.generator.Expression.VariableExpression
 import spec.generator.Expression.Visitor
 import java.io.Writer
 import java.nio.file.Files
@@ -146,7 +146,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 }
             }
 
-            private val Production.comment: String get() = "`$counter` : $key:\n  $expression"
+            private val Production.comment: String get() = "`$counter` : $key:\n$expression"
 
             private fun writeEnumEntry() {
                 write("    `${production.name}`(")
@@ -335,7 +335,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
             override fun visit(switch: SwitchExpression): Visitor {
                 for (i in 0 until switch.cases.size) {
-                    var label = (switch.cases[i] as LabelExpression).label
+                    var label = (switch.cases[i] as VariableExpression).label
                     require(label.startsWith("c = "))
                     label = label.substring(4)
                     write("    `$label` -> ")

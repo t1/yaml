@@ -10,14 +10,13 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
-import spec.generator.Expression.LabelExpression
 import spec.generator.Expression.MinusExpression
-import spec.generator.Expression.NullExpression
 import spec.generator.Expression.RangeExpression
 import spec.generator.Expression.ReferenceExpression
 import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
+import spec.generator.Expression.VariableExpression
 import spec.generator.Expression.Visitor
 
 class ExpressionVisitorTest {
@@ -25,15 +24,6 @@ class ExpressionVisitorTest {
 
     @AfterEach fun tearDown() {
         verifyNoMoreInteractions(visitor)
-    }
-
-
-    @Test fun visitNull() {
-        val expression = NullExpression()
-
-        expression.guide(visitor)
-
-        verify<Visitor>(visitor).visit(expression)
     }
 
 
@@ -47,7 +37,7 @@ class ExpressionVisitorTest {
 
 
     @Test fun visitLabel() {
-        val expression = LabelExpression("foo")
+        val expression = VariableExpression("foo")
 
         expression.guide(visitor)
 
@@ -65,7 +55,7 @@ class ExpressionVisitorTest {
 
 
     @Test fun visitRepeated() {
-        val label = LabelExpression("foo")
+        val label = VariableExpression("foo")
         val expression = RepeatedExpression(label, "4")
         given(visitor.visit(expression)).willReturn(visitor)
 
@@ -78,7 +68,7 @@ class ExpressionVisitorTest {
     }
 
     @Test fun visitRepeatedWithSub() {
-        val label = LabelExpression("foo")
+        val label = VariableExpression("foo")
         val expression = RepeatedExpression(label, "4")
         val sub = mock(Visitor::class.java)
         given(visitor.visit(expression)).willReturn(sub)
@@ -93,8 +83,8 @@ class ExpressionVisitorTest {
 
 
     @Test fun visitRange() {
-        val label1 = LabelExpression("foo")
-        val label2 = LabelExpression("bar")
+        val label1 = VariableExpression("foo")
+        val label2 = VariableExpression("bar")
         val expression = RangeExpression(label1, label2)
         given(visitor.visit(expression)).willReturn(visitor)
 
@@ -108,8 +98,8 @@ class ExpressionVisitorTest {
     }
 
     @Test fun visitRangeWithSub() {
-        val label1 = LabelExpression("foo")
-        val label2 = LabelExpression("bar")
+        val label1 = VariableExpression("foo")
+        val label2 = VariableExpression("bar")
         val expression = RangeExpression(label1, label2)
         val sub = mock(Visitor::class.java)
         given(visitor.visit(expression)).willReturn(sub)
@@ -125,9 +115,9 @@ class ExpressionVisitorTest {
 
 
     @Test fun visitMinus() {
-        val label1 = LabelExpression("foo")
-        val label2 = LabelExpression("bar")
-        val label3 = LabelExpression("baz")
+        val label1 = VariableExpression("foo")
+        val label2 = VariableExpression("bar")
+        val label3 = VariableExpression("baz")
         val expression = MinusExpression.of(label1, label2).minus(label3)
         given(visitor.visit(expression)).willReturn(visitor)
 
@@ -142,9 +132,9 @@ class ExpressionVisitorTest {
     }
 
     @Test fun visitMinusWithSub() {
-        val label1 = LabelExpression("foo")
-        val label2 = LabelExpression("bar")
-        val label3 = LabelExpression("baz")
+        val label1 = VariableExpression("foo")
+        val label2 = VariableExpression("bar")
+        val label3 = VariableExpression("baz")
         val expression = MinusExpression.of(label1, label2).minus(label3)
         val sub = mock(Visitor::class.java)
         given(visitor.visit(expression)).willReturn(sub)
@@ -161,8 +151,8 @@ class ExpressionVisitorTest {
 
 
     @Test fun visitAlternatives() {
-        val label1 = LabelExpression("foo")
-        val label2 = LabelExpression("bar")
+        val label1 = VariableExpression("foo")
+        val label2 = VariableExpression("bar")
         val expression = AlternativesExpression.of(label1, label2)
         given(visitor.visit(expression)).willReturn(visitor)
 
@@ -176,8 +166,8 @@ class ExpressionVisitorTest {
     }
 
     @Test fun visitAlternativesWithSub() {
-        val label1 = LabelExpression("foo")
-        val label2 = LabelExpression("bar")
+        val label1 = VariableExpression("foo")
+        val label2 = VariableExpression("bar")
         val expression = AlternativesExpression.of(label1, label2)
         val sub = mock(Visitor::class.java)
         given(visitor.visit(expression)).willReturn(sub)
@@ -193,8 +183,8 @@ class ExpressionVisitorTest {
 
 
     @Test fun visitSequence() {
-        val label1 = LabelExpression("foo")
-        val label2 = LabelExpression("bar")
+        val label1 = VariableExpression("foo")
+        val label2 = VariableExpression("bar")
         val expression = SequenceExpression.of(label1, label2)
         given(visitor.visit(expression)).willReturn(visitor)
 
@@ -208,8 +198,8 @@ class ExpressionVisitorTest {
     }
 
     @Test fun visitSequenceWithSub() {
-        val label1 = LabelExpression("foo")
-        val label2 = LabelExpression("bar")
+        val label1 = VariableExpression("foo")
+        val label2 = VariableExpression("bar")
         val expression = SequenceExpression.of(label1, label2)
         val sub = mock(Visitor::class.java)
         given(visitor.visit(expression)).willReturn(sub)
@@ -224,10 +214,10 @@ class ExpressionVisitorTest {
     }
 
     @Test fun visitSwitch() {
-        val key1 = LabelExpression("key1")
-        val value1 = LabelExpression("value1")
-        val key2 = LabelExpression("key2")
-        val value2 = LabelExpression("value2")
+        val key1 = VariableExpression("key1")
+        val value1 = VariableExpression("value1")
+        val key2 = VariableExpression("key2")
+        val value2 = VariableExpression("value2")
         val expression = SwitchExpression()
             .addCase(key1).merge(value1)
             .addCase(key2).merge(value2)
@@ -245,10 +235,10 @@ class ExpressionVisitorTest {
     }
 
     @Test fun visitSwitchWithSub() {
-        val key1 = LabelExpression("key1")
-        val value1 = LabelExpression("value1")
-        val key2 = LabelExpression("key2")
-        val value2 = LabelExpression("value2")
+        val key1 = VariableExpression("key1")
+        val value1 = VariableExpression("value1")
+        val key2 = VariableExpression("key2")
+        val value2 = VariableExpression("value2")
         val expression = SwitchExpression()
             .addCase(key1).merge(value1)
             .addCase(key2).merge(value2)
@@ -267,9 +257,9 @@ class ExpressionVisitorTest {
     }
 
     @Test fun visitUnbalancedSwitch() {
-        val key1 = LabelExpression("key1")
-        val value1 = LabelExpression("value1")
-        val key2 = LabelExpression("key2")
+        val key1 = VariableExpression("key1")
+        val value1 = VariableExpression("value1")
+        val key2 = VariableExpression("key2")
         val expression = SwitchExpression()
             .addCase(key1).merge(value1)
             .addCase(key2)
@@ -287,11 +277,11 @@ class ExpressionVisitorTest {
 
 
     @Test fun visitNested() {
-        val label1 = LabelExpression("label-1")
-        val label2 = LabelExpression("label-2")
-        val label3 = LabelExpression("label-3")
-        val label4 = LabelExpression("label-4")
-        val label5 = LabelExpression("label-5")
+        val label1 = VariableExpression("label-1")
+        val label2 = VariableExpression("label-2")
+        val label3 = VariableExpression("label-3")
+        val label4 = VariableExpression("label-4")
+        val label5 = VariableExpression("label-5")
         val sequence1 = SequenceExpression.of(label1, label2)
         val minus = MinusExpression.of(label4, label5)
         val sequence2 = SequenceExpression.of(label3, minus)
