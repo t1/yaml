@@ -26,8 +26,8 @@ class Spec(val productions: List<Production>) {
         }
     }
 
-    operator fun get(key: String): Production = index[key] ?: throw RuntimeException("no production '$key' found")
-
+    operator fun get(key: String): Production = index[key]
+        ?: throw RuntimeException("no production '$key' found")
 }
 
 data class Production(

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
+import spec.generator.Expression.EqualsExpression
 import spec.generator.Expression.MinusExpression
 import spec.generator.Expression.RangeExpression
 import spec.generator.Expression.ReferenceExpression
@@ -202,10 +203,10 @@ class YamlSymbolGeneratorTest {
 
     @Test fun shouldGenerateSwitchProduction() {
         val production = Production(0, "foo", listOf("c"), switch(
-            "c = foo1" to codePoint('1'),
-            "c = foo2" to codePoint('2'),
-            "c = foo3" to codePoint('3'),
-            "c = foo4" to codePoint('4')
+            cEq("foo1") to codePoint('1'),
+            cEq("foo2") to codePoint('2'),
+            cEq("foo3") to codePoint('3'),
+            cEq("foo4") to codePoint('4')
         ))
 
         val written = generate(production)
@@ -213,10 +214,10 @@ class YamlSymbolGeneratorTest {
         assertThat(written).isEqualTo(factoryFunSource("\n" +
             "/**\n" +
             " * `0` : foo(c):\n" +
-            " * <c = foo1> ⇒ <[1][DIGIT ONE][0x31]>\n" +
-            " * <c = foo2> ⇒ <[2][DIGIT TWO][0x32]>\n" +
-            " * <c = foo3> ⇒ <[3][DIGIT THREE][0x33]>\n" +
-            " * <c = foo4> ⇒ <[4][DIGIT FOUR][0x34]>\n" +
+            " * <c> = ->foo1 ⇒ <[1][DIGIT ONE][0x31]>\n" +
+            " * <c> = ->foo2 ⇒ <[2][DIGIT TWO][0x32]>\n" +
+            " * <c> = ->foo3 ⇒ <[3][DIGIT THREE][0x33]>\n" +
+            " * <c> = ->foo4 ⇒ <[4][DIGIT FOUR][0x34]>\n" +
             " */\n" +
             "fun `foo`(c: InOutMode) = when (c) {\n" +
             "    `foo1` -> '1' describedAs \"foo(\$c)\"\n" +
@@ -229,10 +230,10 @@ class YamlSymbolGeneratorTest {
     @Test fun shouldGenerateSwitchProductionToRefWithArgs() {
         val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
         val foo = Production(0, "foo", listOf("n", "c"), switch(
-            "c = foo1" to ref(bar),
-            "c = foo2" to ref(bar),
-            "c = foo3" to ref(bar),
-            "c = foo4" to ref(bar)
+            cEq("foo1") to ref(bar),
+            cEq("foo2") to ref(bar),
+            cEq("foo3") to ref(bar),
+            cEq("foo4") to ref(bar)
         ))
 
         val written = generate(foo, bar)
@@ -240,10 +241,10 @@ class YamlSymbolGeneratorTest {
         assertThat(written).isEqualTo(factoryFunSource("\n" +
             "/**\n" +
             " * `0` : foo(n,c):\n" +
-            " * <c = foo1> ⇒ ->bar(n)\n" +
-            " * <c = foo2> ⇒ ->bar(n)\n" +
-            " * <c = foo3> ⇒ ->bar(n)\n" +
-            " * <c = foo4> ⇒ ->bar(n)\n" +
+            " * <c> = ->foo1 ⇒ ->bar(n)\n" +
+            " * <c> = ->foo2 ⇒ ->bar(n)\n" +
+            " * <c> = ->foo3 ⇒ ->bar(n)\n" +
+            " * <c> = ->foo4 ⇒ ->bar(n)\n" +
             " */\n" +
             "fun `foo`(n: Int, c: InOutMode) = when (c) {\n" +
             "    `foo1` -> `bar`(n) describedAs \"foo(\$c)\"\n" +
@@ -504,6 +505,33 @@ class YamlSymbolGeneratorTest {
             "    `foo`('a' - 'b' - 'c'),\n"))
     }
 
+    @Test fun shouldGenerateEndOfFileRefProduction() {
+        val production = production(ReferenceExpression("End of file"))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(enumSource("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     * ->End of file\n" +
+            "     */\n" +
+            "    `foo`(EOF),\n"))
+    }
+
+    @Test fun shouldGenerateEmptyRefProduction() {
+        val production = production(ReferenceExpression("Empty"))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(enumSource("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     * ->Empty\n" +
+            "     */\n" +
+            "    `foo`(empty),\n"))
+    }
+
+
     private fun production(expression: Expression) = Production(0, "foo", listOf(), expression)
 
     private fun codePoint(char: Char) = codePoint(CodePoint.of(char))
@@ -527,10 +555,10 @@ class YamlSymbolGeneratorTest {
         return out
     }
 
-    private fun switch(vararg pairs: Pair<String, Expression>): SwitchExpression {
+    private fun switch(vararg pairs: Pair<Expression, Expression>): SwitchExpression {
         val out = SwitchExpression()
         for (pair in pairs)
-            out.addCase(VariableExpression(pair.first)).merge(pair.second)
+            out.addCase(pair.first).merge(pair.second)
         return out
     }
 
@@ -558,6 +586,9 @@ class YamlSymbolGeneratorTest {
             YamlSymbolGenerator.SUFFIX +
             body
     }
+
+    private fun cEq(ref: String) = EqualsExpression(VariableExpression("c"), ReferenceExpression(ref))
+
 
     companion object {
         private const val ENUM_CLASS = "enum class FooParser(private val token: Token) : Token {\n"

@@ -3,13 +3,13 @@ package spec.generator
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
 import spec.generator.Expression.ContainerExpression
+import spec.generator.Expression.EqualsExpression
 import spec.generator.Expression.MinusExpression
 import spec.generator.Expression.RangeExpression
 import spec.generator.Expression.ReferenceExpression
 import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
-import spec.generator.Expression.VariableExpression
 import spec.generator.Expression.Visitor
 import java.io.Writer
 import java.nio.file.Files
@@ -39,6 +39,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.tools.CodePointReader\n" +
             "import com.github.t1.yaml.tools.Match\n" +
             "import com.github.t1.yaml.tools.Token\n" +
+            "import com.github.t1.yaml.tools.empty\n" +
             "import com.github.t1.yaml.tools.symbol\n" +
             "import com.github.t1.yaml.tools.toCodePointRange\n" +
             "import com.github.t1.yaml.tools.token\n" +
@@ -83,7 +84,8 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))\n" +
             "private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)\n" +
             "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
-            "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n"
+            "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n" +
+            "private val EOF = symbol(CodePoint.EOF)\n"
     }
 
     private fun generateCode() {
@@ -105,7 +107,9 @@ class YamlSymbolGenerator(private val spec: Spec) {
     ) {
         private val productions = spec.productions
 
-        private fun write(string: String) = out.append(string)
+        private fun write(string: String) {
+            out.append(string)
+        }
 
         fun write() {
             write(PREFIX +
@@ -207,10 +211,8 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     "}\n")
             }
 
-            private fun writeFun(referenceExpression: ReferenceExpression) {
-                val target = spec[referenceExpression.ref]
-                write(" = `${target.name}`${target.argsKey}\n")
-            }
+            private fun writeFun(referenceExpression: ReferenceExpression) = write(
+                with(spec[referenceExpression.ref]) { " = `$name`$argsKey\n" })
 
             private fun writeFun(repeat: RepeatedExpression) {
                 write(": Token {\n" +
@@ -237,14 +239,13 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
             private fun ContainerExpression.isFirst(expression: Expression) = this.expressions.first() === expression
 
-            override fun visit(codePoint: CodePointExpression) {
-                write(string(codePoint))
-            }
+            override fun visit(codePoint: CodePointExpression) = write(string(codePoint))
 
-            override fun visit(reference: ReferenceExpression) {
-                val target = spec[reference.ref]
-                write("`${target.name}`${target.argsKey}")
-            }
+            override fun visit(reference: ReferenceExpression) = write(when (reference.ref) {
+                "End of file" -> "EOF"
+                "Empty" -> "empty"
+                else -> with(spec[reference.ref]) { "`$name`$argsKey" }
+            })
 
             override fun visit(sequence: SequenceExpression) = object : Visitor() {
                 override fun visit(codePoint: CodePointExpression) {
@@ -293,9 +294,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     }
                 }
 
-                override fun leave(sequence: SequenceExpression) {
-                    write(")")
-                }
+                override fun leave(sequence: SequenceExpression) = write(")")
             }
 
             override fun visit(minus: MinusExpression) = object : Visitor() {
@@ -317,9 +316,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 override fun visit(codePoint: CodePointExpression) = this@ProductionWriter.visit(codePoint)
             }
 
-            override fun leave(repeated: RepeatedExpression) {
-                write(" * ${repeated.repetitions}")
-            }
+            override fun leave(repeated: RepeatedExpression) = write(" * ${repeated.repetitions}")
 
             override fun visit(range: RangeExpression): Visitor {
                 range.left.guide(this)
@@ -335,10 +332,11 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
             override fun visit(switch: SwitchExpression): Visitor {
                 for (i in 0 until switch.cases.size) {
-                    var label = (switch.cases[i] as VariableExpression).label
-                    require(label.startsWith("c = "))
-                    label = label.substring(4)
-                    write("    `$label` -> ")
+                    var case = switch.cases[i] as EqualsExpression
+                    val left = case.left as Expression.VariableExpression
+                    require(left.label == "c")
+                    val right = case.right as ReferenceExpression
+                    write("    `${right.ref}` -> ")
                     switch.expressions[i].guide(this)
                     write(" describedAs \"${production.name}(\$c)\"\n")
                 }
