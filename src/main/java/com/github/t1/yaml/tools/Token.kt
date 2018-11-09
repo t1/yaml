@@ -1,5 +1,9 @@
 package com.github.t1.yaml.tools
 
+import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
+import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
+import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
+
 /** A sequence of [CodePoint]s to be matched in a [Scanner] */
 interface Token {
     fun match(reader: CodePointReader): Match
@@ -18,6 +22,17 @@ interface Token {
         var out = this
         repeat(n - 1) { out += this }
         return out
+    }
+
+    operator fun times(mode: RepeatMode): Token = when (mode) {
+        zero_or_once -> token("${this@Token}?") { TODO() }
+        zero_or_more -> token("${this@Token}?") { TODO() }
+        once_or_more -> token("${this@Token}?") { TODO() }
+    }
+
+    @Suppress("EnumEntryName")
+    enum class RepeatMode {
+        zero_or_once, zero_or_more, once_or_more
     }
 
     infix fun or(that: Token) = token("${this@Token} or $that") { reader ->

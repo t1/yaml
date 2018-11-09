@@ -12,6 +12,8 @@ import com.github.t1.yaml.tools.CodePointRange
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
 import com.github.t1.yaml.tools.Token
+import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
+import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
 import com.github.t1.yaml.tools.empty
 import com.github.t1.yaml.tools.symbol
 import com.github.t1.yaml.tools.toCodePointRange
@@ -552,13 +554,13 @@ enum class YamlTokens(private val token: Token) : Token {
      * `84` : ns-directive-name:
      * (->ns-char × +)
      */
-    /* TODO not generated */
+    `ns-directive-name`(`ns-char` * once_or_more),
 
     /**
      * `85` : ns-directive-parameter:
      * (->ns-char × +)
      */
-    /* TODO not generated */
+    `ns-directive-parameter`(`ns-char` * once_or_more),
 
     /**
      * `86` : ns-yaml-directive:
@@ -905,4 +907,4 @@ fun `s-block-line-prefix`(n: Int) = `s-indent`(n)
  * `69` : s-flow-line-prefix(n):
  * ->s-indent(n) + (->s-separate-in-line × ?)
  */
-fun `s-flow-line-prefix`(n: Int) = `s-indent`(n)
+fun `s-flow-line-prefix`(n: Int) = `s-indent`(n) + (`s-indent`(n) * zero_or_once)

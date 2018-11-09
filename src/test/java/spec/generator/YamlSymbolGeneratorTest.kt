@@ -354,34 +354,30 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Disabled @Test fun shouldGenerateProductionWithMinus() {
-        val production = Production(0, "c-foo", listOf(), VariableExpression("bar"))
+    @Test fun shouldGenerateProductionWithMinus() {
+        val production = Production(0, "c-foo", listOf(), codePoint('x'))
 
         val written = generate(production)
 
         assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : c-foo:\n" +
-            "     * <bar>\n" +
+            "     * <[x][LATIN SMALL LETTER X][0x78]>\n" +
             "     */\n" +
-            "    `c_foo`() {\n" +
-            "        return next.accept(\"bar\") ? \"bar\" : null;\n" +
-            "    }\n"))
+            "    `c-foo`('x'),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateProductionWithPlus() {
-        val production = Production(0, "c+foo", listOf(), VariableExpression("bar"))
+    @Test fun shouldGenerateProductionWithPlus() {
+        val production = Production(0, "c+foo", listOf(), codePoint('x'))
 
         val written = generate(production)
 
         assertThat(written).isEqualTo(enumSource("\n" +
             "    /**\n" +
             "     * `0` : c+foo:\n" +
-            "     * <bar>\n" +
+            "     * <[x][LATIN SMALL LETTER X][0x78]>\n" +
             "     */\n" +
-            "    `c_foo`() {\n" +
-            "        return next.accept(\"bar\") ? \"bar\" : null;\n" +
-            "    }\n"))
+            "    `c+foo`('x'),\n"))
     }
 
 
@@ -492,6 +488,33 @@ class YamlSymbolGeneratorTest {
             "    `b`('b'),\n"))
     }
 
+    @Disabled @Test fun shouldGenerateSequenceOfReferenceAndRepeatProduction() {
+        val a = Production(1, "a", listOf(), codePoint('a'))
+        val b = Production(2, "b", listOf(), codePoint('b'))
+        val foo = production(seq(ref(a), RepeatedExpression(ref(b), "?")))
+
+        val written = generate(foo, a, b)
+
+        assertThat(written).isEqualTo(enumSource("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     * ->a + (->b × ?)\n" +
+            "     */\n" +
+            "    `foo`(`a` + (`b` * ?)),\n" +
+            "\n" +
+            "    /**\n" +
+            "     * `1` : a:\n" +
+            "     * <[a][LATIN SMALL LETTER A][0x61]>\n" +
+            "     */\n" +
+            "    `a`('a'),\n" +
+            "\n" +
+            "    /**\n" +
+            "     * `2` : b:\n" +
+            "     * <[b][LATIN SMALL LETTER B][0x62]>\n" +
+            "     */\n" +
+            "    `b`('b'),\n"))
+    }
+
     @Test fun shouldGenerateMinusRefProduction() {
         val production = production(MinusExpression(codePoint('a')).minus(codePoint('b')).minus(codePoint('c')))
 
@@ -529,6 +552,58 @@ class YamlSymbolGeneratorTest {
             "     * ->Empty\n" +
             "     */\n" +
             "    `foo`(empty),\n"))
+    }
+
+    @Test fun shouldGenerateRepeatThreeTimesProduction() {
+        val production = production(RepeatedExpression(codePoint('x'), "3"))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(enumSource("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     * (<[x][LATIN SMALL LETTER X][0x78]> × 3)\n" +
+            "     */\n" +
+            "    `foo`('x' * 3),\n"))
+    }
+
+    @Test fun shouldGenerateRepeatZeroOrOneTimesProduction() {
+        val production = production(RepeatedExpression(codePoint('x'), "?"))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(enumSource("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     * (<[x][LATIN SMALL LETTER X][0x78]> × ?)\n" +
+            "     */\n" +
+            "    `foo`('x' * zero_or_once),\n"))
+    }
+
+    @Test fun shouldGenerateRepeatZeroOrMoreTimesProduction() {
+        val production = production(RepeatedExpression(codePoint('x'), "*"))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(enumSource("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     * (<[x][LATIN SMALL LETTER X][0x78]> × *)\n" +
+            "     */\n" +
+            "    `foo`('x' * zero_or_more),\n"))
+    }
+
+    @Test fun shouldGenerateRepeatOnceOrMoreTimesProduction() {
+        val production = production(RepeatedExpression(codePoint('x'), "+"))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(enumSource("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     * (<[x][LATIN SMALL LETTER X][0x78]> × +)\n" +
+            "     */\n" +
+            "    `foo`('x' * once_or_more),\n"))
     }
 
 

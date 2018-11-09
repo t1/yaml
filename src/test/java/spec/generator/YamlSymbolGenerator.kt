@@ -1,5 +1,8 @@
 package spec.generator
 
+import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
+import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
+import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
 import spec.generator.Expression.ContainerExpression
@@ -39,6 +42,9 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.tools.CodePointReader\n" +
             "import com.github.t1.yaml.tools.Match\n" +
             "import com.github.t1.yaml.tools.Token\n" +
+            "import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more\n" +
+            "import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more\n" +
+            "import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once\n" +
             "import com.github.t1.yaml.tools.empty\n" +
             "import com.github.t1.yaml.tools.symbol\n" +
             "import com.github.t1.yaml.tools.toCodePointRange\n" +
@@ -143,7 +149,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     indent + " * ${production.comment.replace("\n", "\n$indent * ")}\n" +
                     indent + " */\n")
                 when {
-                    production.counter in setOf(66, 84, 85, 87, 89, 93, 97, 98, 103, 111, 114, 122, 123, 126, 139, 142, 193, 207, 210) ->
+                    production.counter in setOf(66, 87, 89, 93, 97, 98, 103, 111, 114, 122, 123, 126, 139, 142, 193, 207, 210) ->
                         write("    /* TODO not generated */\n")
                     production.args.isEmpty() -> writeEnumEntry()
                     else -> writeFactoryFun()
@@ -274,7 +280,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 override fun visit(codePoint: CodePointExpression) {
                     if (!alternatives.isFirst(codePoint))
                         write(" or ")
-                    write(string(codePoint)) // TODO this@ProductionWriter.visit(codePoint)
+                    this@ProductionWriter.visit(codePoint)
                 }
 
                 override fun visit(sequence: SequenceExpression): Visitor {
@@ -316,7 +322,12 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 override fun visit(codePoint: CodePointExpression) = this@ProductionWriter.visit(codePoint)
             }
 
-            override fun leave(repeated: RepeatedExpression) = write(" * ${repeated.repetitions}")
+            override fun leave(repeated: RepeatedExpression) = write(" * ${when (val repetitions = repeated.repetitions) {
+                "?" -> "$zero_or_once"
+                "*" -> "$zero_or_more"
+                "+" -> "$once_or_more"
+                else -> repetitions
+            }}")
 
             override fun visit(range: RangeExpression): Visitor {
                 range.left.guide(this)
@@ -332,7 +343,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
             override fun visit(switch: SwitchExpression): Visitor {
                 for (i in 0 until switch.cases.size) {
-                    var case = switch.cases[i] as EqualsExpression
+                    val case = switch.cases[i] as EqualsExpression
                     val left = case.left as Expression.VariableExpression
                     require(left.label == "c")
                     val right = case.right as ReferenceExpression
