@@ -12,41 +12,6 @@ import kotlin.reflect.full.primaryConstructor
 abstract class Expression {
     abstract fun guide(visitor: Visitor)
 
-    abstract class Visitor {
-        ///////////// no subexpression
-
-        open fun visit(codePoint: CodePointExpression) {}
-        open fun visit(variable: VariableExpression) {}
-        open fun visit(reference: ReferenceExpression) {}
-
-
-        ///////////// fixed number of subexpressions
-
-        open fun visit(repeated: RepeatedExpression): Visitor = this
-        open fun leave(repeated: RepeatedExpression) {}
-
-        open fun visit(range: RangeExpression): Visitor = this
-        open fun leave(range: RangeExpression) {}
-
-        open fun visit(equals: EqualsExpression): Visitor = this
-        open fun leave(equals: EqualsExpression) {}
-
-
-        ///////////// arbitrary number of subexpressions
-
-        open fun visit(minus: MinusExpression): Visitor = this
-        open fun leave(minus: MinusExpression) {}
-
-        open fun visit(alternatives: AlternativesExpression): Visitor = this
-        open fun leave(alternatives: AlternativesExpression) {}
-
-        open fun visit(sequence: SequenceExpression): Visitor = this
-        open fun leave(sequence: SequenceExpression) {}
-
-        open fun visit(switch: SwitchExpression): Visitor = this
-        open fun leave(switch: SwitchExpression) {}
-    }
-
     protected open fun last(): Expression = throw UnsupportedOperationException()
 
     protected open fun replaceLastWith(expression: Expression): Unit = throw UnsupportedOperationException()
@@ -98,9 +63,17 @@ abstract class Expression {
             expressions.stream().map { it.toString() }.collect(joining(" |\n   ", "[", "]"))
 
         override fun guide(visitor: Visitor) {
+            visitor.beforeCollection(this)
             val sub = visitor.visit(this)
-            expressions.forEach { it.guide(sub) }
+            var first = true
+            expressions.forEach {
+                if (first) first = false else sub.betweenAlternativesItem(it)
+                sub.beforeAlternativesItem(it)
+                it.guide(sub)
+                sub.afterAlternativesItem(it)
+            }
             visitor.leave(this)
+            visitor.afterCollection(this)
         }
 
         companion object {
@@ -114,9 +87,17 @@ abstract class Expression {
             else expressions.stream().map { it.toString() }.collect(joining(" + "))!!
 
         override fun guide(visitor: Visitor) {
+            visitor.beforeCollection(this)
             val sub = visitor.visit(this)
-            expressions.forEach { it.guide(sub) }
+            var first = true
+            expressions.forEach {
+                if (first) first = false else sub.betweenSequenceItem(it)
+                sub.beforeSequenceItem(it)
+                it.guide(sub)
+                sub.afterSequenceItem(it)
+            }
             visitor.leave(this)
+            visitor.afterCollection(this)
         }
 
         companion object {
@@ -139,6 +120,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
             left.guide(sub)
+            sub.betweenRange(this)
             right.guide(sub)
             visitor.leave(this)
         }
@@ -166,8 +148,14 @@ abstract class Expression {
 
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
+            sub.beforeMinuend(minuend)
             minuend.guide(sub)
-            subtrahends.forEach { it.guide(sub) }
+            sub.afterMinuend(minuend)
+            subtrahends.forEach {
+                sub.beforeSubtrahend(it)
+                it.guide(sub)
+                sub.afterSubtrahend(it)
+            }
             visitor.leave(this)
         }
 
@@ -232,6 +220,7 @@ abstract class Expression {
         private fun expressionOrNull(i: Int): Expression? = if (i < expressions.size) expressions[i] else null
 
         override fun guide(visitor: Visitor) {
+            visitor.beforeCollection(this)
             val sub = visitor.visit(this)
             for (i in cases.indices) {
                 cases[i].guide(sub)
@@ -239,6 +228,7 @@ abstract class Expression {
                     expressions[i].guide(sub)
             }
             visitor.leave(this)
+            visitor.afterCollection(this)
         }
 
         companion object {

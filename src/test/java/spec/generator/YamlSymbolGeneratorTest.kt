@@ -7,7 +7,6 @@ import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
@@ -456,7 +455,7 @@ class YamlSymbolGeneratorTest {
             "     * [<[\\t][CHARACTER TABULATION][0x9]> |\n" +
             "     *    [<[ ][SPACE][0x20]>-<[\\uDBFF\\uDFFF][?][0x10ffff]>]]\n" +
             "     */\n" +
-            "    `foo`('\\t' or (' '..\"\\uDBFF\\uDFFF\")),\n"))
+            "    `foo`('\\t' or ' '..\"\\uDBFF\\uDFFF\"),\n"))
     }
 
     @Test fun shouldGenerateAlternativeOfSequenceAndReferenceProduction() {
@@ -488,7 +487,7 @@ class YamlSymbolGeneratorTest {
             "    `b`('b'),\n"))
     }
 
-    @Disabled @Test fun shouldGenerateSequenceOfReferenceAndRepeatProduction() {
+    @Test fun shouldGenerateSequenceOfReferenceAndRepeatProduction() {
         val a = Production(1, "a", listOf(), codePoint('a'))
         val b = Production(2, "b", listOf(), codePoint('b'))
         val foo = production(seq(ref(a), RepeatedExpression(ref(b), "?")))
@@ -500,7 +499,7 @@ class YamlSymbolGeneratorTest {
             "     * `0` : foo:\n" +
             "     * ->a + (->b × ?)\n" +
             "     */\n" +
-            "    `foo`(`a` + (`b` * ?)),\n" +
+            "    `foo`(`a` + `b` * zero_or_once),\n" +
             "\n" +
             "    /**\n" +
             "     * `1` : a:\n" +
@@ -604,6 +603,32 @@ class YamlSymbolGeneratorTest {
             "     * (<[x][LATIN SMALL LETTER X][0x78]> × +)\n" +
             "     */\n" +
             "    `foo`('x' * once_or_more),\n"))
+    }
+
+    @Test fun shouldGenerateSequenceWithRepeatTwiceProduction() {
+        val production = production(seq(codePoint('x'), RepeatedExpression(codePoint('y'), "2")))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(enumSource("\n" +
+            "    /**\n" +
+            "     * `0` : foo:\n" +
+            "     * <[x][LATIN SMALL LETTER X][0x78]> + (<[y][LATIN SMALL LETTER Y][0x79]> × 2)\n" +
+            "     */\n" +
+            "    `foo`('x' + 'y' * 2),\n"))
+    }
+
+    @Test fun shouldGenerateParameterizedSequenceWithRepeatTwiceProduction() {
+        val production = Production(0, "foo", listOf("n"), seq(codePoint('x'), RepeatedExpression(codePoint('y'), "n")))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(factoryFunSource("\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * <[x][LATIN SMALL LETTER X][0x78]> + (<[y][LATIN SMALL LETTER Y][0x79]> × n)\n" +
+            " */\n" +
+            "fun `foo`(n: Int) = 'x' + 'y' * n"))
     }
 
 

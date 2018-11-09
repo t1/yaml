@@ -13,7 +13,6 @@ import spec.generator.Expression.ReferenceExpression
 import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
-import spec.generator.Expression.Visitor
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -89,6 +88,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))\n" +
             "private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))\n" +
             "private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)\n" +
+            "private infix operator fun Char.plus(token: Token) = symbol(this) + token\n" +
             "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
             "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n" +
             "private val EOF = symbol(CodePoint.EOF)\n"
@@ -123,7 +123,8 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
             for (production in productions.filter { production -> production.args.isEmpty() }) {
                 try {
-                    ProductionWriter(production).write()
+                    if (production.counter !in setOf(87, 89, 93, 97, 98, 103, 111, 114, 122, 123, 126, 139, 142, 193, 207, 210))
+                        ProductionWriter(production).writeEnumEntry()
                 } catch (e: Exception) {
                     throw RuntimeException("can't write enum entry for ${production.counter}: ${production.key}", e)
                 }
@@ -134,37 +135,25 @@ class YamlSymbolGenerator(private val spec: Spec) {
             for (production in productions.filter { production -> !production.args.isEmpty() }) {
                 try {
                     if (production.counter <= 69)
-                        ProductionWriter(production).write()
+                        ProductionWriter(production).writeFactoryFun()
                 } catch (e: Exception) {
                     throw RuntimeException("can't write factory method for ${production.counter}: ${production.key}", e)
                 }
             }
         }
 
-        private inner class ProductionWriter(val production: Production) : Visitor() {
-            fun write() {
-                val indent = if (production.args.isEmpty()) "    " else ""
-                write("\n" +
-                    indent + "/**\n" +
-                    indent + " * ${production.comment.replace("\n", "\n$indent * ")}\n" +
-                    indent + " */\n")
-                when {
-                    production.counter in setOf(66, 87, 89, 93, 97, 98, 103, 111, 114, 122, 123, 126, 139, 142, 193, 207, 210) ->
-                        write("    /* TODO not generated */\n")
-                    production.args.isEmpty() -> writeEnumEntry()
-                    else -> writeFactoryFun()
-                }
-            }
+        private inner class ProductionWriter(val production: Production) : OrFailVisitor() {
+            private var depth = 0
 
-            private val Production.comment: String get() = "`$counter` : $key:\n$expression"
-
-            private fun writeEnumEntry() {
+            fun writeEnumEntry() {
+                writeComment("    ")
                 write("    `${production.name}`(")
                 production.expression.guide(this)
                 write("),\n")
             }
 
-            private fun writeFactoryFun() {
+            fun writeFactoryFun() {
+                writeComment("")
                 write("fun `${funName()}`(")
                 writeArgs()
                 write(")")
@@ -173,8 +162,17 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     production.expression is ReferenceExpression -> writeFun(production.expression)
                     production.expression is RepeatedExpression -> writeFun(production.expression)
                     production.expression is SwitchExpression -> writeFun(production.expression)
+                    production.expression is SequenceExpression -> writeFun(production.expression)
                     else -> throw UnsupportedOperationException("factory function for ${production.expression::class.simpleName}")
                 }
+            }
+
+            private fun writeComment(indent: String) {
+                val comment = with(production) { "`$counter` : $key:\n$expression" }
+                write("\n" +
+                    indent + "/**\n" +
+                    indent + " * ${comment.replace("\n", "\n$indent * ")}\n" +
+                    indent + " */\n")
             }
 
             private fun funName() = production.name +
@@ -232,8 +230,13 @@ class YamlSymbolGenerator(private val spec: Spec) {
             private fun writeFun(switchExpression: SwitchExpression) {
                 require(switchExpression.balanced) { "unexpected balanced switch '$switchExpression'" }
                 write(" = when (c) {\n")
-                production.expression.guide(this)
+                switchExpression.guide(this)
                 write("}\n")
+            }
+
+            private fun writeFun(sequenceExpression: SequenceExpression) {
+                write(" = ")
+                sequenceExpression.guide(this)
             }
 
             /** the arg as Kotlin string template variable */
@@ -243,85 +246,47 @@ class YamlSymbolGenerator(private val spec: Spec) {
             }
 
 
-            private fun ContainerExpression.isFirst(expression: Expression) = this.expressions.first() === expression
-
-            override fun visit(codePoint: CodePointExpression) = write(string(codePoint))
+            override fun visit(codePoint: CodePointExpression) {
+                val quote = if (codePoint.codePoint.isBig) '\"' else '\''
+                write("$quote${codePoint.codePoint.escaped}$quote")
+            }
 
             override fun visit(reference: ReferenceExpression) = write(when (reference.ref) {
                 "End of file" -> "EOF"
                 "Empty" -> "empty"
+                "Start of line" -> "startOfLine"
                 else -> with(spec[reference.ref]) { "`$name`$argsKey" }
             })
 
-            override fun visit(sequence: SequenceExpression) = object : Visitor() {
-                override fun visit(codePoint: CodePointExpression) {
-                    if (!sequence.isFirst(codePoint))
-                        write(" + ")
-                    write("'${codePoint.codePoint.escaped}'")
-                }
+
+            override fun beforeCollection(expression: ContainerExpression) {
+                depth++
             }
 
-            override fun visit(alternatives: AlternativesExpression) = object : Visitor() {
-                override fun visit(reference: ReferenceExpression) {
-                    if (!alternatives.isFirst(reference))
-                        write(" or ")
-                    this@ProductionWriter.visit(reference)
-                }
-
-                override fun visit(range: RangeExpression): Visitor {
-                    if (!alternatives.isFirst(range))
-                        write(" or ")
-                    write("(")
-                    this@ProductionWriter.visit(range)
-                    write(")")
-                    return object : Visitor() {}
-                }
-
-                override fun visit(codePoint: CodePointExpression) {
-                    if (!alternatives.isFirst(codePoint))
-                        write(" or ")
-                    this@ProductionWriter.visit(codePoint)
-                }
-
-                override fun visit(sequence: SequenceExpression): Visitor {
-                    write("(")
-                    return object : Visitor() {
-                        override fun visit(codePoint: CodePointExpression) {
-                            if (!sequence.isFirst(codePoint))
-                                write(" + ")
-                            write("'${codePoint.codePoint.escaped}'")
-                        }
-
-                        override fun visit(reference: ReferenceExpression) {
-                            if (!sequence.isFirst(reference))
-                                write(" + ")
-                            this@ProductionWriter.visit(reference)
-                        }
-                    }
-                }
-
-                override fun leave(sequence: SequenceExpression) = write(")")
+            override fun afterCollection(expression: ContainerExpression) {
+                depth--
             }
 
-            override fun visit(minus: MinusExpression) = object : Visitor() {
-                override fun visit(reference: ReferenceExpression) {
-                    if (reference !== minus.minuend)
-                        write(" - ")
-                    this@ProductionWriter.visit(reference)
-                }
-
-                override fun visit(codePoint: CodePointExpression) {
-                    if (codePoint !== minus.minuend)
-                        write(" - ")
-                    this@ProductionWriter.visit(codePoint)
-                }
+            override fun visit(sequence: SequenceExpression): Visitor {
+                if (depth > 1) write("(")
+                return this
             }
 
-            override fun visit(repeated: RepeatedExpression) = object : Visitor() {
-                override fun visit(reference: ReferenceExpression) = this@ProductionWriter.visit(reference)
-                override fun visit(codePoint: CodePointExpression) = this@ProductionWriter.visit(codePoint)
+            override fun betweenSequenceItem(expression: Expression) = write(" + ")
+            override fun leave(sequence: SequenceExpression) {
+                if (depth > 1) write(")")
             }
 
+
+            override fun visit(alternatives: AlternativesExpression) = this
+            override fun betweenAlternativesItem(expression: Expression) = write(" or ")
+
+
+            override fun visit(minus: MinusExpression) = this
+            override fun beforeSubtrahend(expression: Expression) = write(" - ")
+
+
+            override fun visit(repeated: RepeatedExpression) = this
             override fun leave(repeated: RepeatedExpression) = write(" * ${when (val repetitions = repeated.repetitions) {
                 "?" -> "$zero_or_once"
                 "*" -> "$zero_or_more"
@@ -329,17 +294,10 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 else -> repetitions
             }}")
 
-            override fun visit(range: RangeExpression): Visitor {
-                range.left.guide(this)
-                write("..")
-                range.right.guide(this)
-                return object : Visitor() {} // write nothing else
-            }
 
-            private fun string(codePoint: CodePointExpression): String {
-                val quote = if (codePoint.codePoint.isBig) '\"' else '\''
-                return "$quote${codePoint.codePoint.escaped}$quote"
-            }
+            override fun visit(range: RangeExpression) = this
+            override fun betweenRange(rangeExpression: RangeExpression) = write("..")
+
 
             override fun visit(switch: SwitchExpression): Visitor {
                 for (i in 0 until switch.cases.size) {
@@ -351,7 +309,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     switch.expressions[i].guide(this)
                     write(" describedAs \"${production.name}(\$c)\"\n")
                 }
-                return object : Visitor() {} // write nothing else
+                return IGNORE_VISITOR
             }
         }
     }

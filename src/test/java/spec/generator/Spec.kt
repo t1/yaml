@@ -16,7 +16,7 @@ class Spec(val productions: List<Production>) {
             assert(previous == null) { "overwrite " + previous!!.key }
         }
         for (production in productions) {
-            production.expression.guide(object : Expression.Visitor() {
+            production.expression.guide(object : OrIgnoreVisitor() {
                 override fun visit(reference: ReferenceExpression) {
                     val ref = reference.ref
                     if (index[ref] == null) production.references.remove(ref)

@@ -17,7 +17,6 @@ import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
 import spec.generator.Expression.VariableExpression
-import spec.generator.Expression.Visitor
 
 class ExpressionVisitorTest {
     private val visitor: Visitor = mock(Visitor::class.java)
