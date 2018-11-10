@@ -15,11 +15,11 @@ class CodePointReader(private val reader: Reader) {
 
     data class Position(
         /** the zero-based code point position in the stream */
-        val totalPosition: Long = 0,
+        val totalPosition: Int = 0,
         /** the one-based line number in the reading stream */
-        val lineNumber: Long = 1,
+        val lineNumber: Int = 1,
         /** the one-based position withing the current line */
-        val linePosition: Long = 1,
+        val linePosition: Int = 1,
         /** end-of-file, i.e. have we read beyond the last code point in the stream */
         val isEof: Boolean = false
     ) {
@@ -33,7 +33,8 @@ class CodePointReader(private val reader: Reader) {
     }
 
     var position = Position()
-    val isStartOfFile get() = position.totalPosition == 0L
+    val isStartOfFile get() = position.totalPosition == 0
+    val isStartOfLine get() = position.linePosition == 1
 
     private val cache = LinkedList<CodePoint>()
     private val reads = Stack<Read>().apply { add(RealRead()) }

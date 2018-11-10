@@ -31,7 +31,7 @@ open class AbstractYamlTest {
         val result = AtomicReference<T>()
         val e = catchThrowable { result.set(function(input!!)) }
         if (e != null && e !is YamlParseException)
-            throw RuntimeException("expected YamlParseException but got a " + e.javaClass.name, e)
+            throw RuntimeException("expected YamlParseException but got a ${e::class.simpleName}", e)
         thrown = e as? YamlParseException
         return result.get()
     }

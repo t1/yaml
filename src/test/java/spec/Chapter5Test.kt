@@ -1,9 +1,9 @@
 package spec
 
-import com.github.t1.yaml.parser.YamlParseException
+import helpers.catchParseException
 import helpers.parse
 import helpers.parseAndCheck
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -14,15 +14,15 @@ import org.junit.jupiter.api.Test
     }
 
     @Test fun spec_5_2_Invalid_Byte_Order_Mark() {
-        assertThatThrownBy {
+        val parseException = catchParseException {
             parse("" +
                 "Invalid use of BOM\n" + // TODO !!seq
 
                 "⇔\n" +
                 "Inside a document.")
         }
-            .isInstanceOf(YamlParseException::class.java)
-            .hasMessage("A BOM must not appear inside a document")
+
+        assertThat(parseException).hasMessage("A BOM must not appear inside a document")
     }
 
     @Disabled @Test fun spec_5_3_Block_Structure_Indicators() {

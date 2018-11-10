@@ -67,7 +67,7 @@ abstract class Expression {
             val sub = visitor.visit(this)
             var first = true
             expressions.forEach {
-                if (first) first = false else sub.betweenAlternativesItem(it)
+                if (first) first = false else sub.betweenAlternativesItems()
                 sub.beforeAlternativesItem(it)
                 it.guide(sub)
                 sub.afterAlternativesItem(it)
@@ -91,7 +91,7 @@ abstract class Expression {
             val sub = visitor.visit(this)
             var first = true
             expressions.forEach {
-                if (first) first = false else sub.betweenSequenceItem(it)
+                if (first) first = false else sub.betweenSequenceItems()
                 sub.beforeSequenceItem(it)
                 it.guide(sub)
                 sub.afterSequenceItem(it)
@@ -110,8 +110,8 @@ abstract class Expression {
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class VariableExpression(val label: String) : Expression() {
-        override fun toString(): String = "<$label>"
+    open class VariableExpression(val name: String) : Expression() {
+        override fun toString(): String = "<$name>"
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
@@ -223,9 +223,12 @@ abstract class Expression {
             visitor.beforeCollection(this)
             val sub = visitor.visit(this)
             for (i in cases.indices) {
+                sub.beforeSwitchItem()
                 cases[i].guide(sub)
+                sub.betweenSwitchCaseAndValue()
                 if (expressions.size > i)
                     expressions[i].guide(sub)
+                sub.afterSwitchItem()
             }
             visitor.leave(this)
             visitor.afterCollection(this)

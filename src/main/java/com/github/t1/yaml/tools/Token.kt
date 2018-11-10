@@ -90,6 +90,7 @@ fun token(codePoints: List<CodePoint>): Token {
 }
 
 val empty = token("empty") { Match(matches = true) }
+val startOfLine = token("startOfLine") { Match(matches = it.isStartOfLine) }
 
 fun token(description: String, match: (CodePointReader) -> Match) = object : Token {
     override fun toString() = description

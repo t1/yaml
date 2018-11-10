@@ -85,7 +85,7 @@ class NodeExpressionParser(nodes: List<Node>) {
             expression = RepeatedExpression(expression, "*")
         if (next.accept("="))
             expression = EqualsExpression(expression, until { skipSpaces(); next.peek("⇒") || next.end() || isBr })
-        if (isEnd) return expression // can be true while we scan a switch case or label
+        if (isEnd) return expression // can be true while we scan a switch case or value
         if (next.peek("⇒"))
             return switch(expression)
 

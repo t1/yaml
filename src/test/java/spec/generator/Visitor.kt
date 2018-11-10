@@ -49,16 +49,19 @@ interface Visitor {
     fun visit(alternatives: AlternativesExpression): Visitor
     fun beforeAlternativesItem(expression: Expression) {}
     fun afterAlternativesItem(expression: Expression) {}
-    fun betweenAlternativesItem(expression: Expression) {}
+    fun betweenAlternativesItems() {}
     fun leave(alternatives: AlternativesExpression) {}
 
     fun visit(sequence: SequenceExpression): Visitor
     fun beforeSequenceItem(expression: Expression) {}
     fun afterSequenceItem(expression: Expression) {}
-    fun betweenSequenceItem(expression: Expression) {}
+    fun betweenSequenceItems() {}
     fun leave(sequence: SequenceExpression) {}
 
     fun visit(switch: SwitchExpression): Visitor
+    fun beforeSwitchItem() {}
+    fun betweenSwitchCaseAndValue() {}
+    fun afterSwitchItem() {}
     fun leave(switch: SwitchExpression) {}
 }
 

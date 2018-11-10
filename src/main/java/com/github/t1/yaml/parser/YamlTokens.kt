@@ -3,18 +3,56 @@
 package com.github.t1.yaml.parser
 
 import com.github.t1.yaml.parser.InOutMode.`block-in`
+import com.github.t1.yaml.parser.InOutMode.`block-key`
 import com.github.t1.yaml.parser.InOutMode.`block-out`
 import com.github.t1.yaml.parser.InOutMode.`flow-in`
+import com.github.t1.yaml.parser.InOutMode.`flow-key`
 import com.github.t1.yaml.parser.InOutMode.`flow-out`
+import com.github.t1.yaml.parser.YamlTokens.`b-as-line-feed`
+import com.github.t1.yaml.parser.YamlTokens.`b-as-space`
+import com.github.t1.yaml.parser.YamlTokens.`b-comment`
+import com.github.t1.yaml.parser.YamlTokens.`b-non-content`
+import com.github.t1.yaml.parser.YamlTokens.`c-comment`
+import com.github.t1.yaml.parser.YamlTokens.`c-double-quote`
+import com.github.t1.yaml.parser.YamlTokens.`c-indicator`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-key`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-start`
+import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
+import com.github.t1.yaml.parser.YamlTokens.`c-nb-comment-text`
+import com.github.t1.yaml.parser.YamlTokens.`c-ns-alias-node`
+import com.github.t1.yaml.parser.YamlTokens.`c-ns-anchor-property`
+import com.github.t1.yaml.parser.YamlTokens.`c-ns-tag-property`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-end`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
+import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
+import com.github.t1.yaml.parser.YamlTokens.`c-single-quote`
+import com.github.t1.yaml.parser.YamlTokens.`e-node`
+import com.github.t1.yaml.parser.YamlTokens.`e-scalar`
+import com.github.t1.yaml.parser.YamlTokens.`l-comment`
+import com.github.t1.yaml.parser.YamlTokens.`nb-char`
+import com.github.t1.yaml.parser.YamlTokens.`nb-double-one-line`
+import com.github.t1.yaml.parser.YamlTokens.`nb-ns-double-in-line`
+import com.github.t1.yaml.parser.YamlTokens.`nb-ns-single-in-line`
+import com.github.t1.yaml.parser.YamlTokens.`nb-single-one-line`
+import com.github.t1.yaml.parser.YamlTokens.`ns-char`
+import com.github.t1.yaml.parser.YamlTokens.`ns-plain-safe-in`
+import com.github.t1.yaml.parser.YamlTokens.`ns-plain-safe-out`
+import com.github.t1.yaml.parser.YamlTokens.`ns-s-block-map-implicit-key`
+import com.github.t1.yaml.parser.YamlTokens.`s-l-comments`
+import com.github.t1.yaml.parser.YamlTokens.`s-separate-in-line`
 import com.github.t1.yaml.parser.YamlTokens.`s-space`
+import com.github.t1.yaml.parser.YamlTokens.`s-white`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointRange
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
+import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
 import com.github.t1.yaml.tools.empty
+import com.github.t1.yaml.tools.startOfLine
 import com.github.t1.yaml.tools.symbol
 import com.github.t1.yaml.tools.toCodePointRange
 import com.github.t1.yaml.tools.token
@@ -49,14 +87,14 @@ enum class YamlTokens(private val token: Token) : Token {
      *    [<[][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] |
      *    [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
      */
-    `c-printable`('\t' or '\n' or '\r' or (' '..'~') or '\u0085' or (' '..'퟿') or (''..'�') or ("\uD800\uDC00".."\uDBFF\uDFFF")),
+    `c-printable`('\t' or '\n' or '\r' or ' '..'~' or '\u0085' or ' '..'퟿' or ''..'�' or "\uD800\uDC00".."\uDBFF\uDFFF"),
 
     /**
      * `2` : nb-json:
      * [<[\t][CHARACTER TABULATION][0x9]> |
      *    [<[ ][SPACE][0x20]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
      */
-    `nb-json`('\t' or (' '.."\uDBFF\uDFFF")),
+    `nb-json`('\t' or ' '.."\uDBFF\uDFFF"),
 
     /**
      * `3` : c-byte-order-mark:
@@ -288,14 +326,14 @@ enum class YamlTokens(private val token: Token) : Token {
      *    [<[A][LATIN CAPITAL LETTER A][0x41]>-<[F][LATIN CAPITAL LETTER F][0x46]>] |
      *    [<[a][LATIN SMALL LETTER A][0x61]>-<[f][LATIN SMALL LETTER F][0x66]>]]
      */
-    `ns-hex-digit`(`ns-dec-digit` or ('A'..'F') or ('a'..'f')),
+    `ns-hex-digit`(`ns-dec-digit` or 'A'..'F' or 'a'..'f'),
 
     /**
      * `37` : ns-ascii-letter:
      * [[<[A][LATIN CAPITAL LETTER A][0x41]>-<[Z][LATIN CAPITAL LETTER Z][0x5a]>] |
      *    [<[a][LATIN SMALL LETTER A][0x61]>-<[z][LATIN SMALL LETTER Z][0x7a]>]]
      */
-    `ns-ascii-letter`(('A'..'Z') or ('a'..'z')),
+    `ns-ascii-letter`('A'..'Z' or 'a'..'z'),
 
     /**
      * `38` : ns-word-char:
@@ -331,7 +369,7 @@ enum class YamlTokens(private val token: Token) : Token {
      *    <[[][LEFT SQUARE BRACKET][0x5b]> |
      *    <[]][RIGHT SQUARE BRACKET][0x5d]>]
      */
-    `ns-uri-char`('%' + '#' + ';' + '/' + '?' + ':' + '@' + '&' + '=' + '+' + '$' + ',' + '_' + '.' + '!' + '~' + '*' + '\'' + '(' + ')' + '[' + ']'),
+    `ns-uri-char`('%' + `ns-hex-digit` + `ns-hex-digit` or `ns-word-char` or '#' or ';' or '/' or '?' or ':' or '@' or '&' or '=' or '+' or '$' or ',' or '_' or '.' or '!' or '~' or '*' or '\'' or '(' or ')' or '[' or ']'),
 
     /**
      * `40` : ns-tag-char:
@@ -452,19 +490,19 @@ enum class YamlTokens(private val token: Token) : Token {
      * `59` : ns-esc-8-bit:
      * <[x][LATIN SMALL LETTER X][0x78]> + (->ns-hex-digit × 2)
      */
-    `ns-esc-8-bit`('x'),
+    `ns-esc-8-bit`('x' + `ns-hex-digit` * 2),
 
     /**
      * `60` : ns-esc-16-bit:
      * <[u][LATIN SMALL LETTER U][0x75]> + (->ns-hex-digit × 4)
      */
-    `ns-esc-16-bit`('u'),
+    `ns-esc-16-bit`('u' + `ns-hex-digit` * 4),
 
     /**
      * `61` : ns-esc-32-bit:
      * <[U][LATIN CAPITAL LETTER U][0x55]> + (->ns-hex-digit × 8)
      */
-    `ns-esc-32-bit`('U'),
+    `ns-esc-32-bit`('U' + `ns-hex-digit` * 8),
 
     /**
      * `62` : c-ns-esc-char:
@@ -489,14 +527,14 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->ns-esc-16-bit |
      *    ->ns-esc-32-bit]
      */
-    `c-ns-esc-char`(),
+    `c-ns-esc-char`(`c-escape` + `ns-esc-null` or `ns-esc-bell` or `ns-esc-backspace` or `ns-esc-horizontal-tab` or `ns-esc-line-feed` or `ns-esc-vertical-tab` or `ns-esc-form-feed` or `ns-esc-carriage-return` or `ns-esc-escape` or `ns-esc-space` or `ns-esc-double-quote` or `ns-esc-slash` or `ns-esc-backslash` or `ns-esc-next-line` or `ns-esc-non-breaking-space` or `ns-esc-line-separator` or `ns-esc-paragraph-separator` or `ns-esc-8-bit` or `ns-esc-16-bit` or `ns-esc-32-bit`),
 
     /**
      * `66` : s-separate-in-line:
      * [(->s-white × +) |
      *    ->Start of line]
      */
-    /* TODO not generated */
+    `s-separate-in-line`(`s-white` * once_or_more or startOfLine),
 
     /**
      * `72` : b-as-space:
@@ -508,7 +546,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `75` : c-nb-comment-text:
      * ->c-comment + (->nb-char × *)
      */
-    `c-nb-comment-text`(),
+    `c-nb-comment-text`(`c-comment` + `nb-char` * zero_or_more),
 
     /**
      * `76` : b-comment:
@@ -521,20 +559,20 @@ enum class YamlTokens(private val token: Token) : Token {
      * `77` : s-b-comment:
      * (->s-separate-in-line + (->c-nb-comment-text × ?) × ?) + ->b-comment
      */
-    `s-b-comment`(),
+    `s-b-comment`((`s-separate-in-line` + `c-nb-comment-text` * zero_or_once) * zero_or_once + `b-comment`),
 
     /**
      * `78` : l-comment:
      * ->s-separate-in-line + (->c-nb-comment-text × ?) + ->b-comment
      */
-    `l-comment`(),
+    `l-comment`(`s-separate-in-line` + `c-nb-comment-text` * zero_or_once + `b-comment`),
 
     /**
      * `79` : s-l-comments:
      * [->s-b-comment |
      *    ->Start of line] + (->l-comment × *)
      */
-    `s-l-comments`(),
+    `s-l-comments`(`s-b-comment` or startOfLine + `l-comment` * zero_or_more),
 
     /**
      * `82` : l-directive:
@@ -542,13 +580,13 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->ns-tag-directive |
      *    ->ns-reserved-directive] + ->s-l-comments
      */
-    `l-directive`(),
+    `l-directive`(undefined /* TODO forward reference */),
 
     /**
      * `83` : ns-reserved-directive:
      * ->ns-directive-name + (->s-separate-in-line + ->ns-directive-parameter × *)
      */
-    `ns-reserved-directive`(),
+    `ns-reserved-directive`(undefined /* TODO forward reference */),
 
     /**
      * `84` : ns-directive-name:
@@ -566,19 +604,19 @@ enum class YamlTokens(private val token: Token) : Token {
      * `86` : ns-yaml-directive:
      * <[Y][LATIN CAPITAL LETTER Y][0x59]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[M][LATIN CAPITAL LETTER M][0x4d]> + <[L][LATIN CAPITAL LETTER L][0x4c]> + ->s-separate-in-line + ->ns-yaml-version
      */
-    `ns-yaml-directive`('Y' + 'A' + 'M' + 'L'),
+    `ns-yaml-directive`(undefined /* TODO forward reference */),
 
     /**
      * `87` : ns-yaml-version:
      * (->ns-dec-digit × +) + <[.][FULL STOP][0x2e]> + (->ns-dec-digit × +)
      */
-    /* TODO not generated */
+    `ns-yaml-version`(`ns-dec-digit` * once_or_more + '.' + `ns-dec-digit` * once_or_more),
 
     /**
      * `88` : ns-tag-directive:
      * <[T][LATIN CAPITAL LETTER T][0x54]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[G][LATIN CAPITAL LETTER G][0x47]> + ->s-separate-in-line + ->c-tag-handle + ->s-separate-in-line + ->ns-tag-prefix
      */
-    `ns-tag-directive`('T' + 'A' + 'G'),
+    `ns-tag-directive`(undefined /* TODO forward reference */),
 
     /**
      * `89` : c-tag-handle:
@@ -586,7 +624,7 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->c-secondary-tag-handle |
      *    ->c-primary-tag-handle]
      */
-    /* TODO not generated */
+    `c-tag-handle`(undefined /* TODO forward reference */),
 
     /**
      * `90` : c-primary-tag-handle:
@@ -598,32 +636,32 @@ enum class YamlTokens(private val token: Token) : Token {
      * `91` : c-secondary-tag-handle:
      * ->c-tag + ->c-tag
      */
-    `c-secondary-tag-handle`(),
+    `c-secondary-tag-handle`(`c-tag` + `c-tag`),
 
     /**
      * `92` : c-named-tag-handle:
      * ->c-tag + (->ns-word-char × +) + ->c-tag
      */
-    `c-named-tag-handle`(),
+    `c-named-tag-handle`(`c-tag` + `ns-word-char` * once_or_more + `c-tag`),
 
     /**
      * `93` : ns-tag-prefix:
      * [->c-ns-local-tag-prefix |
      *    ->ns-global-tag-prefix]
      */
-    /* TODO not generated */
+    `ns-tag-prefix`(undefined /* TODO forward reference */),
 
     /**
      * `94` : c-ns-local-tag-prefix:
      * ->c-tag + (->ns-uri-char × *)
      */
-    `c-ns-local-tag-prefix`(),
+    `c-ns-local-tag-prefix`(`c-tag` + `ns-uri-char` * zero_or_more),
 
     /**
      * `95` : ns-global-tag-prefix:
      * ->ns-tag-char + (->ns-uri-char × *)
      */
-    `ns-global-tag-prefix`(),
+    `ns-global-tag-prefix`(`ns-tag-char` + `ns-uri-char` * zero_or_more),
 
     /**
      * `97` : c-ns-tag-property:
@@ -631,19 +669,19 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->c-ns-shorthand-tag |
      *    ->c-non-specific-tag]
      */
-    /* TODO not generated */
+    `c-ns-tag-property`(undefined /* TODO forward reference */),
 
     /**
      * `98` : c-verbatim-tag:
      * ->c-tag + <[<][LESS-THAN SIGN][0x3c]> + (->ns-uri-char × +) + <[>][GREATER-THAN SIGN][0x3e]>
      */
-    /* TODO not generated */
+    `c-verbatim-tag`(`c-tag` + '<' + `ns-uri-char` * once_or_more + '>'),
 
     /**
      * `99` : c-ns-shorthand-tag:
      * ->c-tag-handle + (->ns-tag-char × +)
      */
-    `c-ns-shorthand-tag`(),
+    `c-ns-shorthand-tag`(`c-tag-handle` + `ns-tag-char` * once_or_more),
 
     /**
      * `100` : c-non-specific-tag:
@@ -655,7 +693,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `101` : c-ns-anchor-property:
      * ->c-anchor + ->ns-anchor-name
      */
-    `c-ns-anchor-property`(),
+    `c-ns-anchor-property`(undefined /* TODO forward reference */),
 
     /**
      * `102` : ns-anchor-char:
@@ -667,13 +705,13 @@ enum class YamlTokens(private val token: Token) : Token {
      * `103` : ns-anchor-name:
      * (->ns-anchor-char × +)
      */
-    /* TODO not generated */
+    `ns-anchor-name`(`ns-anchor-char` * once_or_more),
 
     /**
      * `104` : c-ns-alias-node:
      * ->c-alias + ->ns-anchor-name
      */
-    `c-ns-alias-node`(),
+    `c-ns-alias-node`(`c-alias` + `ns-anchor-name`),
 
     /**
      * `105` : e-scalar:
@@ -692,7 +730,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * [->c-ns-esc-char |
      *    (->nb-json - ->c-escape - ->c-double-quote)]
      */
-    `nb-double-char`(`c-ns-esc-char` or `nb-json` or `c-escape` or `c-double-quote`),
+    `nb-double-char`(`c-ns-esc-char` or `nb-json` - `c-escape` - `c-double-quote`),
 
     /**
      * `108` : ns-double-char:
@@ -704,26 +742,26 @@ enum class YamlTokens(private val token: Token) : Token {
      * `111` : nb-double-one-line:
      * (->nb-double-char × *)
      */
-    /* TODO not generated */
+    `nb-double-one-line`(`nb-double-char` * zero_or_more),
 
     /**
      * `114` : nb-ns-double-in-line:
      * ((->s-white × *) + ->ns-double-char × *)
      */
-    /* TODO not generated */
+    `nb-ns-double-in-line`(`s-white` * zero_or_more + `ns-double-char` * zero_or_more),
 
     /**
      * `117` : c-quoted-quote:
      * ->c-single-quote + ->c-single-quote
      */
-    `c-quoted-quote`(),
+    `c-quoted-quote`(`c-single-quote` + `c-single-quote`),
 
     /**
      * `118` : nb-single-char:
      * [->c-quoted-quote |
      *    (->nb-json - ->c-single-quote)]
      */
-    `nb-single-char`(`c-quoted-quote` or `nb-json` or `c-single-quote`),
+    `nb-single-char`(`c-quoted-quote` or `nb-json` - `c-single-quote`),
 
     /**
      * `119` : ns-single-char:
@@ -735,13 +773,13 @@ enum class YamlTokens(private val token: Token) : Token {
      * `122` : nb-single-one-line:
      * (->nb-single-char × *)
      */
-    /* TODO not generated */
+    `nb-single-one-line`(`nb-single-char` * zero_or_more),
 
     /**
      * `123` : nb-ns-single-in-line:
      * ((->s-white × *) + ->ns-single-char × *)
      */
-    /* TODO not generated */
+    `nb-ns-single-in-line`(`s-white` * zero_or_more + `ns-single-char` * zero_or_more),
 
     /**
      * `128` : ns-plain-safe-out:
@@ -760,13 +798,13 @@ enum class YamlTokens(private val token: Token) : Token {
      * [->c-s-implicit-json-key(c) |
      *    ->ns-s-implicit-yaml-key(c)]
      */
-    /* TODO not generated */
+    `ns-s-block-map-implicit-key`(undefined /* TODO global variable */),
 
     /**
      * `202` : l-document-prefix:
      * (->c-byte-order-mark × ?) + (->l-comment × *)
      */
-    `l-document-prefix`(),
+    `l-document-prefix`(`c-byte-order-mark` * zero_or_once + `l-comment` * zero_or_more),
 
     /**
      * `203` : c-directives-end:
@@ -784,7 +822,7 @@ enum class YamlTokens(private val token: Token) : Token {
      * `205` : l-document-suffix:
      * ->c-document-end + ->s-l-comments
      */
-    `l-document-suffix`(),
+    `l-document-suffix`(`c-document-end` + `s-l-comments`),
 
     /**
      * `206` : c-forbidden:
@@ -793,26 +831,26 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->s-white |
      *    ->End of file]
      */
-    `c-forbidden`(),
+    `c-forbidden`(startOfLine + `c-directives-end` or `c-document-end` + `b-char` or `s-white` or EOF),
 
     /**
      * `207` : l-bare-document:
      * ->s-l+block-node(n,c) + ->Excluding c-forbidden content
      */
-    /* TODO not generated */
+    `l-bare-document`(undefined /* TODO global variable */),
 
     /**
      * `208` : l-explicit-document:
      * ->c-directives-end + [->l-bare-document |
      *    ->e-node + ->s-l-comments]
      */
-    `l-explicit-document`(),
+    `l-explicit-document`(`c-directives-end` + `l-bare-document` or (`e-node` + `s-l-comments`)),
 
     /**
      * `209` : l-directive-document:
      * (->l-directive × +) + ->l-explicit-document
      */
-    `l-directive-document`(),
+    `l-directive-document`(`l-directive` * once_or_more + `l-explicit-document`),
 
     /**
      * `210` : l-any-document:
@@ -820,18 +858,17 @@ enum class YamlTokens(private val token: Token) : Token {
      *    ->l-explicit-document |
      *    ->l-bare-document]
      */
-    /* TODO not generated */
+    `l-any-document`(`l-directive-document` or `l-explicit-document` or `l-bare-document`),
 
     /**
      * `211` : l-yaml-stream:
      * (->l-document-prefix × *) + (->l-any-document × ?) + ((->l-document-suffix × +) + (->l-document-prefix × *) + [(->l-any-document × ?) |
      *    (->l-document-prefix × *) + (->l-explicit-document × ?)] × *)
      */
-    `l-yaml-stream`(),
+    `l-yaml-stream`(`l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once + (`l-document-suffix` * once_or_more + `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once or (`l-document-prefix` * zero_or_more + `l-explicit-document` * zero_or_once)) * zero_or_more),
     ;
 
 
-    @Deprecated("not yet generated") constructor() : this(undefined)
     constructor(codePoint: Char) : this(symbol(codePoint))
     constructor(range: CharRange) : this(range.toCodePointRange())
     constructor(range: CodePointRange) : this(symbol(range))
@@ -848,9 +885,13 @@ private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this).
 private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
 private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
 private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
+private infix operator fun Char.plus(token: Token) = symbol(this) + token
 private infix operator fun Token.plus(that: Char) = this + symbol(that)
 private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
 private val EOF = symbol(CodePoint.EOF)
+private val followedByAnNsPlainSafe = undefined
+private val anNsCharPreceding = undefined
+private val atMost1024CharactersAltogether = undefined
 
 /**
  * `63` : s-indent(n):
@@ -895,6 +936,7 @@ fun `s-line-prefix`(n: Int, c: InOutMode) = when (c) {
     `block-in` -> `s-block-line-prefix`(n) describedAs "s-line-prefix($c)"
     `flow-out` -> `s-flow-line-prefix`(n) describedAs "s-line-prefix($c)"
     `flow-in` -> `s-flow-line-prefix`(n) describedAs "s-line-prefix($c)"
+    else -> error("unexpected `c` value `$c`")
 }
 
 /**
@@ -907,4 +949,608 @@ fun `s-block-line-prefix`(n: Int) = `s-indent`(n)
  * `69` : s-flow-line-prefix(n):
  * ->s-indent(n) + (->s-separate-in-line × ?)
  */
-fun `s-flow-line-prefix`(n: Int) = `s-indent`(n) + (`s-indent`(n) * zero_or_once)
+fun `s-flow-line-prefix`(n: Int) = `s-indent`(n) + `s-separate-in-line` * zero_or_once
+/**
+ * `70` : l-empty(n,c):
+ * [->s-line-prefix(n,c) |
+ *    ->s-indent(n)] + ->b-as-line-feed
+ */
+fun `l-empty`(n: Int, c: InOutMode) = `s-line-prefix`(n,c) or `s-indent`(n) + `b-as-line-feed`
+/**
+ * `71` : b-l-trimmed(n,c):
+ * ->b-non-content + (->l-empty(n,c) × +)
+ */
+fun `b-l-trimmed`(n: Int, c: InOutMode) = `b-non-content` + `l-empty`(n,c) * once_or_more
+/**
+ * `73` : b-l-folded(n,c):
+ * [->b-l-trimmed(n,c) |
+ *    ->b-as-space]
+ */
+fun `b-l-folded`(n: Int, c: InOutMode) = `b-l-trimmed`(n,c) or `b-as-space`
+/**
+ * `74` : s-flow-folded(n):
+ * (->s-separate-in-line × ?) + ->b-l-folded(n,c) + ->s-flow-line-prefix(n)
+ */
+fun `s-flow-folded`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `80` : s-separate(n,c):
+ * <c> = ->block-out ⇒ ->s-separate-lines(n)
+ * <c> = ->block-in ⇒ ->s-separate-lines(n)
+ * <c> = ->flow-out ⇒ ->s-separate-lines(n)
+ * <c> = ->flow-in ⇒ ->s-separate-lines(n)
+ * <c> = ->block-key ⇒ ->s-separate-in-line
+ * <c> = ->flow-key ⇒ ->s-separate-in-line
+ */
+fun `s-separate`(n: Int, c: InOutMode) = when (c) {
+    `block-out` -> `s-separate-lines`(n) describedAs "s-separate($c)"
+    `block-in` -> `s-separate-lines`(n) describedAs "s-separate($c)"
+    `flow-out` -> `s-separate-lines`(n) describedAs "s-separate($c)"
+    `flow-in` -> `s-separate-lines`(n) describedAs "s-separate($c)"
+    `block-key` -> `s-separate-in-line` describedAs "s-separate($c)"
+    `flow-key` -> `s-separate-in-line` describedAs "s-separate($c)"
+    else -> error("unexpected `c` value `$c`")
+}
+
+/**
+ * `81` : s-separate-lines(n):
+ * [->s-l-comments + ->s-flow-line-prefix(n) |
+ *    ->s-separate-in-line]
+ */
+fun `s-separate-lines`(n: Int) = (`s-l-comments` + `s-flow-line-prefix`(n)) or `s-separate-in-line`
+/**
+ * `96` : c-ns-properties(n,c):
+ * [->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) |
+ *    ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)]
+ */
+fun `c-ns-properties`(n: Int, c: InOutMode) = (`c-ns-tag-property` + (`s-separate`(n,c) + `c-ns-anchor-property`) * zero_or_once) or (`c-ns-anchor-property` + (`s-separate`(n,c) + `c-ns-tag-property`) * zero_or_once)
+/**
+ * `109` : c-double-quoted(n,c):
+ * ->c-double-quote + ->nb-double-text(n,c) + ->c-double-quote
+ */
+fun `c-double-quoted`(n: Int, c: InOutMode) = `c-double-quote` + `nb-double-text`(n,c) + `c-double-quote`
+/**
+ * `110` : nb-double-text(n,c):
+ * <c> = ->flow-out ⇒ ->nb-double-multi-line(n)
+ * <c> = ->flow-in ⇒ ->nb-double-multi-line(n)
+ * <c> = ->block-key ⇒ ->nb-double-one-line
+ * <c> = ->flow-key ⇒ ->nb-double-one-line
+ */
+fun `nb-double-text`(n: Int, c: InOutMode) = when (c) {
+    `flow-out` -> `nb-double-multi-line`(n) describedAs "nb-double-text($c)"
+    `flow-in` -> `nb-double-multi-line`(n) describedAs "nb-double-text($c)"
+    `block-key` -> `nb-double-one-line` describedAs "nb-double-text($c)"
+    `flow-key` -> `nb-double-one-line` describedAs "nb-double-text($c)"
+    else -> error("unexpected `c` value `$c`")
+}
+
+/**
+ * `112` : s-double-escaped(n):
+ * (->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c) × *) + ->s-flow-line-prefix(n)
+ */
+fun `s-double-escaped`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `113` : s-double-break(n):
+ * [->s-double-escaped(n) |
+ *    ->s-flow-folded(n)]
+ */
+fun `s-double-break`(n: Int) = `s-double-escaped`(n) or `s-flow-folded`(n)
+/**
+ * `115` : s-double-next-line(n):
+ * ->s-double-break(n) + (->ns-double-char + ->nb-ns-double-in-line + [->s-double-next-line(n) |
+ *    (->s-white × *)] × ?)
+ */
+fun `s-double-next-line`(n: Int)= undefined /* TODO recursion */
+
+/**
+ * `116` : nb-double-multi-line(n):
+ * ->nb-ns-double-in-line + [->s-double-next-line(n) |
+ *    (->s-white × *)]
+ */
+fun `nb-double-multi-line`(n: Int) = `nb-ns-double-in-line` + `s-double-next-line`(n) or `s-white` * zero_or_more
+/**
+ * `120` : c-single-quoted(n,c):
+ * ->c-single-quote + ->nb-single-text(n,c) + ->c-single-quote
+ */
+fun `c-single-quoted`(n: Int, c: InOutMode) = `c-single-quote` + `nb-single-text`(n,c) + `c-single-quote`
+/**
+ * `121` : nb-single-text(n,c):
+ * <c> = ->flow-out ⇒ ->nb-single-multi-line(n)
+ * <c> = ->flow-in ⇒ ->nb-single-multi-line(n)
+ * <c> = ->block-key ⇒ ->nb-single-one-line
+ * <c> = ->flow-key ⇒ ->nb-single-one-line
+ */
+fun `nb-single-text`(n: Int, c: InOutMode) = when (c) {
+    `flow-out` -> `nb-single-multi-line`(n) describedAs "nb-single-text($c)"
+    `flow-in` -> `nb-single-multi-line`(n) describedAs "nb-single-text($c)"
+    `block-key` -> `nb-single-one-line` describedAs "nb-single-text($c)"
+    `flow-key` -> `nb-single-one-line` describedAs "nb-single-text($c)"
+    else -> error("unexpected `c` value `$c`")
+}
+
+/**
+ * `124` : s-single-next-line(n):
+ * ->s-flow-folded(n) + (->ns-single-char + ->nb-ns-single-in-line + [->s-single-next-line(n) |
+ *    (->s-white × *)] × ?)
+ */
+fun `s-single-next-line`(n: Int)= undefined /* TODO recursion */
+
+/**
+ * `125` : nb-single-multi-line(n):
+ * ->nb-ns-single-in-line + [->s-single-next-line(n) |
+ *    (->s-white × *)]
+ */
+fun `nb-single-multi-line`(n: Int) = `nb-ns-single-in-line` + `s-single-next-line`(n) or `s-white` * zero_or_more
+/**
+ * `126` : ns-plain-first(c):
+ * [(->ns-char - ->c-indicator) |
+ *    [->c-mapping-key |
+ *    ->c-mapping-value |
+ *    ->c-sequence-entry] + ->Followed by an ns-plain-safe(c) )]
+ */
+fun `ns-plain-first`(c: InOutMode) = `ns-char` - `c-indicator` or (`c-mapping-key` or `c-mapping-value` or `c-sequence-entry` + followedByAnNsPlainSafe)
+/**
+ * `127` : ns-plain-safe(c):
+ * <c> = ->flow-out ⇒ ->ns-plain-safe-out
+ * <c> = ->flow-in ⇒ ->ns-plain-safe-in
+ * <c> = ->block-key ⇒ ->ns-plain-safe-out
+ * <c> = ->flow-key ⇒ ->ns-plain-safe-in
+ */
+fun `ns-plain-safe`(c: InOutMode) = when (c) {
+    `flow-out` -> `ns-plain-safe-out` describedAs "ns-plain-safe($c)"
+    `flow-in` -> `ns-plain-safe-in` describedAs "ns-plain-safe($c)"
+    `block-key` -> `ns-plain-safe-out` describedAs "ns-plain-safe($c)"
+    `flow-key` -> `ns-plain-safe-in` describedAs "ns-plain-safe($c)"
+    else -> error("unexpected `c` value `$c`")
+}
+
+/**
+ * `130` : ns-plain-char(c):
+ * [(->ns-plain-safe(c) - ->c-mapping-value - ->c-comment) |
+ *    ->An ns-char preceding + ->c-comment |
+ *    ->c-mapping-value]
+ */
+fun `ns-plain-char`(c: InOutMode) = `ns-plain-safe`(c) - `c-mapping-value` - `c-comment` or (anNsCharPreceding + `c-comment`) or `c-mapping-value`
+/**
+ * `131` : ns-plain(n,c):
+ * <c> = ->flow-out ⇒ ->ns-plain-multi-line(n,c)
+ * <c> = ->flow-in ⇒ ->ns-plain-multi-line(n,c)
+ * <c> = ->block-key ⇒ ->ns-plain-one-line(c)
+ * <c> = ->flow-key ⇒ ->ns-plain-one-line(c)
+ */
+fun `ns-plain`(n: Int, c: InOutMode) = when (c) {
+    `flow-out` -> `ns-plain-multi-line`(n,c) describedAs "ns-plain($c)"
+    `flow-in` -> `ns-plain-multi-line`(n,c) describedAs "ns-plain($c)"
+    `block-key` -> `ns-plain-one-line`(c) describedAs "ns-plain($c)"
+    `flow-key` -> `ns-plain-one-line`(c) describedAs "ns-plain($c)"
+    else -> error("unexpected `c` value `$c`")
+}
+
+/**
+ * `132` : nb-ns-plain-in-line(c):
+ * ((->s-white × *) + ->ns-plain-char(c) × *)
+ */
+fun `nb-ns-plain-in-line`(c: InOutMode): Token {
+    val token = `s-white` * zero_or_more + `ns-plain-char`(c) * zero_or_more
+    return token("nb-ns-plain-in-line($c)") { token.match(it) }
+}
+
+/**
+ * `133` : ns-plain-one-line(c):
+ * ->ns-plain-first(c) + ->nb-ns-plain-in-line(c)
+ */
+fun `ns-plain-one-line`(c: InOutMode) = `ns-plain-first`(c) + `nb-ns-plain-in-line`(c)
+/**
+ * `134` : s-ns-plain-next-line(n,c):
+ * ->s-flow-folded(n) + ->ns-plain-char(c) + ->nb-ns-plain-in-line(c)
+ */
+fun `s-ns-plain-next-line`(n: Int, c: InOutMode) = `s-flow-folded`(n) + `ns-plain-char`(c) + `nb-ns-plain-in-line`(c)
+/**
+ * `135` : ns-plain-multi-line(n,c):
+ * ->ns-plain-one-line(c) + (->s-ns-plain-next-line(n,c) × *)
+ */
+fun `ns-plain-multi-line`(n: Int, c: InOutMode) = `ns-plain-one-line`(c) + `s-ns-plain-next-line`(n,c) * zero_or_more
+/**
+ * `136` : in-flow(c):
+ * <c> = ->flow-out ⇒ ->flow-in
+ * <c> = ->flow-in ⇒ ->flow-in
+ * <c> = ->block-key ⇒ ->flow-key
+ * <c> = ->flow-key ⇒ ->flow-key
+ */
+fun `in-flow`(c: InOutMode)= undefined /* TODO other */
+
+/**
+ * `137` : c-flow-sequence(n,c):
+ * ->c-sequence-start + (->s-separate(n,c) × ?) + ->ns-s-flow-seq-entries(n,c) + ->in-flow(c) + (->ns-s-flow-seq-entries(n,c) × ?) + ->c-sequence-end
+ */
+fun `c-flow-sequence`(n: Int, c: InOutMode) = `c-sequence-start` + `s-separate`(n,c) * zero_or_once + `ns-s-flow-seq-entries`(n,c) + `in-flow`(c) + `ns-s-flow-seq-entries`(n,c) * zero_or_once + `c-sequence-end`
+/**
+ * `138` : ns-s-flow-seq-entries(n,c):
+ * ->ns-flow-seq-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c) × ?) × ?)
+ */
+fun `ns-s-flow-seq-entries`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+
+/**
+ * `139` : ns-flow-seq-entry(n,c):
+ * [->ns-flow-pair(n,c) |
+ *    ->ns-flow-node(n,c)]
+ */
+fun `ns-flow-seq-entry`(n: Int, c: InOutMode) = `ns-flow-pair`(n,c) or `ns-flow-node`(n,c)
+/**
+ * `140` : c-flow-mapping(n,c):
+ * ->c-mapping-start + (->s-separate(n,c) × ?) + ->ns-s-flow-map-entries(n,c) + ->in-flow(c) + (->ns-s-flow-map-entries(n,c) × ?) + ->c-mapping-end
+ */
+fun `c-flow-mapping`(n: Int, c: InOutMode) = `c-mapping-start` + `s-separate`(n,c) * zero_or_once + `ns-s-flow-map-entries`(n,c) + `in-flow`(c) + `ns-s-flow-map-entries`(n,c) * zero_or_once + `c-mapping-end`
+/**
+ * `141` : ns-s-flow-map-entries(n,c):
+ * ->ns-flow-map-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c) × ?) × ?)
+ */
+fun `ns-s-flow-map-entries`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+
+/**
+ * `142` : ns-flow-map-entry(n,c):
+ * [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) |
+ *    ->ns-flow-map-implicit-entry(n,c)]
+ */
+fun `ns-flow-map-entry`(n: Int, c: InOutMode) = (`c-mapping-key` + `s-separate`(n,c) + `ns-flow-map-explicit-entry`(n,c)) or `ns-flow-map-implicit-entry`(n,c)
+/**
+ * `143` : ns-flow-map-explicit-entry(n,c):
+ * [->ns-flow-map-implicit-entry(n,c) |
+ *    ->e-node + ->e-node]
+ */
+fun `ns-flow-map-explicit-entry`(n: Int, c: InOutMode) = `ns-flow-map-implicit-entry`(n,c) or (`e-node` + `e-node`)
+/**
+ * `144` : ns-flow-map-implicit-entry(n,c):
+ * [->ns-flow-map-yaml-key-entry(n,c) |
+ *    ->c-ns-flow-map-empty-key-entry(n,c) |
+ *    ->c-ns-flow-map-json-key-entry(n,c)]
+ */
+fun `ns-flow-map-implicit-entry`(n: Int, c: InOutMode) = `ns-flow-map-yaml-key-entry`(n,c) or `c-ns-flow-map-empty-key-entry`(n,c) or `c-ns-flow-map-json-key-entry`(n,c)
+/**
+ * `145` : ns-flow-map-yaml-key-entry(n,c):
+ * ->ns-flow-yaml-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-separate-value(n,c) |
+ *    ->e-node]
+ */
+fun `ns-flow-map-yaml-key-entry`(n: Int, c: InOutMode) = `ns-flow-yaml-node`(n,c) + (`s-separate`(n,c) * zero_or_once + `c-ns-flow-map-separate-value`(n,c)) or `e-node`
+/**
+ * `146` : c-ns-flow-map-empty-key-entry(n,c):
+ * ->e-node + ->c-ns-flow-map-separate-value(n,c)
+ */
+fun `c-ns-flow-map-empty-key-entry`(n: Int, c: InOutMode) = `e-node` + `c-ns-flow-map-separate-value`(n,c)
+/**
+ * `147` : c-ns-flow-map-separate-value(n,c):
+ * ->c-mapping-value + [->s-separate(n,c) + ->ns-flow-node(n,c) |
+ *    ->e-node]
+ */
+fun `c-ns-flow-map-separate-value`(n: Int, c: InOutMode) = `c-mapping-value` + (`s-separate`(n,c) + `ns-flow-node`(n,c)) or `e-node`
+/**
+ * `148` : c-ns-flow-map-json-key-entry(n,c):
+ * ->c-flow-json-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-adjacent-value(n,c) |
+ *    ->e-node]
+ */
+fun `c-ns-flow-map-json-key-entry`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+
+/**
+ * `149` : c-ns-flow-map-adjacent-value(n,c):
+ * ->c-mapping-value + [(->s-separate(n,c) × ?) + ->ns-flow-node(n,c) |
+ *    ->e-node]
+ */
+fun `c-ns-flow-map-adjacent-value`(n: Int, c: InOutMode) = `c-mapping-value` + (`s-separate`(n,c) * zero_or_once + `ns-flow-node`(n,c)) or `e-node`
+/**
+ * `150` : ns-flow-pair(n,c):
+ * [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) |
+ *    ->ns-flow-pair-entry(n,c)]
+ */
+fun `ns-flow-pair`(n: Int, c: InOutMode) = (`c-mapping-key` + `s-separate`(n,c) + `ns-flow-map-explicit-entry`(n,c)) or `ns-flow-pair-entry`(n,c)
+/**
+ * `151` : ns-flow-pair-entry(n,c):
+ * [->ns-flow-pair-yaml-key-entry(n,c) |
+ *    ->c-ns-flow-map-empty-key-entry(n,c) |
+ *    ->c-ns-flow-pair-json-key-entry(n,c)]
+ */
+fun `ns-flow-pair-entry`(n: Int, c: InOutMode) = `ns-flow-pair-yaml-key-entry`(n,c) or `c-ns-flow-map-empty-key-entry`(n,c) or `c-ns-flow-pair-json-key-entry`(n,c)
+/**
+ * `152` : ns-flow-pair-yaml-key-entry(n,c):
+ * ->ns-s-implicit-yaml-key(c) + ->c-ns-flow-map-separate-value(n,c)
+ */
+fun `ns-flow-pair-yaml-key-entry`(n: Int, c: InOutMode) = `ns-s-implicit-yaml-key`(c) + `c-ns-flow-map-separate-value`(n,c)
+/**
+ * `153` : c-ns-flow-pair-json-key-entry(n,c):
+ * ->c-s-implicit-json-key(c) + ->c-ns-flow-map-adjacent-value(n,c)
+ */
+fun `c-ns-flow-pair-json-key-entry`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+
+/**
+ * `154` : ns-s-implicit-yaml-key(c):
+ * ->ns-flow-yaml-node(n,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether
+ */
+fun `ns-s-implicit-yaml-key`(c: InOutMode)= undefined /* TODO global variable */
+
+/**
+ * `155` : c-s-implicit-json-key(c):
+ * ->c-flow-json-node(n,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether
+ */
+fun `c-s-implicit-json-key`(c: InOutMode)= undefined /* TODO global variable */
+
+/**
+ * `156` : ns-flow-yaml-content(n,c):
+ * ->ns-plain(n,c)
+ */
+fun `ns-flow-yaml-content`(n: Int, c: InOutMode) = `ns-plain`(n,c)
+
+/**
+ * `157` : c-flow-json-content(n,c):
+ * [->c-flow-sequence(n,c) |
+ *    ->c-flow-mapping(n,c) |
+ *    ->c-single-quoted(n,c) |
+ *    ->c-double-quoted(n,c)]
+ */
+fun `c-flow-json-content`(n: Int, c: InOutMode) = `c-flow-sequence`(n,c) or `c-flow-mapping`(n,c) or `c-single-quoted`(n,c) or `c-double-quoted`(n,c)
+/**
+ * `158` : ns-flow-content(n,c):
+ * [->ns-flow-yaml-content(n,c) |
+ *    ->c-flow-json-content(n,c)]
+ */
+fun `ns-flow-content`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+
+/**
+ * `159` : ns-flow-yaml-node(n,c):
+ * [->c-ns-alias-node |
+ *    ->ns-flow-yaml-content(n,c) |
+ *    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-yaml-content(n,c) |
+ *    ->e-scalar]]
+ */
+fun `ns-flow-yaml-node`(n: Int, c: InOutMode) = `c-ns-alias-node` or `ns-flow-yaml-content`(n,c) or (`c-ns-properties`(n,c) + (`s-separate`(n,c) + `ns-flow-yaml-content`(n,c)) or `e-scalar`)
+/**
+ * `160` : c-flow-json-node(n,c):
+ * (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + ->c-flow-json-content(n,c)
+ */
+fun `c-flow-json-node`(n: Int, c: InOutMode) = (`c-ns-properties`(n,c) + `s-separate`(n,c)) * zero_or_once + `c-flow-json-content`(n,c)
+/**
+ * `161` : ns-flow-node(n,c):
+ * [->c-ns-alias-node |
+ *    ->ns-flow-content(n,c) |
+ *    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-content(n,c) |
+ *    ->e-scalar]]
+ */
+fun `ns-flow-node`(n: Int, c: InOutMode) = `c-ns-alias-node` or `ns-flow-content`(n,c) or (`c-ns-properties`(n,c) + (`s-separate`(n,c) + `ns-flow-content`(n,c)) or `e-scalar`)
+/**
+ * `162` : c-b-block-header(m,t):
+ * [->c-indentation-indicator(m) + ->c-chomping-indicator(t) |
+ *    ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment
+ */
+fun `c-b-block-header`(m: Int, t: String)= undefined /* TODO other */
+
+/**
+ * `163` : c-indentation-indicator(m):
+ * ->ns-dec-digit ⇒ ->m = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)
+ * ->Empty ⇒ ->m = ->auto-detect()
+ */
+fun `c-indentation-indicator`(m: Int)= undefined /* TODO other */
+
+/**
+ * `164` : c-chomping-indicator(t):
+ * <[-][HYPHEN-MINUS][0x2d]> ⇒ <t> = ->strip
+ * <[+][PLUS SIGN][0x2b]> ⇒ <t> = ->keep
+ * ->Empty ⇒ <t> = ->clip
+ */
+fun `c-chomping-indicator`(t: String)= undefined /* TODO other */
+
+/**
+ * `165` : b-chomped-last(t):
+ * <t> = ->strip ⇒ [->b-non-content |
+ *    ->End of file]
+ * <t> = ->clip ⇒ [->b-as-line-feed |
+ *    ->End of file]
+ * <t> = ->keep ⇒ [->b-as-line-feed |
+ *    ->End of file]
+ */
+fun `b-chomped-last`(t: String)= undefined /* TODO other */
+
+/**
+ * `166` : l-chomped-empty(n,t):
+ * <t> = ->strip ⇒ ->l-strip-empty(n)
+ * <t> = ->clip ⇒ ->l-strip-empty(n)
+ * <t> = ->keep ⇒ ->l-keep-empty(n)
+ */
+fun `l-chomped-empty`(n: Int, t: String)= undefined /* TODO other */
+
+/**
+ * `167` : l-strip-empty(n):
+ * (->s-indent(n) + ->b-non-content × *) + (->l-trail-comments(n) × ?)
+ */
+fun `l-strip-empty`(n: Int) = (`s-indent`(n) + `b-non-content`) * zero_or_more + `l-trail-comments`(n) * zero_or_once
+/**
+ * `168` : l-keep-empty(n):
+ * (->l-empty(n,c) × *) + (->l-trail-comments(n) × ?)
+ */
+fun `l-keep-empty`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `169` : l-trail-comments(n):
+ * ->s-indent(n) + ->c-nb-comment-text + ->b-comment + (->l-comment × *)
+ */
+fun `l-trail-comments`(n: Int) = `s-indent`(n) + `c-nb-comment-text` + `b-comment` + `l-comment` * zero_or_more
+/**
+ * `170` : c-l+literal(n):
+ * ->c-literal + ->c-b-block-header(m,t) + ->l-literal-content(n,t)
+ */
+fun `c-l+literal`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `171` : l-nb-literal-text(n):
+ * (->l-empty(n,c) × *) + ->s-indent(n) + (->nb-char × +)
+ */
+fun `l-nb-literal-text`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `172` : b-nb-literal-next(n):
+ * ->b-as-line-feed + ->l-nb-literal-text(n)
+ */
+fun `b-nb-literal-next`(n: Int) = `b-as-line-feed` + `l-nb-literal-text`(n)
+/**
+ * `173` : l-literal-content(n,t):
+ * (->l-nb-literal-text(n) + (->b-nb-literal-next(n) × *) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
+ */
+fun `l-literal-content`(n: Int, t: String) = (`l-nb-literal-text`(n) + `b-nb-literal-next`(n) * zero_or_more + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n,t)
+/**
+ * `174` : c-l+folded(n):
+ * ->c-folded + ->c-b-block-header(m,t) + ->l-folded-content(n,t)
+ */
+fun `c-l+folded`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `175` : s-nb-folded-text(n):
+ * ->s-indent(n) + ->ns-char + (->nb-char × *)
+ */
+fun `s-nb-folded-text`(n: Int) = `s-indent`(n) + `ns-char` + `nb-char` * zero_or_more
+/**
+ * `176` : l-nb-folded-lines(n):
+ * ->s-nb-folded-text(n) + (->b-l-folded(n,c) + ->s-nb-folded-text(n) × *)
+ */
+fun `l-nb-folded-lines`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `177` : s-nb-spaced-text(n):
+ * ->s-indent(n) + ->s-white + (->nb-char × *)
+ */
+fun `s-nb-spaced-text`(n: Int) = `s-indent`(n) + `s-white` + `nb-char` * zero_or_more
+/**
+ * `178` : b-l-spaced(n):
+ * ->b-as-line-feed + (->l-empty(n,c) × *)
+ */
+fun `b-l-spaced`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `179` : l-nb-spaced-lines(n):
+ * ->s-nb-spaced-text(n) + (->b-l-spaced(n) + ->s-nb-spaced-text(n) × *)
+ */
+fun `l-nb-spaced-lines`(n: Int) = `s-nb-spaced-text`(n) + (`b-l-spaced`(n) + `s-nb-spaced-text`(n)) * zero_or_more
+/**
+ * `180` : l-nb-same-lines(n):
+ * (->l-empty(n,c) × *) + [->l-nb-folded-lines(n) |
+ *    ->l-nb-spaced-lines(n)]
+ */
+fun `l-nb-same-lines`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `181` : l-nb-diff-lines(n):
+ * ->l-nb-same-lines(n) + (->b-as-line-feed + ->l-nb-same-lines(n) × *)
+ */
+fun `l-nb-diff-lines`(n: Int) = `l-nb-same-lines`(n) + (`b-as-line-feed` + `l-nb-same-lines`(n)) * zero_or_more
+/**
+ * `182` : l-folded-content(n,t):
+ * (->l-nb-diff-lines(n) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
+ */
+fun `l-folded-content`(n: Int, t: String) = (`l-nb-diff-lines`(n) + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n,t)
+/**
+ * `183` : l+block-sequence(n):
+ * (->s-indent(n) + ->c-l-block-seq-entry(n) × +) + ->For some fixed auto-detected m > 0
+ */
+fun `l+block-sequence`(n: Int)= undefined /* TODO other */
+
+/**
+ * `184` : c-l-block-seq-entry(n):
+ * ->c-sequence-entry + ->s-l+block-indented(n,c)
+ */
+fun `c-l-block-seq-entry`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `185` : s-l+block-indented(n,c):
+ * [->s-indent(n) + [->ns-l-compact-sequence(n) |
+ *    ->ns-l-compact-mapping(n)] |
+ *    ->s-l+block-node(n,c) |
+ *    ->e-node + ->s-l-comments]
+ */
+fun `s-l+block-indented`(n: Int, c: InOutMode) = (`s-indent`(n) + `ns-l-compact-sequence`(n) or `ns-l-compact-mapping`(n)) or `s-l+block-node`(n,c) or (`e-node` + `s-l-comments`)
+/**
+ * `186` : ns-l-compact-sequence(n):
+ * ->c-l-block-seq-entry(n) + (->s-indent(n) + ->c-l-block-seq-entry(n) × *)
+ */
+fun `ns-l-compact-sequence`(n: Int)= undefined /* TODO recursion */
+
+/**
+ * `187` : l+block-mapping(n):
+ * (->s-indent(n) + ->ns-l-block-map-entry(n) × +) + ->For some fixed auto-detected m > 0
+ */
+fun `l+block-mapping`(n: Int)= undefined /* TODO other */
+
+/**
+ * `188` : ns-l-block-map-entry(n):
+ * [->c-l-block-map-explicit-entry(n) |
+ *    ->ns-l-block-map-implicit-entry(n)]
+ */
+fun `ns-l-block-map-entry`(n: Int) = `c-l-block-map-explicit-entry`(n) or `ns-l-block-map-implicit-entry`(n)
+/**
+ * `189` : c-l-block-map-explicit-entry(n):
+ * ->c-l-block-map-explicit-key(n) + [->l-block-map-explicit-value(n) |
+ *    ->e-node]
+ */
+fun `c-l-block-map-explicit-entry`(n: Int) = `c-l-block-map-explicit-key`(n) + `l-block-map-explicit-value`(n) or `e-node`
+/**
+ * `190` : c-l-block-map-explicit-key(n):
+ * ->c-mapping-key + ->s-l+block-indented(n,c)
+ */
+fun `c-l-block-map-explicit-key`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `191` : l-block-map-explicit-value(n):
+ * ->s-indent(n) + ->c-mapping-value + ->s-l+block-indented(n,c)
+ */
+fun `l-block-map-explicit-value`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `192` : ns-l-block-map-implicit-entry(n):
+ * [->ns-s-block-map-implicit-key |
+ *    ->e-node] + ->c-l-block-map-implicit-value(n)
+ */
+fun `ns-l-block-map-implicit-entry`(n: Int) = `ns-s-block-map-implicit-key` or `e-node` + `c-l-block-map-implicit-value`(n)
+/**
+ * `194` : c-l-block-map-implicit-value(n):
+ * ->c-mapping-value + [->s-l+block-node(n,c) |
+ *    ->e-node + ->s-l-comments]
+ */
+fun `c-l-block-map-implicit-value`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `195` : ns-l-compact-mapping(n):
+ * ->ns-l-block-map-entry(n) + (->s-indent(n) + ->ns-l-block-map-entry(n) × *)
+ */
+fun `ns-l-compact-mapping`(n: Int) = `ns-l-block-map-entry`(n) + (`s-indent`(n) + `ns-l-block-map-entry`(n)) * zero_or_more
+/**
+ * `196` : s-l+block-node(n,c):
+ * [->s-l+block-in-block(n,c) |
+ *    ->s-l+flow-in-block(n)]
+ */
+fun `s-l+block-node`(n: Int, c: InOutMode) = `s-l+block-in-block`(n,c) or `s-l+flow-in-block`(n)
+/**
+ * `197` : s-l+flow-in-block(n):
+ * ->s-separate(n,c) + ->ns-flow-node(n,c) + ->s-l-comments
+ */
+fun `s-l+flow-in-block`(n: Int)= undefined /* TODO global variable */
+
+/**
+ * `198` : s-l+block-in-block(n,c):
+ * [->s-l+block-scalar(n,c) |
+ *    ->s-l+block-collection(n,c)]
+ */
+fun `s-l+block-in-block`(n: Int, c: InOutMode) = `s-l+block-scalar`(n,c) or `s-l+block-collection`(n,c)
+/**
+ * `199` : s-l+block-scalar(n,c):
+ * ->s-separate(n,c) + (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + [->c-l+literal(n) |
+ *    ->c-l+folded(n)]
+ */
+fun `s-l+block-scalar`(n: Int, c: InOutMode) = `s-separate`(n,c) + (`c-ns-properties`(n,c) + `s-separate`(n,c)) * zero_or_once + `c-l+literal`(n) or `c-l+folded`(n)
+/**
+ * `200` : s-l+block-collection(n,c):
+ * (->s-separate(n,c) + ->c-ns-properties(n,c) × ?) + ->s-l-comments + ->l+block-sequence(n) + ->seq-spaces(n,c) + [->l+block-sequence(n) |
+ *    ->l+block-mapping(n)]
+ */
+fun `s-l+block-collection`(n: Int, c: InOutMode) = (`s-separate`(n,c) + `c-ns-properties`(n,c)) * zero_or_once + `s-l-comments` + `l+block-sequence`(n) + `seq-spaces`(n,c) + `l+block-sequence`(n) or `l+block-mapping`(n)
+/**
+ * `201` : seq-spaces(n,c):
+ * <c> = ->block-out ⇒ ->n-1
+ * <c> = ->block-in ⇒ ->n
+ */
+fun `seq-spaces`(n: Int, c: InOutMode)= undefined /* TODO other */
