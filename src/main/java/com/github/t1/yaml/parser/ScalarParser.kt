@@ -20,6 +20,7 @@ import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
 import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
 import com.github.t1.yaml.parser.YamlTokens.`c-single-quote`
 import com.github.t1.yaml.parser.YamlTokens.`s-space`
+import com.github.t1.yaml.tools.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.spaces
 
 internal class ScalarParser private constructor(
@@ -70,7 +71,7 @@ internal class ScalarParser private constructor(
             next.expect(spaces)
             if (next.peek(`c-comment`) || next.peek(BLOCK_MAPPING_VALUE)) break
             builder.append(spaces)
-            if (next.peek().isEof) break
+            if (next.peek() == EOF) break
             if (mode == KEY && next.peek(`c-mapping-value`)) break
             if (mode == VALUE && (next.peek(`c-collect-entry`) || next.peek(`c-mapping-end`))) break
             builder.appendCodePoint(next.read().value)

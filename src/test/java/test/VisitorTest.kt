@@ -10,7 +10,6 @@ import com.github.t1.yaml.model.Sequence.Item
 import com.github.t1.yaml.model.Visitor
 import com.github.t1.yaml.tools.Scanner
 import com.nhaarman.mockitokotlin2.mock
-import helpers.catchParseException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test

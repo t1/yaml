@@ -1,12 +1,12 @@
 package spec
 
-import helpers.catchParseException
-import helpers.parse
-import helpers.parseAndCheck
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import test.catchParseException
+import test.parse
+import test.parseAndCheck
 
 @Tag("spec") class Chapter5Test {
     @Test fun spec_5_1_Byte_Order_Mark() {

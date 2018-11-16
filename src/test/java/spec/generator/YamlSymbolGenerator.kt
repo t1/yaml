@@ -32,12 +32,12 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "\n" +
             "package com.github.t1.yaml.parser\n" +
             "\n" +
+            "import com.github.t1.yaml.parser.InOutMode.`block-in`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`block-key`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`block-out`\n" +
-            "import com.github.t1.yaml.parser.InOutMode.`block-in`\n" +
+            "import com.github.t1.yaml.parser.InOutMode.`flow-in`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`flow-key`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`flow-out`\n" +
-            "import com.github.t1.yaml.parser.InOutMode.`flow-in`\n" +
             "import com.github.t1.yaml.parser.YamlTokens.*\n" +
             "import com.github.t1.yaml.tools.CodePoint\n" +
             "import com.github.t1.yaml.tools.CodePointRange\n" +
@@ -129,7 +129,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
             for (production in productions.filter { production -> production.args.isEmpty() }) {
                 try {
-                    ProductionWriter(production).writeEnumEntry()
+                    ProductionWriter(production).writeToken()
                 } catch (e: Exception) {
                     throw RuntimeException("can't write enum entry for ${production.counter}: ${production.key}", e)
                 }
@@ -139,7 +139,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
             for (production in productions.filter { production -> !production.args.isEmpty() }) {
                 try {
-                    ProductionWriter(production).writeFactoryFun()
+                    ProductionWriter(production).writeTokenFactory()
                 } catch (e: Exception) {
                     throw RuntimeException("can't write factory method for ${production.counter}: ${production.key}", e)
                 }
@@ -149,7 +149,10 @@ class YamlSymbolGenerator(private val spec: Spec) {
         private inner class ProductionWriter(val production: Production) {
             private val visitor = ProductionVisitor()
 
-            fun writeEnumEntry() {
+            fun writeToken() {
+                // TODO fix forward reference by going from enum to constants:
+                //val `c-printable` = token("c-printable",
+                //    '\t' or '\n' or '\r' or ' '..'~' or '\u0085' or ' '..'퟿' or ''..'�' or "\uD800\uDC00".."\uDBFF\uDFFF")
                 writeComment("    ")
                 write("    `${production.name}`(")
                 when (production.counter) {
@@ -160,7 +163,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 write("),\n")
             }
 
-            fun writeFactoryFun() {
+            fun writeTokenFactory() {
                 writeComment("")
                 write("fun `${funName()}`(")
                 writeArgs()
@@ -225,7 +228,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 }
                 write(".match(reader).codePoints } }\n" +
                     "    if (match.size $negatedComparison n) return@token Match(matches = false)\n" +
-                    "    reader.read(match.size)\n" +
+                    "    reader.expect(match)\n" +
                     "    return@token Match(matches = true, codePoints = match)\n" +
                     "}\n")
             }
@@ -243,15 +246,14 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
 
                 // ------------------------------ reference
-                fun writeFun(reference: ReferenceExpression) = write(with(spec[reference.ref]) { " = `$name`$argsKey\n" })
+                fun writeFun(reference: ReferenceExpression) = write(" = ${refCall(reference)}\n")
 
                 override fun visit(reference: ReferenceExpression) = write(when (reference.ref) {
                     "End of file" -> "EOF"
                     "Empty" -> "empty"
                     "Start of line" -> "startOfLine"
-                    "Excluding c-forbidden content" -> "excludingForbiddenContent"
                     "Followed by an ns-plain-safe(c)" -> "followedByAnNsPlainSafe"
-                    "Followed by an ns-plain-safe(c) )" -> "followedByAnNsPlainSafe"
+                    "Followed by an ns-plain-safe(c) )" -> "followedByAnNsPlainSafe" // BUG-IN-SPEC
                     "An ns-char preceding" -> "anNsCharPreceding"
                     "At most 1024 characters altogether" -> "atMost1024CharactersAltogether"
                     "flow-key" -> "`flow-key`"
@@ -260,8 +262,11 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     "block-key" -> "`block-key`"
                     "block-out" -> "`block-out`"
                     "block-in" -> "`block-in`"
-                    else -> with(spec[reference.ref]) { "`$name`$argsKey" }
+                    else -> refCall(reference)
                 })
+
+                private fun refCall(reference: ReferenceExpression): String =
+                    with(spec[reference.ref]) { "`$name`${argsKey.replace(",", ", ")}" }
 
 
                 // ------------------------------ repeated
@@ -295,6 +300,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 fun writeFun(sequence: SequenceExpression) {
                     write(" = ")
                     sequence.guide(this)
+                    write("\n")
                 }
 
                 override fun visit(sequence: SequenceExpression): Visitor {
@@ -312,6 +318,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 fun writeFun(alternatives: AlternativesExpression) {
                     write(" = ")
                     alternatives.guide(this)
+                    write("\n")
                 }
 
                 override fun visit(alternatives: AlternativesExpression) = this
@@ -320,7 +327,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
                 // ------------------------------ other
                 override fun visit(codePoint: CodePointExpression) {
-                    val quote = if (codePoint.codePoint.isBig) '\"' else '\''
+                    val quote = if (codePoint.codePoint.isSupplementary) '\"' else '\''
                     write("$quote${codePoint.codePoint.escaped}$quote")
                 }
 
@@ -354,7 +361,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
                 override fun beforeSwitchItem() = write("    ")
                 override fun betweenSwitchCaseAndValue() = write(" -> ")
-                override fun afterSwitchItem() = write(" describedAs \"${production.name}(\$$variableName)\"\n")
+                override fun afterSwitchItem() = write(" named \"${production.name}(\$$variableName)\"\n")
 
                 override fun visit(equals: EqualsExpression) = this
                 override fun visit(variable: VariableExpression) {}

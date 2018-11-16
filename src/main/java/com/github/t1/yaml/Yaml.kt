@@ -15,21 +15,21 @@ import java.io.StringReader
 import java.nio.charset.StandardCharsets.UTF_8
 
 object Yaml {
-    fun parseFirst(inputStream: InputStream): Document = parseFirst(BufferedReader(InputStreamReader(inputStream, UTF_8)))
+    @JvmStatic fun parseFirst(inputStream: InputStream): Document = parseFirst(BufferedReader(InputStreamReader(inputStream, UTF_8)))
 
-    fun parseFirst(reader: Reader): Document = parseFirst(DocumentParser(reader))
+    @JvmStatic fun parseFirst(reader: Reader): Document = parseFirst(DocumentParser(reader))
 
-    fun parseFirst(yaml: String): Document = parseFirst(StringReader(yaml))
+    @JvmStatic fun parseFirst(yaml: String): Document = parseFirst(StringReader(yaml))
 
     private fun parseFirst(parser: DocumentParser): Document = parser.document()
         ?: throw YamlParseException("expected at least one document, but found none")
 
 
-    fun parseSingle(inputStream: InputStream): Document = parseSingle(BufferedReader(InputStreamReader(inputStream, UTF_8)))
+    @JvmStatic fun parseSingle(inputStream: InputStream): Document = parseSingle(BufferedReader(InputStreamReader(inputStream, UTF_8)))
 
-    fun parseSingle(reader: Reader): Document = parseSingle(DocumentParser(reader))
+    @JvmStatic fun parseSingle(reader: Reader): Document = parseSingle(DocumentParser(reader))
 
-    fun parseSingle(yaml: String): Document = parseSingle(StringReader(yaml))
+    @JvmStatic fun parseSingle(yaml: String): Document = parseSingle(StringReader(yaml))
 
     private fun parseSingle(parser: DocumentParser): Document {
         val document = parser.document()
@@ -40,11 +40,11 @@ object Yaml {
     }
 
 
-    fun parseAll(inputStream: InputStream): Stream = parseAll(BufferedReader(InputStreamReader(inputStream, UTF_8)))
+    @JvmStatic fun parseAll(inputStream: InputStream): Stream = parseAll(BufferedReader(InputStreamReader(inputStream, UTF_8)))
 
-    fun parseAll(yaml: String): Stream = parseAll(StringReader(yaml))
+    @JvmStatic fun parseAll(yaml: String): Stream = parseAll(StringReader(yaml))
 
-    fun parseAll(reader: Reader): Stream = parseAll(DocumentParser(reader))
+    @JvmStatic fun parseAll(reader: Reader): Stream = parseAll(DocumentParser(reader))
 
     private fun parseAll(parser: DocumentParser): Stream {
         val stream = Stream()
@@ -54,7 +54,8 @@ object Yaml {
     }
 
 
-    fun present(stream: Stream): String = Presenter().present(stream)
+    @JvmStatic fun present(document: Document): String = present(Stream(mutableListOf(document)))
+    @JvmStatic fun present(stream: Stream): String = Presenter().present(stream)
 
-    fun canonicalize(stream: Stream) = stream.guide(Canonicalizer())
+    @JvmStatic fun canonicalize(stream: Stream) = stream.guide(Canonicalizer())
 }

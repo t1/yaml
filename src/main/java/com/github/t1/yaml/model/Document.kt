@@ -13,8 +13,13 @@ data class Document(
     var hasDocumentEndMarker: Boolean = false,
     var suffixComment: Comment? = null
 ) {
-    val isEmpty: Boolean
-        get() = node == null && !hasDirectivesEndMarker
+    constructor(node: Node) : this(directives = mutableListOf(), node = node)
+
+    companion object {
+        @JvmStatic fun document(node: Node) = Document(node)
+    }
+
+    val isEmpty: Boolean get() = node == null && !hasDirectivesEndMarker
 
     fun directive(directive: Directive): Document {
         directives.add(Objects.requireNonNull(directive))

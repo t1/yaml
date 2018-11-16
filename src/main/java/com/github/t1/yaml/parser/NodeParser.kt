@@ -20,6 +20,7 @@ import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
 import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
 import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.symbol
+import com.github.t1.yaml.tools.whitespace
 
 internal class NodeParser(private val next: YamlScanner) {
     private val nesting = Nesting(this.next)
@@ -44,7 +45,7 @@ internal class NodeParser(private val next: YamlScanner) {
             sequence.item(flowSequenceItem())
         } while (next.more() && next.accept(`c-collect-entry`))
         next.expect(`c-sequence-end`)
-        next.skip(WS)
+        next.skip(whitespace)
         return sequence
     }
 

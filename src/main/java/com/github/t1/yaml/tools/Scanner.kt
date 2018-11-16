@@ -1,5 +1,7 @@
 package com.github.t1.yaml.tools
 
+import com.github.t1.yaml.tools.CodePoint.Companion.EOF
+
 open class Scanner(private val reader: CodePointReader) {
     constructor(string: String) : this(CodePointReader(string))
 
@@ -27,7 +29,7 @@ open class Scanner(private val reader: CodePointReader) {
 
     fun peek(token: Token): Boolean = mark { token.match(reader).matches }
 
-    fun peek(): CodePoint = peek(1)[0]
+    fun peek(): CodePoint = mark { reader.read() }
 
     fun peek(count: Int): List<CodePoint> = mark { reader.read(count) }
 
@@ -58,7 +60,7 @@ open class Scanner(private val reader: CodePointReader) {
         return this
     }
 
-    fun end(): Boolean = peek().isEof
+    fun end(): Boolean = peek() == EOF
 
     open fun more(): Boolean = !end()
 

@@ -1,9 +1,9 @@
 package spec
 
-import helpers.parseAndCheck
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import test.parseAndCheck
 
 @Tag("spec") class Chapter2Test {
     @Test fun spec_2_1_Sequence_of_Scalars() {

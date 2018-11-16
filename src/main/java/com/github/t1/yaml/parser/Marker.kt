@@ -10,11 +10,9 @@ import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
-import com.github.t1.yaml.tools.Symbol
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.token
-
-val WS = Symbol("whitespace") { it: CodePoint -> it.isWhitespace }
+import com.github.t1.yaml.tools.whitespace
 
 val INDENTED_COMMENT = token("indented comment") { reader ->
     val spaces = reader.readWhile(`s-space`)
@@ -23,15 +21,15 @@ val INDENTED_COMMENT = token("indented comment") { reader ->
 
 private fun CodePointReader.readWhile(token: Token): List<CodePoint> = this.readWhile {
     val match = token.match(this)
-    return@readWhile if (match.matches) match.codePoints else listOf()
+    if (match.matches) match.codePoints else listOf()
 }
 
 private fun CodePointReader.readUntil(token: Token): List<CodePoint> = this.readUntil {
     val match = token.match(this)
-    return@readUntil if (match.matches) match.codePoints else listOf()
+    if (match.matches) match.codePoints else listOf()
 }
 
-val BLOCK_SEQUENCE_START = `c-sequence-entry` + WS describedAs "BLOCK_SEQUENCE_START"
+val BLOCK_SEQUENCE_START = `c-sequence-entry` + whitespace named "BLOCK_SEQUENCE_START"
 
 val BLOCK_MAPPING_START = token("BLOCK_MAPPING_START") { reader ->
     val mappingKey = reader.mark { `c-mapping-key`.match(reader) } // TODO this is bullshit
@@ -44,4 +42,4 @@ val BLOCK_MAPPING_START = token("BLOCK_MAPPING_START") { reader ->
         Match(true, string)
 }
 
-val BLOCK_MAPPING_VALUE = `c-mapping-value` + WS describedAs "BLOCK_MAPPING_VALUE"
+val BLOCK_MAPPING_VALUE = `c-mapping-value` + whitespace named "BLOCK_MAPPING_VALUE"

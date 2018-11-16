@@ -7,6 +7,7 @@ import com.github.t1.yaml.parser.YamlTokens.`c-document-end`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Scanner
+import com.github.t1.yaml.tools.whitespace
 import java.io.Reader
 
 internal class YamlScanner(reader: Reader) : Scanner(CodePointReader(reader)) {
@@ -17,7 +18,7 @@ internal class YamlScanner(reader: Reader) : Scanner(CodePointReader(reader)) {
         return super.read()
     }
 
-    fun readWord(): String = readUntilAndSkip(WS)
+    fun readWord(): String = readUntilAndSkip(whitespace)
 
     fun readLine(): String = readUntilAndSkip(`b-break`)
 

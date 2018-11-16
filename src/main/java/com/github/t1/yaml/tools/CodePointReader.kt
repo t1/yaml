@@ -1,5 +1,7 @@
 package com.github.t1.yaml.tools
 
+import com.github.t1.yaml.tools.CodePoint.Companion.BOM
+import com.github.t1.yaml.tools.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.CodePointReader.Mark
 import java.io.Reader
 import java.io.StringReader
@@ -14,27 +16,32 @@ class CodePointReader(private val reader: Reader) {
     constructor(string: String) : this(StringReader(string))
 
     data class Position(
-        /** the zero-based code point position in the stream */
+        /** the zero-based code point position in the stream. BOM counts, too. */
         val totalPosition: Int = 0,
         /** the one-based line number in the reading stream */
         val lineNumber: Int = 1,
-        /** the one-based position withing the current line */
-        val linePosition: Int = 1,
-        /** end-of-file, i.e. have we read beyond the last code point in the stream */
-        val isEof: Boolean = false
+        /** the one-based position withing the current line, ignoring BOM in line 1 */
+        val linePosition: Int = 1
     ) {
-        operator fun rem(nl: Boolean): Position = copy(
-            totalPosition = this.totalPosition + 1,
-            lineNumber = if (nl) lineNumber + 1 else lineNumber,
-            linePosition = if (nl) 1 else linePosition + 1
-        )
+        operator fun rem(codePoint: CodePoint): Position {
+            if (codePoint == EOF) return this
+            if (codePoint == BOM && totalPosition == 0) return copy(totalPosition = this.totalPosition + 1) // don't increase linePosition!
+            val nl = codePoint.isNl // TODO only one NL if Windows-style 0D-0A
+            return copy(
+                totalPosition = this.totalPosition + 1,
+                lineNumber = if (nl) lineNumber + 1 else lineNumber,
+                linePosition = if (nl) 1 else linePosition + 1
+            )
+        }
 
         val info get() = "line $lineNumber char $linePosition"
     }
 
     var position = Position()
-    val isStartOfFile get() = position.totalPosition == 0
+    val isStartOfFile get() = isFirstLine && isStartOfLine
+    val isFirstLine get() = position.lineNumber == 1
     val isStartOfLine get() = position.linePosition == 1
+    val isEndOfFile get() = mark { read() == EOF }
 
     private val cache = LinkedList<CodePoint>()
     private val reads = Stack<Read>().apply { add(RealRead()) }
@@ -52,14 +59,13 @@ class CodePointReader(private val reader: Reader) {
 
     fun read(): CodePoint {
         val codePoint = reads.peek().read()
-        if (codePoint.isEof) position = position.copy(isEof = true)
-        else position %= codePoint.isNl
+        position %= codePoint
         return codePoint
     }
 
     fun readWhile(predicate: (CodePointReader) -> List<CodePoint>): List<CodePoint> {
         val out = mutableListOf<CodePoint>()
-        while (!position.isEof) {
+        while (!isEndOfFile) {
             val match = mark { predicate(this) }
             if (match.isEmpty()) break
             read(match.size)
@@ -72,21 +78,33 @@ class CodePointReader(private val reader: Reader) {
     fun readUntil(predicate: (CodePointReader) -> List<CodePoint>): List<CodePoint> {
         val out = mutableListOf<CodePoint>()
         mark {
-            while (!position.isEof) {
+            while (!isEndOfFile) {
                 val match = mark { predicate(this) }
                 if (!match.isEmpty()) break
-                out.addAll(read(1))
+                out.add(read())
             }
-            if (position.isEof) out.clear()
+            if (isEndOfFile) out.clear()
         }
         read(out.size)
         return out
     }
 
+    fun expect(expected: List<CodePoint>) {
+        val actual = read(expected.size)
+        require(actual == expected) { "expected $expected but got $actual at ${position.info}" }
+    }
+
     abstract inner class Read {
         open fun read(): CodePoint =
-            if (cache.isEmpty()) CodePoint.of(reader.read())
-            else cache.removeFirst()
+            if (!cache.isEmpty()) cache.removeFirst() else {
+                val c = reader.read()
+                when {
+                    c < 0 -> EOF
+                    Character.isHighSurrogate(c.toChar()) -> CodePoint.of(c.toChar(), reader.read().toChar())
+                    else -> CodePoint.of(c)
+                }
+            }
+
     }
 
     inner class RealRead : Read()

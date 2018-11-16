@@ -1,10 +1,11 @@
-package helpers
+package test
 
 import com.github.t1.yaml.Yaml
 import com.github.t1.yaml.model.Stream
 import com.github.t1.yaml.tools.ParseException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.catchThrowableOfType
+import org.assertj.core.api.SoftAssertions
 import kotlin.test.fail
 
 private const val BOM = "⇔"
@@ -52,3 +53,5 @@ fun parse(yaml: String): Stream = Yaml.parseAll(resolveMagic(yaml))
 
 fun catchParseException(body: () -> Unit): ParseException = catchThrowableOfType(body, ParseException::class.java)
     ?: fail("ParseException expected but nothing thrown")
+
+fun softly(block: SoftAssertions.() -> Unit) = SoftAssertions().apply(block).assertAll()

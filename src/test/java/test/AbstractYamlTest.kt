@@ -5,7 +5,6 @@ import com.github.t1.yaml.dump.Canonicalizer
 import com.github.t1.yaml.model.Document
 import com.github.t1.yaml.model.Stream
 import com.github.t1.yaml.parser.YamlParseException
-import helpers.withoutTrailingNl
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.catchThrowable
 import org.junit.jupiter.api.AfterEach

@@ -1,9 +1,9 @@
 package spec
 
-import helpers.parseAndCheck
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import test.parseAndCheck
 
 @Tag("spec") class Chapter9Test {
     @Test fun spec_9_1_Document_Prefix() {

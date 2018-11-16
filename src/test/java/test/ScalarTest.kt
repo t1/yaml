@@ -6,8 +6,6 @@ import com.github.t1.yaml.model.Scalar
 import com.github.t1.yaml.model.Scalar.Line
 import com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED
 import com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED
-import helpers.catchParseException
-import helpers.parse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested

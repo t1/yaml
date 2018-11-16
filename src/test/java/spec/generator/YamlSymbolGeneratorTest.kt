@@ -150,9 +150,9 @@ class YamlSymbolGeneratorTest {
             " * <c> = ->z ⇒ <[3][DIGIT THREE][0x33]>\n" +
             " */\n" +
             "fun `foo`(c: InOutMode) = when (c) {\n" +
-            "    `x` -> '1' describedAs \"foo(\$c)\"\n" +
-            "    `y` -> '2' describedAs \"foo(\$c)\"\n" +
-            "    `z` -> '3' describedAs \"foo(\$c)\"\n" +
+            "    `x` -> '1' named \"foo(\$c)\"\n" +
+            "    `y` -> '2' named \"foo(\$c)\"\n" +
+            "    `z` -> '3' named \"foo(\$c)\"\n" +
             "    else -> error(\"unexpected `c` value `\$c`\")\n" +
             "}\n")
     }
@@ -198,9 +198,9 @@ class YamlSymbolGeneratorTest {
             " * <d> = ->z ⇒ ->bar(n)\n" +
             " */\n" +
             "fun `foo`(n: Int, c: InOutMode) = when (d) {\n" +
-            "    `x` -> `bar`(n) describedAs \"foo(\$d)\"\n" +
-            "    `y` -> `bar`(n) describedAs \"foo(\$d)\"\n" +
-            "    `z` -> `bar`(n) describedAs \"foo(\$d)\"\n" +
+            "    `x` -> `bar`(n) named \"foo(\$d)\"\n" +
+            "    `y` -> `bar`(n) named \"foo(\$d)\"\n" +
+            "    `z` -> `bar`(n) named \"foo(\$d)\"\n" +
             "    else -> error(\"unexpected `d` value `\$d`\")\n" +
             "}\n" +
             "\n" +
@@ -243,7 +243,7 @@ class YamlSymbolGeneratorTest {
             "fun `foo≪`(n: Int) = token(\"foo(<\$n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size >= n) return@token Match(matches = false)\n" +
-            "    reader.read(match.size)\n" +
+            "    reader.expect(match)\n" +
             "    return@token Match(matches = true, codePoints = match)\n" +
             "}\n"))
     }
@@ -261,7 +261,7 @@ class YamlSymbolGeneratorTest {
             "fun `foo≤`(n: Int) = token(\"foo(≤\$n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size > n) return@token Match(matches = false)\n" +
-            "    reader.read(match.size)\n" +
+            "    reader.expect(match)\n" +
             "    return@token Match(matches = true, codePoints = match)\n" +
             "}\n"))
     }
@@ -580,7 +580,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * <[x][LATIN SMALL LETTER X][0x78]> + (<[y][LATIN SMALL LETTER Y][0x79]> × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) = 'x' + 'y' * n"))
+            "fun `foo`(n: Int) = 'x' + 'y' * n\n"))
     }
 
 

@@ -16,31 +16,29 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
             value == '\r'.toInt() -> "\\r"
             value == '\''.toInt() -> "\\'"
             value == '\\'.toInt() -> "\\\\"
-            isEof -> "-1"
-            isBom || isNel || isBig -> unicodeEscape
+            this == EOF -> "-1"
+            this == BOM || this == NEL || isSupplementary -> unicodeEscape
             isBmpCodePoint -> toString()
             else -> unicodeEscape
         }
 
-    private val unicodeEscape get() = if (isBig) "\\u${pad(HEX(highSurrogate))}\\u${pad(HEX(lowSurrogate))}" else "\\u${pad(HEX)}"
+    private val unicodeEscape get() = if (isSupplementary) "\\u${pad(HEX(highSurrogate))}\\u${pad(HEX(lowSurrogate))}" else "\\u${pad(HEX)}"
 
-    val isBig get() = value > 0xffff
+    val isSupplementary get() = Character.isSupplementaryCodePoint(value)
     private val lowSurrogate get() = Character.lowSurrogate(value)
     private val highSurrogate get() = Character.highSurrogate(value)
 
     private val name
         get() = when {
-            value < 0 -> "EOF"
+            this == EOF -> "EOF"
             value == 0 -> "NULL"
             else -> Character.getName(value) ?: "?"
         }
 
     @Suppress("PrivatePropertyName")
-    private val HEX: String get() = hex.toUpperCase()
-    private val hex: String get() = Integer.toHexString(value)
-
-    @Suppress("FunctionName")
-    private fun HEX(char: Char) = Integer.toHexString(char.toInt()).toUpperCase()
+    private val HEX: String
+        get() = hex.toUpperCase()
+    private val hex: String get() = hex(value)
 
     private fun pad(string: String) = "0000".substring(string.length) + string
 
@@ -55,32 +53,39 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
     val isAlphabetic get () = Character.isAlphabetic(value)
     val isSpaceChar get () = Character.isSpaceChar(value)
 
-    /** End Of File */
-    val isEof: Boolean get() = value < 0
-
-    /**
-     * Byte Order Mark: If the first character of a file is a `ZERO WIDTH NO-BREAK SPACE`,
-     * it is commonly used as an indicator of the byte-order in the file:
-     * little endian vs. big endian */
-    private val isBom get() = value == 0xFEFF
-
-    /** Next Line */
-    private val isNel get() = value == 0x0085
-
     /** New-Line */
     val isNl: Boolean get() = value == '\n'.toInt() || value == '\r'.toInt()
 
     fun appendTo(out: StringBuilder) = out.appendCodePoint(value)!!
 
     operator fun rangeTo(that: CodePoint) = CodePointRange(this, that)
+    infix fun until(that: CodePoint) = CodePointRange(this, that - 1)
+
+    operator fun minus(i: Int) = CodePoint.of(value - i)
 
     companion object {
+        /** End Of File: Typically represented by a -1 integer */
         val EOF = of(-1)
+
+        /**
+         * Byte Order Mark: If the first character of a file is a `ZERO WIDTH NO-BREAK SPACE`,
+         * it is commonly used as an indicator of the byte-order in the file:
+         * little endian vs. big endian
+         */
+        val BOM = of(0xFEFF)
+
+        /** Next Line */
+        val NEL = of(0x0085)
 
         fun of(codePoint: Char): CodePoint = of(codePoint.toInt())
         fun of(codePoint: Int): CodePoint = CodePoint(codePoint)
+        fun of(high: Char, low: Char): CodePoint {
+            require(Character.isSurrogatePair(high, low)) { "expected surrogate pair but got ${hex(high)} ${hex(low)}" }
+            return CodePoint(Character.toCodePoint(high, low))
+        }
+
         fun of(string: String): CodePoint {
-            require(string.codePointCount == 1) { "expected a string with one code point but found \"$this\"" }
+            require(string.codePointCount == 1) { "expected a string with one code point but got \"$string\"" }
             return of(string.codePointAt(0))
         }
 
@@ -88,7 +93,13 @@ data class CodePoint(val value: Int) : Comparable<CodePoint> {
 
         fun decode(text: String): CodePoint = of(Integer.decode(text)!!)
 
-        val String.codePointCount get(): Int = this.codePointCount(0, length)
+        private val String.codePointCount get(): Int = this.codePointCount(0, length)
+
+        @Suppress("FunctionName")
+        private fun HEX(char: Char) = hex(char).toUpperCase()
+
+        private fun hex(char: Char) = hex(char.toInt())
+        private fun hex(int: Int) = Integer.toHexString(int)
     }
 }
 

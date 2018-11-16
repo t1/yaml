@@ -13,6 +13,10 @@ data class Scalar(
     val lines: MutableList<Line> = mutableListOf()
 ) : Node {
 
+    companion object {
+        @JvmStatic fun scalar() = Scalar()
+    }
+
     val isEmpty: Boolean get() = lines.isEmpty()
 
     override fun toString(): String =
