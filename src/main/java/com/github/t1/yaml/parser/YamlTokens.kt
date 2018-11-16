@@ -37,6 +37,21 @@ import com.github.t1.yaml.tools.token
 import com.github.t1.yaml.tools.undefined
 import javax.annotation.Generated
 
+private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
+private infix fun Char.or(that: Token) = symbol(this) or that
+private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))
+private infix fun Token.or(that: String): Token = or(symbol(that))
+private infix fun Token.or(that: Char): Token = or(symbol(that))
+private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this)..CodePoint.of(that))
+private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
+private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
+private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
+private infix operator fun Char.plus(token: Token) = symbol(this) + token
+private infix operator fun Token.plus(that: Char) = this + symbol(that)
+private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
+private val followedByAnNsPlainSafe = undefined
+private val anNsCharPreceding = undefined
+private val atMost1024CharactersAltogether = undefined
 private val EOF = symbol(CodePoint.EOF)
 
 
@@ -648,19 +663,9 @@ fun `s-separate`(n: Int, c: InOutMode) = when (c) {
  */
 fun `s-separate-lines`(n: Int) = (`s-l-comments` + `s-flow-line-prefix`(n)) or `s-separate-in-line`
 
-/**
- * `82` : l-directive:
- * ->c-directive + [->ns-yaml-directive |
- *    ->ns-tag-directive |
- *    ->ns-reserved-directive] + ->s-l-comments
- */
-val `l-directive` = token("l-directive", undefined /* TODO forward reference */)
+// 82: l-directive -> [83, 86, 88]
 
-/**
- * `83` : ns-reserved-directive:
- * ->ns-directive-name + (->s-separate-in-line + ->ns-directive-parameter × *)
- */
-val `ns-reserved-directive` = token("ns-reserved-directive", undefined /* TODO forward reference */)
+// 83: ns-reserved-directive -> [84, 85]
 
 /**
  * `84` : ns-directive-name:
@@ -675,10 +680,12 @@ val `ns-directive-name` = token("ns-directive-name", `ns-char` * once_or_more)
 val `ns-directive-parameter` = token("ns-directive-parameter", `ns-char` * once_or_more)
 
 /**
- * `86` : ns-yaml-directive:
- * <[Y][LATIN CAPITAL LETTER Y][0x59]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[M][LATIN CAPITAL LETTER M][0x4d]> + <[L][LATIN CAPITAL LETTER L][0x4c]> + ->s-separate-in-line + ->ns-yaml-version
+ * `83` : ns-reserved-directive:
+ * ->ns-directive-name + (->s-separate-in-line + ->ns-directive-parameter × *)
  */
-val `ns-yaml-directive` = token("ns-yaml-directive", undefined /* TODO forward reference */)
+val `ns-reserved-directive` = token("ns-reserved-directive", `ns-directive-name` + (`s-separate-in-line` + `ns-directive-parameter`) * zero_or_more)
+
+// 86: ns-yaml-directive -> [87]
 
 /**
  * `87` : ns-yaml-version:
@@ -687,18 +694,14 @@ val `ns-yaml-directive` = token("ns-yaml-directive", undefined /* TODO forward r
 val `ns-yaml-version` = token("ns-yaml-version", `ns-dec-digit` * once_or_more + '.' + `ns-dec-digit` * once_or_more)
 
 /**
- * `88` : ns-tag-directive:
- * <[T][LATIN CAPITAL LETTER T][0x54]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[G][LATIN CAPITAL LETTER G][0x47]> + ->s-separate-in-line + ->c-tag-handle + ->s-separate-in-line + ->ns-tag-prefix
+ * `86` : ns-yaml-directive:
+ * <[Y][LATIN CAPITAL LETTER Y][0x59]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[M][LATIN CAPITAL LETTER M][0x4d]> + <[L][LATIN CAPITAL LETTER L][0x4c]> + ->s-separate-in-line + ->ns-yaml-version
  */
-val `ns-tag-directive` = token("ns-tag-directive", undefined /* TODO forward reference */)
+val `ns-yaml-directive` = token("ns-yaml-directive", 'Y' + 'A' + 'M' + 'L' + `s-separate-in-line` + `ns-yaml-version`)
 
-/**
- * `89` : c-tag-handle:
- * [->c-named-tag-handle |
- *    ->c-secondary-tag-handle |
- *    ->c-primary-tag-handle]
- */
-val `c-tag-handle` = token("c-tag-handle", undefined /* TODO forward reference */)
+// 88: ns-tag-directive -> [89, 93]
+
+// 89: c-tag-handle -> [90, 91, 92]
 
 /**
  * `90` : c-primary-tag-handle:
@@ -719,11 +722,14 @@ val `c-secondary-tag-handle` = token("c-secondary-tag-handle", `c-tag` + `c-tag`
 val `c-named-tag-handle` = token("c-named-tag-handle", `c-tag` + `ns-word-char` * once_or_more + `c-tag`)
 
 /**
- * `93` : ns-tag-prefix:
- * [->c-ns-local-tag-prefix |
- *    ->ns-global-tag-prefix]
+ * `89` : c-tag-handle:
+ * [->c-named-tag-handle |
+ *    ->c-secondary-tag-handle |
+ *    ->c-primary-tag-handle]
  */
-val `ns-tag-prefix` = token("ns-tag-prefix", undefined /* TODO forward reference */)
+val `c-tag-handle` = token("c-tag-handle", `c-named-tag-handle` or `c-secondary-tag-handle` or `c-primary-tag-handle`)
+
+// 93: ns-tag-prefix -> [94, 95]
 
 /**
  * `94` : c-ns-local-tag-prefix:
@@ -738,19 +744,34 @@ val `c-ns-local-tag-prefix` = token("c-ns-local-tag-prefix", `c-tag` + `ns-uri-c
 val `ns-global-tag-prefix` = token("ns-global-tag-prefix", `ns-tag-char` + `ns-uri-char` * zero_or_more)
 
 /**
+ * `93` : ns-tag-prefix:
+ * [->c-ns-local-tag-prefix |
+ *    ->ns-global-tag-prefix]
+ */
+val `ns-tag-prefix` = token("ns-tag-prefix", `c-ns-local-tag-prefix` or `ns-global-tag-prefix`)
+
+/**
+ * `88` : ns-tag-directive:
+ * <[T][LATIN CAPITAL LETTER T][0x54]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[G][LATIN CAPITAL LETTER G][0x47]> + ->s-separate-in-line + ->c-tag-handle + ->s-separate-in-line + ->ns-tag-prefix
+ */
+val `ns-tag-directive` = token("ns-tag-directive", 'T' + 'A' + 'G' + `s-separate-in-line` + `c-tag-handle` + `s-separate-in-line` + `ns-tag-prefix`)
+
+/**
+ * `82` : l-directive:
+ * ->c-directive + [->ns-yaml-directive |
+ *    ->ns-tag-directive |
+ *    ->ns-reserved-directive] + ->s-l-comments
+ */
+val `l-directive` = token("l-directive", `c-directive` + `ns-yaml-directive` or `ns-tag-directive` or `ns-reserved-directive` + `s-l-comments`)
+
+/**
  * `96` : c-ns-properties(n,c):
  * [->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) |
  *    ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)]
  */
 fun `c-ns-properties`(n: Int, c: InOutMode) = (`c-ns-tag-property` + (`s-separate`(n, c) + `c-ns-anchor-property`) * zero_or_once) or (`c-ns-anchor-property` + (`s-separate`(n, c) + `c-ns-tag-property`) * zero_or_once)
 
-/**
- * `97` : c-ns-tag-property:
- * [->c-verbatim-tag |
- *    ->c-ns-shorthand-tag |
- *    ->c-non-specific-tag]
- */
-val `c-ns-tag-property` = token("c-ns-tag-property", undefined /* TODO forward reference */)
+// 97: c-ns-tag-property -> [98, 99, 100]
 
 /**
  * `98` : c-verbatim-tag:
@@ -771,10 +792,14 @@ val `c-ns-shorthand-tag` = token("c-ns-shorthand-tag", `c-tag-handle` + `ns-tag-
 val `c-non-specific-tag` = token("c-non-specific-tag", `c-tag`)
 
 /**
- * `101` : c-ns-anchor-property:
- * ->c-anchor + ->ns-anchor-name
+ * `97` : c-ns-tag-property:
+ * [->c-verbatim-tag |
+ *    ->c-ns-shorthand-tag |
+ *    ->c-non-specific-tag]
  */
-val `c-ns-anchor-property` = token("c-ns-anchor-property", undefined /* TODO forward reference */)
+val `c-ns-tag-property` = token("c-ns-tag-property", `c-verbatim-tag` or `c-ns-shorthand-tag` or `c-non-specific-tag`)
+
+// 101: c-ns-anchor-property -> [103]
 
 /**
  * `102` : ns-anchor-char:
@@ -787,6 +812,12 @@ val `ns-anchor-char` = token("ns-anchor-char", `ns-char` - `c-flow-indicator`)
  * (->ns-anchor-char × +)
  */
 val `ns-anchor-name` = token("ns-anchor-name", `ns-anchor-char` * once_or_more)
+
+/**
+ * `101` : c-ns-anchor-property:
+ * ->c-anchor + ->ns-anchor-name
+ */
+val `c-ns-anchor-property` = token("c-ns-anchor-property", `c-anchor` + `ns-anchor-name`)
 
 /**
  * `104` : c-ns-alias-node:
@@ -1543,19 +1574,3 @@ val `l-any-document` = token("l-any-document", `l-directive-document` or `l-expl
  *    (->l-document-prefix × *) + (->l-explicit-document × ?)] × *)
  */
 val `l-yaml-stream` = token("l-yaml-stream", `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once + (`l-document-suffix` * once_or_more + `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once or (`l-document-prefix` * zero_or_more + `l-explicit-document` * zero_or_once)) * zero_or_more)
-
-private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
-private infix fun Char.or(that: Token) = symbol(this) or that
-private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))
-private infix fun Token.or(that: String): Token = or(symbol(that))
-private infix fun Token.or(that: Char): Token = or(symbol(that))
-private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this)..CodePoint.of(that))
-private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
-private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
-private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
-private infix operator fun Char.plus(token: Token) = symbol(this) + token
-private infix operator fun Token.plus(that: Char) = this + symbol(that)
-private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
-private val followedByAnNsPlainSafe = undefined
-private val anNsCharPreceding = undefined
-private val atMost1024CharactersAltogether = undefined

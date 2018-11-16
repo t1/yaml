@@ -4,10 +4,12 @@ import spec.generator.Expression.ReferenceExpression
 import java.util.TreeMap
 
 class Spec(val productions: List<Production>) {
+    val externalRefs = mutableSetOf<String>()
     private val index = TreeMap<String, Production>()
 
     init {
         index()
+        resolveReferences()
     }
 
     private fun index() {
@@ -15,11 +17,14 @@ class Spec(val productions: List<Production>) {
             val previous = index.put(production.key, production)
             assert(previous == null) { "overwrite " + previous!!.key }
         }
+    }
+
+    private fun resolveReferences() {
         for (production in productions) {
             production.expression.guide(object : OrIgnoreVisitor() {
                 override fun visit(reference: ReferenceExpression) {
                     val ref = reference.ref
-                    if (index[ref] == null) production.references.remove(ref)
+                    if (index[ref] == null) externalRefs += ref
                     else production.references[ref] = index[ref]!!
                 }
             })

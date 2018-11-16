@@ -13,7 +13,6 @@ import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
 import spec.generator.Expression.VariableExpression
-import spec.generator.YamlSymbolGenerator.Companion.FOOTER
 import spec.generator.YamlSymbolGenerator.Companion.HEADER
 import java.io.StringWriter
 import java.util.Arrays.asList
@@ -71,17 +70,19 @@ class YamlSymbolGeneratorTest {
         val written = generate(foo, bar)
 
         assertThat(written).isEqualTo(source("\n" +
-            "/**\n" +
-            " * `0` : foo:\n" +
-            " * ->bar\n" +
-            " */\n" +
-            "val `foo` = token(\"foo\", `bar`)\n" +
+            "// 0: foo -> [1]\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar:\n" +
             " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
             " */\n" +
-            "val `bar` = token(\"bar\", 'x')\n"))
+            "val `bar` = token(\"bar\", 'x')\n" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo:\n" +
+            " * ->bar\n" +
+            " */\n" +
+            "val `foo` = token(\"foo\", `bar`)\n"))
     }
 
     @Test fun shouldGenerateCodePointRangeProduction() {
@@ -122,38 +123,38 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(foo, x, y, z)
 
-        assertThat(written).isEqualTo(source(
+        assertThat(written).isEqualTo(source("" +
             "\n" +
-                "/**\n" +
-                " * `0` : foo(c):\n" +
-                " * <c> = ->x ⇒ <[1][DIGIT ONE][0x31]>\n" +
-                " * <c> = ->y ⇒ <[2][DIGIT TWO][0x32]>\n" +
-                " * <c> = ->z ⇒ <[3][DIGIT THREE][0x33]>\n" +
-                " */\n" +
-                "fun `foo`(c: InOutMode) = when (c) {\n" +
-                "    `x` -> '1' named \"foo(\$c)\"\n" +
-                "    `y` -> '2' named \"foo(\$c)\"\n" +
-                "    `z` -> '3' named \"foo(\$c)\"\n" +
-                "    else -> error(\"unexpected `c` value `\$c`\")\n" +
-                "}\n" +
-                "\n" +
-                "/**\n" +
-                " * `1` : x:\n" +
-                " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
-                " */\n" +
-                "val `x` = token(\"x\", 'x')\n" +
-                "\n" +
-                "/**\n" +
-                " * `2` : y:\n" +
-                " * <[y][LATIN SMALL LETTER Y][0x79]>\n" +
-                " */\n" +
-                "val `y` = token(\"y\", 'y')\n" +
-                "\n" +
-                "/**\n" +
-                " * `3` : z:\n" +
-                " * <[z][LATIN SMALL LETTER Z][0x7a]>\n" +
-                " */\n" +
-                "val `z` = token(\"z\", 'z')\n"))
+            "/**\n" +
+            " * `0` : foo(c):\n" +
+            " * <c> = ->x ⇒ <[1][DIGIT ONE][0x31]>\n" +
+            " * <c> = ->y ⇒ <[2][DIGIT TWO][0x32]>\n" +
+            " * <c> = ->z ⇒ <[3][DIGIT THREE][0x33]>\n" +
+            " */\n" +
+            "fun `foo`(c: InOutMode) = when (c) {\n" +
+            "    `x` -> '1' named \"foo(\$c)\"\n" +
+            "    `y` -> '2' named \"foo(\$c)\"\n" +
+            "    `z` -> '3' named \"foo(\$c)\"\n" +
+            "    else -> error(\"unexpected `c` value `\$c`\")\n" +
+            "}\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : x:\n" +
+            " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
+            " */\n" +
+            "val `x` = token(\"x\", 'x')\n" +
+            "\n" +
+            "/**\n" +
+            " * `2` : y:\n" +
+            " * <[y][LATIN SMALL LETTER Y][0x79]>\n" +
+            " */\n" +
+            "val `y` = token(\"y\", 'y')\n" +
+            "\n" +
+            "/**\n" +
+            " * `3` : z:\n" +
+            " * <[z][LATIN SMALL LETTER Z][0x7a]>\n" +
+            " */\n" +
+            "val `z` = token(\"z\", 'z')\n"))
     }
 
     @Test fun shouldGenerateSwitchProductionToRefWithArgs() {
@@ -169,47 +170,47 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(foo, x, y, z, bar)
 
-        assertThat(written).isEqualTo(source(
+        assertThat(written).isEqualTo(source("" +
             "\n" +
-                "/**\n" +
-                " * `0` : foo(n,c):\n" +
-                " * <d> = ->x ⇒ ->bar(n)\n" +
-                " * <d> = ->y ⇒ ->bar(n)\n" +
-                " * <d> = ->z ⇒ ->bar(n)\n" +
-                " */\n" +
-                "fun `foo`(n: Int, c: InOutMode) = when (d) {\n" +
-                "    `x` -> `bar`(n) named \"foo(\$d)\"\n" +
-                "    `y` -> `bar`(n) named \"foo(\$d)\"\n" +
-                "    `z` -> `bar`(n) named \"foo(\$d)\"\n" +
-                "    else -> error(\"unexpected `d` value `\$d`\")\n" +
-                "}\n" +
-                "\n" +
-                "/**\n" +
-                " * `1` : x:\n" +
-                " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
-                " */\n" +
-                "val `x` = token(\"x\", 'x')\n" +
-                "\n" +
-                "/**\n" +
-                " * `2` : y:\n" +
-                " * <[y][LATIN SMALL LETTER Y][0x79]>\n" +
-                " */\n" +
-                "val `y` = token(\"y\", 'y')\n" +
-                "\n" +
-                "/**\n" +
-                " * `3` : z:\n" +
-                " * <[z][LATIN SMALL LETTER Z][0x7a]>\n" +
-                " */\n" +
-                "val `z` = token(\"z\", 'z')\n" +
-                "\n" +
-                "/**\n" +
-                " * `4` : bar(n):\n" +
-                " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
-                " */\n" +
-                "fun `bar`(n: Int): Token {\n" +
-                "    val token = 'x' * n\n" +
-                "    return token(\"bar(\$n)\") { token.match(it) }\n" +
-                "}\n"))
+            "/**\n" +
+            " * `0` : foo(n,c):\n" +
+            " * <d> = ->x ⇒ ->bar(n)\n" +
+            " * <d> = ->y ⇒ ->bar(n)\n" +
+            " * <d> = ->z ⇒ ->bar(n)\n" +
+            " */\n" +
+            "fun `foo`(n: Int, c: InOutMode) = when (d) {\n" +
+            "    `x` -> `bar`(n) named \"foo(\$d)\"\n" +
+            "    `y` -> `bar`(n) named \"foo(\$d)\"\n" +
+            "    `z` -> `bar`(n) named \"foo(\$d)\"\n" +
+            "    else -> error(\"unexpected `d` value `\$d`\")\n" +
+            "}\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : x:\n" +
+            " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
+            " */\n" +
+            "val `x` = token(\"x\", 'x')\n" +
+            "\n" +
+            "/**\n" +
+            " * `2` : y:\n" +
+            " * <[y][LATIN SMALL LETTER Y][0x79]>\n" +
+            " */\n" +
+            "val `y` = token(\"y\", 'y')\n" +
+            "\n" +
+            "/**\n" +
+            " * `3` : z:\n" +
+            " * <[z][LATIN SMALL LETTER Z][0x7a]>\n" +
+            " */\n" +
+            "val `z` = token(\"z\", 'z')\n" +
+            "\n" +
+            "/**\n" +
+            " * `4` : bar(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
+            " */\n" +
+            "fun `bar`(n: Int): Token {\n" +
+            "    val token = 'x' * n\n" +
+            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
+            "}\n"))
     }
 
     @Test fun shouldGenerateProductionWithOneArg() {
@@ -286,7 +287,8 @@ class YamlSymbolGeneratorTest {
 
         val written = generate(foo, bar)
 
-        assertThat(written).isEqualTo(source("\n" +
+        assertThat(written).isEqualTo(source("" +
+            "\n" +
             "/**\n" +
             " * `0` : foo(n):\n" +
             " * ->bar(n)\n" +
@@ -338,12 +340,7 @@ class YamlSymbolGeneratorTest {
         val written = generate(foo, ref1, ref2)
 
         assertThat(written).isEqualTo(source("\n" +
-            "/**\n" +
-            " * `0` : foo:\n" +
-            " * [->ref1 |\n" +
-            " *    ->ref2]\n" +
-            " */\n" +
-            "val `foo` = token(\"foo\", `ref1` or `ref2`)\n" +
+            "// 0: foo -> [1, 2]\n" +
             "\n" +
             "/**\n" +
             " * `1` : ref1:\n" +
@@ -355,7 +352,15 @@ class YamlSymbolGeneratorTest {
             " * `2` : ref2:\n" +
             " * <[y][LATIN SMALL LETTER Y][0x79]>\n" +
             " */\n" +
-            "val `ref2` = token(\"ref2\", 'y')\n"))
+            "val `ref2` = token(\"ref2\", 'y')\n" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo:\n" +
+            " * [->ref1 |\n" +
+            " *    ->ref2]\n" +
+            " */\n" +
+            "val `foo` = token(\"foo\", `ref1` or `ref2`)\n"
+        ))
     }
 
 
@@ -380,18 +385,20 @@ class YamlSymbolGeneratorTest {
         val written = generate(foo, bar)
 
         assertThat(written).isEqualTo(source("\n" +
-            "/**\n" +
-            " * `0` : foo:\n" +
-            " * [->bar |\n" +
-            " *    <[b][LATIN SMALL LETTER B][0x62]>]\n" +
-            " */\n" +
-            "val `foo` = token(\"foo\", `bar` or 'b')\n" +
+            "// 0: foo -> [1]\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar:\n" +
             " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
             " */\n" +
-            "val `bar` = token(\"bar\", 'x')\n"))
+            "val `bar` = token(\"bar\", 'x')\n" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo:\n" +
+            " * [->bar |\n" +
+            " *    <[b][LATIN SMALL LETTER B][0x62]>]\n" +
+            " */\n" +
+            "val `foo` = token(\"foo\", `bar` or 'b')\n"))
     }
 
     @Test fun shouldGenerateAlternativeOfCodePointOrRangeProduction() {
@@ -416,13 +423,7 @@ class YamlSymbolGeneratorTest {
         val written = generate(foo, a, b)
 
         assertThat(written).isEqualTo(source("\n" +
-            "/**\n" +
-            " * `0` : foo:\n" +
-            " * [->a + ->b |\n" +
-            " *    ->a |\n" +
-            " *    ->b]\n" +
-            " */\n" +
-            "val `foo` = token(\"foo\", (`a` + `b`) or `a` or `b`)\n" +
+            "// 0: foo -> [1, 2]\n" +
             "\n" +
             "/**\n" +
             " * `1` : a:\n" +
@@ -434,7 +435,15 @@ class YamlSymbolGeneratorTest {
             " * `2` : b:\n" +
             " * <[b][LATIN SMALL LETTER B][0x62]>\n" +
             " */\n" +
-            "val `b` = token(\"b\", 'b')\n"))
+            "val `b` = token(\"b\", 'b')\n" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo:\n" +
+            " * [->a + ->b |\n" +
+            " *    ->a |\n" +
+            " *    ->b]\n" +
+            " */\n" +
+            "val `foo` = token(\"foo\", (`a` + `b`) or `a` or `b`)\n"))
     }
 
     @Test fun shouldGenerateSequenceOfReferenceAndRepeatProduction() {
@@ -445,11 +454,7 @@ class YamlSymbolGeneratorTest {
         val written = generate(foo, a, b)
 
         assertThat(written).isEqualTo(source("\n" +
-            "/**\n" +
-            " * `0` : foo:\n" +
-            " * ->a + (->b × ?)\n" +
-            " */\n" +
-            "val `foo` = token(\"foo\", `a` + `b` * zero_or_once)\n" +
+            "// 0: foo -> [1, 2]\n" +
             "\n" +
             "/**\n" +
             " * `1` : a:\n" +
@@ -461,7 +466,13 @@ class YamlSymbolGeneratorTest {
             " * `2` : b:\n" +
             " * <[b][LATIN SMALL LETTER B][0x62]>\n" +
             " */\n" +
-            "val `b` = token(\"b\", 'b')\n"))
+            "val `b` = token(\"b\", 'b')\n" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo:\n" +
+            " * ->a + (->b × ?)\n" +
+            " */\n" +
+            "val `foo` = token(\"foo\", `a` + `b` * zero_or_once)\n"))
     }
 
     @Test fun shouldGenerateMinusRefProduction() {
@@ -626,5 +637,5 @@ class YamlSymbolGeneratorTest {
         return writer.toString()
     }
 
-    private fun source(body: String): String = "$HEADER$body$FOOTER"
+    private fun source(body: String): String = "$HEADER$body"
 }

@@ -3,6 +3,7 @@ package spec.generator
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
+import org.assertj.core.api.Assertions.assertThat
 import spec.generator.Expression.AlternativesExpression
 import spec.generator.Expression.CodePointExpression
 import spec.generator.Expression.ContainerExpression
@@ -69,11 +70,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.tools.undefined\n" +
             "import javax.annotation.Generated\n" +
             "\n" +
-            "private val EOF = symbol(CodePoint.EOF)\n" +
-            "\n"
-
-        const val FOOTER = "" +
-            "\n" +
             "private infix fun Char.or(that: Char) = symbol(this) or symbol(that)\n" +
             "private infix fun Char.or(that: Token) = symbol(this) or that\n" +
             "private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))\n" +
@@ -88,7 +84,9 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n" +
             "private val followedByAnNsPlainSafe = undefined\n" +
             "private val anNsCharPreceding = undefined\n" +
-            "private val atMost1024CharactersAltogether = undefined\n"
+            "private val atMost1024CharactersAltogether = undefined\n" +
+            "private val EOF = symbol(CodePoint.EOF)\n" +
+            "\n"
     }
 
     private fun generateCode() {
@@ -104,23 +102,72 @@ class YamlSymbolGenerator(private val spec: Spec) {
         private val out: Writer
     ) {
         private val productions = spec.productions
+        private val externalRefMap = mapOf(
+            "End of file" to "EOF",
+            "Empty" to "empty",
+            "Start of line" to "startOfLine",
+            "Followed by an ns-plain-safe(c)" to "followedByAnNsPlainSafe",
+            "Followed by an ns-plain-safe(c) )" to "followedByAnNsPlainSafe", // BUG-IN-SPEC
+            "An ns-char preceding" to "anNsCharPreceding",
+            "At most 1024 characters altogether" to "atMost1024CharactersAltogether",
+            "flow-key" to "`flow-key`",
+            "flow-out" to "`flow-out`",
+            "flow-in" to "`flow-in`",
+            "block-key" to "`block-key`",
+            "block-out" to "`block-out`",
+            "block-in" to "`block-in`",
+            "m" to "m",
+            "n" to "n",
+            "auto-detect()" to "autoDetect",
+            "strip" to "strip",
+            "keep" to "keep",
+            "clip" to "clip",
+            "For some fixed auto-detected m > 0" to "forSomeFixedAutoDetectedMgt0",
+            "n-1" to "n1",
+            "Excluding c-forbidden content" to "excludingCForbiddenContent"
+        )
 
         private fun write(string: String) {
             out.append(string)
         }
 
         fun write() {
+            assertThat(spec.externalRefs - externalRefMap.keys).describedAs("unknown external references").isEmpty()
+
             write(HEADER)
 
-            for (production in productions) {
+            productionsSortedWithoutForwardReferences { production ->
                 try {
                     ProductionWriter(production).write()
                 } catch (e: Exception) {
                     throw RuntimeException("can't write production for ${production.counter}: ${production.key}", e)
                 }
             }
+        }
 
-            write(FOOTER)
+        private fun productionsSortedWithoutForwardReferences(body: (Production) -> Unit) {
+            val remaining = productions.toMutableList()
+            val written = mutableSetOf<Int>()
+            val warned = mutableSetOf<Int>()
+            fun firstWithoutForwardReferences(): Int {
+                for ((index, production) in remaining.withIndex()) {
+                    if (production.args.isNotEmpty()) return index // `fun` can reference forward, only `val` can not
+                    val forwardRefs = production.references.values
+                        .map { it.counter }
+                        .filter { !written.contains(it) && production.counter != it }
+                    if (forwardRefs.isEmpty()) return index
+                    if (warned.add(production.counter)) write("\n// ${production.counter}: ${production.key} -> ${forwardRefs.sorted()}\n")
+                }
+                write("\n// remaining: ${remaining.map { it.counter }}\n")
+                error("no production without forward references found")
+            }
+
+            while (!remaining.isEmpty()) {
+                val index = firstWithoutForwardReferences()
+                val production = remaining.removeAt(index)
+                body(production)
+                written.add(production.counter)
+            }
         }
 
         private inner class ProductionWriter(private val production: Production) {
@@ -132,7 +179,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 write(comment())
                 write("val `${production.name}` = token(\"${production.name}\", ")
                 when (production.counter) {
-                    in setOf(82, 83, 86, 88, 89, 93, 97, 101) -> write("undefined /* TODO forward reference */")
                     in setOf(193, 207) -> write("undefined /* TODO global variable */")
                     else -> production.expression.guide(visitor)
                 }
@@ -223,22 +269,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 // ------------------------------ reference
                 fun writeFun(reference: ReferenceExpression) = write(" = ${refCall(reference)}\n")
 
-                override fun visit(reference: ReferenceExpression) = write(when (reference.ref) {
-                    "End of file" -> "EOF"
-                    "Empty" -> "empty"
-                    "Start of line" -> "startOfLine"
-                    "Followed by an ns-plain-safe(c)" -> "followedByAnNsPlainSafe"
-                    "Followed by an ns-plain-safe(c) )" -> "followedByAnNsPlainSafe" // BUG-IN-SPEC
-                    "An ns-char preceding" -> "anNsCharPreceding"
-                    "At most 1024 characters altogether" -> "atMost1024CharactersAltogether"
-                    "flow-key" -> "`flow-key`"
-                    "flow-out" -> "`flow-out`"
-                    "flow-in" -> "`flow-in`"
-                    "block-key" -> "`block-key`"
-                    "block-out" -> "`block-out`"
-                    "block-in" -> "`block-in`"
-                    else -> refCall(reference)
-                })
+                override fun visit(reference: ReferenceExpression) = write(externalRefMap[reference.ref] ?: refCall(reference))
 
                 private fun refCall(reference: ReferenceExpression): String =
                     with(spec[reference.ref]) { "`$name`${argsKey.replace(",", ", ")}" }
