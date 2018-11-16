@@ -85,6 +85,19 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", `bar`)\n"))
     }
 
+    @Test fun shouldGenerateRecursiveRefProduction() {
+        val production = Production(0, "foo", listOf("n"), ReferenceExpression("foo(n)"))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * ->foo(n)\n" +
+            " */\n" +
+            "fun `foo`(n: Int): Token = `foo`(n)\n")) // Kotlin needs the explicit return type here
+    }
+
     @Test fun shouldGenerateCodePointRangeProduction() {
         val production = production(range('0', '9'))
 

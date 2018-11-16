@@ -901,7 +901,7 @@ val `nb-ns-double-in-line` = token("nb-ns-double-in-line", `s-white` * zero_or_m
  * ->s-double-break(n) + (->ns-double-char + ->nb-ns-double-in-line + [->s-double-next-line(n) |
  *    (->s-white × *)] × ?)
  */
-fun `s-double-next-line`(n: Int)= undefined /* TODO recursion */
+fun `s-double-next-line`(n: Int): Token = `s-double-break`(n) + (`ns-double-char` + `nb-ns-double-in-line` + `s-double-next-line`(n) or `s-white` * zero_or_more) * zero_or_once
 
 /**
  * `116` : nb-double-multi-line(n):
@@ -967,7 +967,7 @@ val `nb-ns-single-in-line` = token("nb-ns-single-in-line", `s-white` * zero_or_m
  * ->s-flow-folded(n) + (->ns-single-char + ->nb-ns-single-in-line + [->s-single-next-line(n) |
  *    (->s-white × *)] × ?)
  */
-fun `s-single-next-line`(n: Int)= undefined /* TODO recursion */
+fun `s-single-next-line`(n: Int): Token = `s-flow-folded`(n) + (`ns-single-char` + `nb-ns-single-in-line` + `s-single-next-line`(n) or `s-white` * zero_or_more) * zero_or_once
 
 /**
  * `125` : nb-single-multi-line(n):
@@ -1081,7 +1081,7 @@ fun `c-flow-sequence`(n: Int, c: InOutMode) = `c-sequence-start` + `s-separate`(
  * `138` : ns-s-flow-seq-entries(n,c):
  * ->ns-flow-seq-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c) × ?) × ?)
  */
-fun `ns-s-flow-seq-entries`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+fun `ns-s-flow-seq-entries`(n: Int, c: InOutMode): Token = `ns-flow-seq-entry`(n, c) + `s-separate`(n, c) * zero_or_once + (`c-collect-entry` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-seq-entries`(n, c) * zero_or_once) * zero_or_once
 
 /**
  * `139` : ns-flow-seq-entry(n,c):
@@ -1100,7 +1100,7 @@ fun `c-flow-mapping`(n: Int, c: InOutMode) = `c-mapping-start` + `s-separate`(n,
  * `141` : ns-s-flow-map-entries(n,c):
  * ->ns-flow-map-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c) × ?) × ?)
  */
-fun `ns-s-flow-map-entries`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+fun `ns-s-flow-map-entries`(n: Int, c: InOutMode): Token = `ns-flow-map-entry`(n, c) + `s-separate`(n, c) * zero_or_once + (`c-collect-entry` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-map-entries`(n, c) * zero_or_once) * zero_or_once
 
 /**
  * `142` : ns-flow-map-entry(n,c):
@@ -1149,7 +1149,7 @@ fun `c-ns-flow-map-separate-value`(n: Int, c: InOutMode) = `c-mapping-value` + (
  * ->c-flow-json-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-adjacent-value(n,c) |
  *    ->e-node]
  */
-fun `c-ns-flow-map-json-key-entry`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+fun `c-ns-flow-map-json-key-entry`(n: Int, c: InOutMode) = `c-flow-json-node`(n, c) + (`s-separate`(n, c) * zero_or_once + `c-ns-flow-map-adjacent-value`(n, c)) or `e-node`
 
 /**
  * `149` : c-ns-flow-map-adjacent-value(n,c):
@@ -1183,7 +1183,7 @@ fun `ns-flow-pair-yaml-key-entry`(n: Int, c: InOutMode) = `ns-s-implicit-yaml-ke
  * `153` : c-ns-flow-pair-json-key-entry(n,c):
  * ->c-s-implicit-json-key(c) + ->c-ns-flow-map-adjacent-value(n,c)
  */
-fun `c-ns-flow-pair-json-key-entry`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+fun `c-ns-flow-pair-json-key-entry`(n: Int, c: InOutMode) = `c-s-implicit-json-key`(c) + `c-ns-flow-map-adjacent-value`(n, c)
 
 /**
  * `154` : ns-s-implicit-yaml-key(c):
@@ -1217,7 +1217,7 @@ fun `c-flow-json-content`(n: Int, c: InOutMode) = `c-flow-sequence`(n, c) or `c-
  * [->ns-flow-yaml-content(n,c) |
  *    ->c-flow-json-content(n,c)]
  */
-fun `ns-flow-content`(n: Int, c: InOutMode)= undefined /* TODO recursion */
+fun `ns-flow-content`(n: Int, c: InOutMode) = `ns-flow-yaml-content`(n, c) or `c-flow-json-content`(n, c)
 
 /**
  * `159` : ns-flow-yaml-node(n,c):
@@ -1406,7 +1406,7 @@ fun `s-l+block-indented`(n: Int, c: InOutMode) = (`s-indent`(n) + `ns-l-compact-
  * `186` : ns-l-compact-sequence(n):
  * ->c-l-block-seq-entry(n) + (->s-indent(n) + ->c-l-block-seq-entry(n) × *)
  */
-fun `ns-l-compact-sequence`(n: Int)= undefined /* TODO recursion */
+fun `ns-l-compact-sequence`(n: Int) = `c-l-block-seq-entry`(n) + (`s-indent`(n) + `c-l-block-seq-entry`(n)) * zero_or_more
 
 /**
  * `187` : l+block-mapping(n):

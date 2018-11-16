@@ -190,10 +190,10 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 write("fun `${funName()}`(")
                 writeArgs()
                 write(")")
+                if (production.isRecursive) write(": Token")
                 when {
                     production.counter in setOf(74, 112, 154, 155, 168, 170, 171, 174, 176, 178, 180, 184, 190, 191, 194, 197) ->
                         write("= undefined /* TODO global variable */\n")
-                    production.counter in setOf(115, 124, 138, 141, 148, 153, 158, 186) -> write("= undefined /* TODO recursion */\n")
                     production.counter in setOf(136, 162, 163, 164, 165, 166, 183, 187, 201) -> write("= undefined /* TODO other */\n")
                     onlyArgOrEmpty.startsWith("<") || onlyArgOrEmpty.startsWith("≤") -> writeLessFun(onlyArgOrEmpty[0])
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
@@ -204,6 +204,8 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     else -> throw UnsupportedOperationException("factory function for ${production.expression::class.simpleName}")
                 }
             }
+
+            private val Production.isRecursive get() = references.any { it.value == production }
 
             private fun comment(): String {
                 return "\n" +
