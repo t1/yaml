@@ -1,9 +1,5 @@
 package com.github.t1.yaml.parser
 
-import com.github.t1.yaml.parser.YamlTokens.`b-break`
-import com.github.t1.yaml.parser.YamlTokens.`c-byte-order-mark`
-import com.github.t1.yaml.parser.YamlTokens.`c-directives-end`
-import com.github.t1.yaml.parser.YamlTokens.`c-document-end`
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Scanner

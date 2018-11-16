@@ -10,16 +10,6 @@ import com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED
 import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
 import com.github.t1.yaml.parser.ScalarParser.Mode.NORMAL
 import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
-import com.github.t1.yaml.parser.YamlTokens.`b-break`
-import com.github.t1.yaml.parser.YamlTokens.`c-collect-entry`
-import com.github.t1.yaml.parser.YamlTokens.`c-comment`
-import com.github.t1.yaml.parser.YamlTokens.`c-double-quote`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-end`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-start`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
-import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
-import com.github.t1.yaml.parser.YamlTokens.`c-single-quote`
-import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import com.github.t1.yaml.tools.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.spaces
 

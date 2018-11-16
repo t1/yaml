@@ -1,16 +1,16 @@
 package spec.generator
 
-import com.github.t1.yaml.parser.YamlTokens.`c-nb-comment-text`
-import com.github.t1.yaml.parser.YamlTokens.`l-document-prefix`
-import com.github.t1.yaml.parser.YamlTokens.`nb-char`
-import com.github.t1.yaml.parser.YamlTokens.`ns-directive-name`
-import com.github.t1.yaml.parser.YamlTokens.`ns-esc-16-bit`
-import com.github.t1.yaml.parser.YamlTokens.`ns-esc-32-bit`
-import com.github.t1.yaml.parser.YamlTokens.`ns-esc-8-bit`
-import com.github.t1.yaml.parser.YamlTokens.`s-separate-in-line`
+import com.github.t1.yaml.parser.`c-nb-comment-text`
+import com.github.t1.yaml.parser.`l-document-prefix`
+import com.github.t1.yaml.parser.`nb-char`
+import com.github.t1.yaml.parser.`ns-directive-name`
+import com.github.t1.yaml.parser.`ns-esc-16-bit`
+import com.github.t1.yaml.parser.`ns-esc-32-bit`
+import com.github.t1.yaml.parser.`ns-esc-8-bit`
 import com.github.t1.yaml.parser.`s-indent`
 import com.github.t1.yaml.parser.`s-indent≤`
 import com.github.t1.yaml.parser.`s-indent≪`
+import com.github.t1.yaml.parser.`s-separate-in-line`
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
 import com.github.t1.yaml.tools.symbol
 import org.junit.jupiter.api.Disabled

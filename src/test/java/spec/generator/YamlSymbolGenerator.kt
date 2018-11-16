@@ -27,10 +27,25 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
         private val SOURCE_FILE = Paths.get("src/main/java/com/github/t1/yaml/parser/YamlTokens.kt")
 
-        val CLASS_HEADER = "" +
-            "@file:Suppress(\"unused\", \"FunctionName\", \"NonAsciiCharacters\")\n" +
+        val HEADER = "" +
+            "@file:Generated(\"${YamlSymbolGenerator::class.qualifiedName}\")\n" +
+            "@file:Suppress(\"unused\", \"ObjectPropertyName\", \"FunctionName\", \"NonAsciiCharacters\")\n" +
             "\n" +
             "package com.github.t1.yaml.parser\n" +
+            "\n" +
+            "/**\n" +
+            " * The productions as specified in the YAML spec\n" +
+            " *\n" +
+            " * e-        A production matching no characters.\n" +
+            " * c-        A production starting and ending with a special character.\n" +
+            " * b-        A production matching a single line break.\n" +
+            " * nb-       A production starting and ending with a non-break character.\n" +
+            " * s-        A production starting and ending with a white space character.\n" +
+            " * ns-       A production starting and ending with a non-space character.\n" +
+            " * l-        A production matching complete line(s).\n" +
+            " * X-Y-      A production starting with an X- character and ending with a Y- character, where X- and Y- are any of the above prefixes.\n" +
+            " * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.\n" +
+            " */\n" +
             "\n" +
             "import com.github.t1.yaml.parser.InOutMode.`block-in`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`block-key`\n" +
@@ -38,7 +53,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.parser.InOutMode.`flow-in`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`flow-key`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`flow-out`\n" +
-            "import com.github.t1.yaml.parser.YamlTokens.*\n" +
             "import com.github.t1.yaml.tools.CodePoint\n" +
             "import com.github.t1.yaml.tools.CodePointRange\n" +
             "import com.github.t1.yaml.tools.CodePointReader\n" +
@@ -55,32 +69,10 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.tools.undefined\n" +
             "import javax.annotation.Generated\n" +
             "\n" +
-            "/**\n" +
-            " * The productions as specified in the YAML spec\n" +
-            " *\n" +
-            " * e-        A production matching no characters.\n" +
-            " * c-        A production starting and ending with a special character.\n" +
-            " * b-        A production matching a single line break.\n" +
-            " * nb-       A production starting and ending with a non-break character.\n" +
-            " * s-        A production starting and ending with a white space character.\n" +
-            " * ns-       A production starting and ending with a non-space character.\n" +
-            " * l-        A production matching complete line(s).\n" +
-            " * X-Y-      A production starting with an X- character and ending with a Y- character, where X- and Y- are any of the above prefixes.\n" +
-            " * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.\n" +
-            " */\n" +
-            "@Generated(\"${YamlSymbolGenerator::class.qualifiedName}\")\n" +
-            "@Suppress(\"EnumEntryName\")\n"
+            "private val EOF = symbol(CodePoint.EOF)\n" +
+            "\n"
 
-        const val ENUM_END = "" +
-            "    ;\n" +
-            "\n" +
-            "\n" +
-            "    constructor(codePoint: Char) : this(symbol(codePoint))\n" +
-            "    constructor(range: CharRange) : this(range.toCodePointRange())\n" +
-            "    constructor(range: CodePointRange) : this(symbol(range))\n" +
-            "\n" +
-            "    override fun match(reader: CodePointReader): Match = this.token.match(reader)\n" +
-            "}\n" +
+        const val FOOTER = "" +
             "\n" +
             "private infix fun Char.or(that: Char) = symbol(this) or symbol(that)\n" +
             "private infix fun Char.or(that: Token) = symbol(this) or that\n" +
@@ -94,26 +86,20 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "private infix operator fun Char.plus(token: Token) = symbol(this) + token\n" +
             "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
             "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n" +
-            "private val EOF = symbol(CodePoint.EOF)\n" +
             "private val followedByAnNsPlainSafe = undefined\n" +
             "private val anNsCharPreceding = undefined\n" +
             "private val atMost1024CharactersAltogether = undefined\n"
     }
 
     private fun generateCode() {
-        var className = SOURCE_FILE.fileName.toString()
-        val suffix = ".kt"
-        assert(className.endsWith(suffix))
-        className = className.substring(0, className.length - suffix.length)
-        Files.newBufferedWriter(SOURCE_FILE).use { writer -> generateCode(className, writer) }
+        Files.newBufferedWriter(SOURCE_FILE).use { writer -> generateCode(writer) }
     }
 
-    fun generateCode(className: String, out: Writer) {
-        SourceCodeGenerator(className, spec, out).write()
+    fun generateCode(out: Writer) {
+        SourceCodeGenerator(spec, out).write()
     }
 
     class SourceCodeGenerator(
-        private val className: String,
         private val spec: Spec,
         private val out: Writer
     ) {
@@ -124,8 +110,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
         }
 
         fun write() {
-            write(CLASS_HEADER +
-                "enum class $className(private val token: Token) : Token {\n")
+            write(HEADER)
 
             for (production in productions.filter { production -> production.args.isEmpty() }) {
                 try {
@@ -135,8 +120,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 }
             }
 
-            write(ENUM_END)
-
             for (production in productions.filter { production -> !production.args.isEmpty() }) {
                 try {
                     ProductionWriter(production).writeTokenFactory()
@@ -144,27 +127,26 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     throw RuntimeException("can't write factory method for ${production.counter}: ${production.key}", e)
                 }
             }
+
+            write(FOOTER)
         }
 
         private inner class ProductionWriter(val production: Production) {
             private val visitor = ProductionVisitor()
 
             fun writeToken() {
-                // TODO fix forward reference by going from enum to constants:
-                //val `c-printable` = token("c-printable",
-                //    '\t' or '\n' or '\r' or ' '..'~' or '\u0085' or ' '..'퟿' or ''..'�' or "\uD800\uDC00".."\uDBFF\uDFFF")
-                writeComment("    ")
-                write("    `${production.name}`(")
+                write(comment())
+                write("val `${production.name}` = token(\"${production.name}\", ")
                 when (production.counter) {
                     in setOf(82, 83, 86, 88, 89, 93, 97, 101) -> write("undefined /* TODO forward reference */")
                     in setOf(193, 207) -> write("undefined /* TODO global variable */")
                     else -> production.expression.guide(visitor)
                 }
-                write("),\n")
+                write(")\n")
             }
 
             fun writeTokenFactory() {
-                writeComment("")
+                write(comment())
                 write("fun `${funName()}`(")
                 writeArgs()
                 write(")")
@@ -183,12 +165,11 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 }
             }
 
-            private fun writeComment(indent: String) {
-                val comment = with(production) { "`$counter` : $key:\n$expression" }
-                write("\n" +
-                    indent + "/**\n" +
-                    indent + " * ${comment.replace("\n", "\n$indent * ")}\n" +
-                    indent + " */\n")
+            private fun comment(): String {
+                return "\n" +
+                    "/**\n" +
+                    " * ${with(production) { "`$counter` : $key:\n$expression" }.replace("\n", "\n * ")}\n" +
+                    " */\n"
             }
 
             private fun funName() = production.name +

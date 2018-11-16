@@ -1,63 +1,7 @@
-@file:Suppress("unused", "FunctionName", "NonAsciiCharacters")
+@file:Generated("spec.generator.YamlSymbolGenerator")
+@file:Suppress("unused", "ObjectPropertyName", "FunctionName", "NonAsciiCharacters")
 
 package com.github.t1.yaml.parser
-
-import com.github.t1.yaml.parser.InOutMode.`block-in`
-import com.github.t1.yaml.parser.InOutMode.`block-key`
-import com.github.t1.yaml.parser.InOutMode.`block-out`
-import com.github.t1.yaml.parser.InOutMode.`flow-in`
-import com.github.t1.yaml.parser.InOutMode.`flow-key`
-import com.github.t1.yaml.parser.InOutMode.`flow-out`
-import com.github.t1.yaml.parser.YamlTokens.`b-as-line-feed`
-import com.github.t1.yaml.parser.YamlTokens.`b-as-space`
-import com.github.t1.yaml.parser.YamlTokens.`b-comment`
-import com.github.t1.yaml.parser.YamlTokens.`b-non-content`
-import com.github.t1.yaml.parser.YamlTokens.`c-comment`
-import com.github.t1.yaml.parser.YamlTokens.`c-double-quote`
-import com.github.t1.yaml.parser.YamlTokens.`c-indicator`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-end`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-key`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-start`
-import com.github.t1.yaml.parser.YamlTokens.`c-mapping-value`
-import com.github.t1.yaml.parser.YamlTokens.`c-nb-comment-text`
-import com.github.t1.yaml.parser.YamlTokens.`c-ns-alias-node`
-import com.github.t1.yaml.parser.YamlTokens.`c-ns-anchor-property`
-import com.github.t1.yaml.parser.YamlTokens.`c-ns-tag-property`
-import com.github.t1.yaml.parser.YamlTokens.`c-sequence-end`
-import com.github.t1.yaml.parser.YamlTokens.`c-sequence-entry`
-import com.github.t1.yaml.parser.YamlTokens.`c-sequence-start`
-import com.github.t1.yaml.parser.YamlTokens.`c-single-quote`
-import com.github.t1.yaml.parser.YamlTokens.`e-node`
-import com.github.t1.yaml.parser.YamlTokens.`e-scalar`
-import com.github.t1.yaml.parser.YamlTokens.`l-comment`
-import com.github.t1.yaml.parser.YamlTokens.`nb-char`
-import com.github.t1.yaml.parser.YamlTokens.`nb-double-one-line`
-import com.github.t1.yaml.parser.YamlTokens.`nb-ns-double-in-line`
-import com.github.t1.yaml.parser.YamlTokens.`nb-ns-single-in-line`
-import com.github.t1.yaml.parser.YamlTokens.`nb-single-one-line`
-import com.github.t1.yaml.parser.YamlTokens.`ns-char`
-import com.github.t1.yaml.parser.YamlTokens.`ns-plain-safe-in`
-import com.github.t1.yaml.parser.YamlTokens.`ns-plain-safe-out`
-import com.github.t1.yaml.parser.YamlTokens.`ns-s-block-map-implicit-key`
-import com.github.t1.yaml.parser.YamlTokens.`s-l-comments`
-import com.github.t1.yaml.parser.YamlTokens.`s-separate-in-line`
-import com.github.t1.yaml.parser.YamlTokens.`s-space`
-import com.github.t1.yaml.parser.YamlTokens.`s-white`
-import com.github.t1.yaml.tools.CodePoint
-import com.github.t1.yaml.tools.CodePointRange
-import com.github.t1.yaml.tools.CodePointReader
-import com.github.t1.yaml.tools.Match
-import com.github.t1.yaml.tools.Token
-import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
-import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
-import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
-import com.github.t1.yaml.tools.empty
-import com.github.t1.yaml.tools.startOfLine
-import com.github.t1.yaml.tools.symbol
-import com.github.t1.yaml.tools.toCodePointRange
-import com.github.t1.yaml.tools.token
-import com.github.t1.yaml.tools.undefined
-import javax.annotation.Generated
 
 /**
  * The productions as specified in the YAML spec
@@ -72,826 +16,820 @@ import javax.annotation.Generated
  * X-Y-      A production starting with an X- character and ending with a Y- character, where X- and Y- are any of the above prefixes.
  * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.
  */
-@Generated("spec.generator.YamlSymbolGenerator")
-@Suppress("EnumEntryName")
-enum class YamlTokens(private val token: Token) : Token {
 
-    /**
-     * `1` : c-printable:
-     * [<[\t][CHARACTER TABULATION][0x9]> |
-     *    <[\n][LINE FEED (LF)][0xa]> |
-     *    <[\r][CARRIAGE RETURN (CR)][0xd]> |
-     *    [<[ ][SPACE][0x20]>-<[~][TILDE][0x7e]>] |
-     *    <[\u0085][NEXT LINE (NEL)][0x85]> |
-     *    [<[ ][NO-BREAK SPACE][0xa0]>-<[퟿][?][0xd7ff]>] |
-     *    [<[][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] |
-     *    [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
-     */
-    `c-printable`('\t' or '\n' or '\r' or ' '..'~' or '\u0085' or ' '..'퟿' or ''..'�' or "\uD800\uDC00".."\uDBFF\uDFFF"),
+import com.github.t1.yaml.parser.InOutMode.`block-in`
+import com.github.t1.yaml.parser.InOutMode.`block-key`
+import com.github.t1.yaml.parser.InOutMode.`block-out`
+import com.github.t1.yaml.parser.InOutMode.`flow-in`
+import com.github.t1.yaml.parser.InOutMode.`flow-key`
+import com.github.t1.yaml.parser.InOutMode.`flow-out`
+import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.yaml.tools.Match
+import com.github.t1.yaml.tools.Token
+import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
+import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
+import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
+import com.github.t1.yaml.tools.empty
+import com.github.t1.yaml.tools.startOfLine
+import com.github.t1.yaml.tools.symbol
+import com.github.t1.yaml.tools.toCodePointRange
+import com.github.t1.yaml.tools.token
+import com.github.t1.yaml.tools.undefined
+import javax.annotation.Generated
 
-    /**
-     * `2` : nb-json:
-     * [<[\t][CHARACTER TABULATION][0x9]> |
-     *    [<[ ][SPACE][0x20]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
-     */
-    `nb-json`('\t' or ' '.."\uDBFF\uDFFF"),
-
-    /**
-     * `3` : c-byte-order-mark:
-     * <[\uFEFF][ZERO WIDTH NO-BREAK SPACE][0xfeff]>
-     */
-    `c-byte-order-mark`('\uFEFF'),
-
-    /**
-     * `4` : c-sequence-entry:
-     * <[-][HYPHEN-MINUS][0x2d]>
-     */
-    `c-sequence-entry`('-'),
-
-    /**
-     * `5` : c-mapping-key:
-     * <[?][QUESTION MARK][0x3f]>
-     */
-    `c-mapping-key`('?'),
-
-    /**
-     * `6` : c-mapping-value:
-     * <[:][COLON][0x3a]>
-     */
-    `c-mapping-value`(':'),
-
-    /**
-     * `7` : c-collect-entry:
-     * <[,][COMMA][0x2c]>
-     */
-    `c-collect-entry`(','),
-
-    /**
-     * `8` : c-sequence-start:
-     * <[[][LEFT SQUARE BRACKET][0x5b]>
-     */
-    `c-sequence-start`('['),
-
-    /**
-     * `9` : c-sequence-end:
-     * <[]][RIGHT SQUARE BRACKET][0x5d]>
-     */
-    `c-sequence-end`(']'),
-
-    /**
-     * `10` : c-mapping-start:
-     * <[{][LEFT CURLY BRACKET][0x7b]>
-     */
-    `c-mapping-start`('{'),
-
-    /**
-     * `11` : c-mapping-end:
-     * <[}][RIGHT CURLY BRACKET][0x7d]>
-     */
-    `c-mapping-end`('}'),
-
-    /**
-     * `12` : c-comment:
-     * <[#][NUMBER SIGN][0x23]>
-     */
-    `c-comment`('#'),
-
-    /**
-     * `13` : c-anchor:
-     * <[&][AMPERSAND][0x26]>
-     */
-    `c-anchor`('&'),
-
-    /**
-     * `14` : c-alias:
-     * <[*][ASTERISK][0x2a]>
-     */
-    `c-alias`('*'),
-
-    /**
-     * `15` : c-tag:
-     * <[!][EXCLAMATION MARK][0x21]>
-     */
-    `c-tag`('!'),
-
-    /**
-     * `16` : c-literal:
-     * <[|][VERTICAL LINE][0x7c]>
-     */
-    `c-literal`('|'),
-
-    /**
-     * `17` : c-folded:
-     * <[>][GREATER-THAN SIGN][0x3e]>
-     */
-    `c-folded`('>'),
-
-    /**
-     * `18` : c-single-quote:
-     * <[\'][APOSTROPHE][0x27]>
-     */
-    `c-single-quote`('\''),
-
-    /**
-     * `19` : c-double-quote:
-     * <["][QUOTATION MARK][0x22]>
-     */
-    `c-double-quote`('"'),
-
-    /**
-     * `20` : c-directive:
-     * <[%][PERCENT SIGN][0x25]>
-     */
-    `c-directive`('%'),
-
-    /**
-     * `21` : c-reserved:
-     * [<[@][COMMERCIAL AT][0x40]> |
-     *    <[`][GRAVE ACCENT][0x60]>]
-     */
-    `c-reserved`('@' or '`'),
-
-    /**
-     * `22` : c-indicator:
-     * [->c-sequence-entry |
-     *    ->c-mapping-key |
-     *    ->c-mapping-value |
-     *    ->c-collect-entry |
-     *    ->c-sequence-start |
-     *    ->c-sequence-end |
-     *    ->c-mapping-start |
-     *    ->c-mapping-end |
-     *    ->c-comment |
-     *    ->c-anchor |
-     *    ->c-alias |
-     *    ->c-tag |
-     *    ->c-literal |
-     *    ->c-folded |
-     *    ->c-single-quote |
-     *    ->c-double-quote |
-     *    ->c-directive |
-     *    ->c-reserved]
-     */
-    `c-indicator`(`c-sequence-entry` or `c-mapping-key` or `c-mapping-value` or `c-collect-entry` or `c-sequence-start` or `c-sequence-end` or `c-mapping-start` or `c-mapping-end` or `c-comment` or `c-anchor` or `c-alias` or `c-tag` or `c-literal` or `c-folded` or `c-single-quote` or `c-double-quote` or `c-directive` or `c-reserved`),
-
-    /**
-     * `23` : c-flow-indicator:
-     * [->c-collect-entry |
-     *    ->c-sequence-start |
-     *    ->c-sequence-end |
-     *    ->c-mapping-start |
-     *    ->c-mapping-end]
-     */
-    `c-flow-indicator`(`c-collect-entry` or `c-sequence-start` or `c-sequence-end` or `c-mapping-start` or `c-mapping-end`),
-
-    /**
-     * `24` : b-line-feed:
-     * <[\n][LINE FEED (LF)][0xa]>
-     */
-    `b-line-feed`('\n'),
-
-    /**
-     * `25` : b-carriage-return:
-     * <[\r][CARRIAGE RETURN (CR)][0xd]>
-     */
-    `b-carriage-return`('\r'),
-
-    /**
-     * `26` : b-char:
-     * [->b-line-feed |
-     *    ->b-carriage-return]
-     */
-    `b-char`(`b-line-feed` or `b-carriage-return`),
-
-    /**
-     * `27` : nb-char:
-     * (->c-printable - ->b-char - ->c-byte-order-mark)
-     */
-    `nb-char`(`c-printable` - `b-char` - `c-byte-order-mark`),
-
-    /**
-     * `28` : b-break:
-     * [->b-carriage-return + ->b-line-feed |
-     *    ->b-carriage-return |
-     *    ->b-line-feed]
-     */
-    `b-break`((`b-carriage-return` + `b-line-feed`) or `b-carriage-return` or `b-line-feed`),
-
-    /**
-     * `29` : b-as-line-feed:
-     * ->b-break
-     */
-    `b-as-line-feed`(`b-break`),
-
-    /**
-     * `30` : b-non-content:
-     * ->b-break
-     */
-    `b-non-content`(`b-break`),
-
-    /**
-     * `31` : s-space:
-     * <[ ][SPACE][0x20]>
-     */
-    `s-space`(' '),
-
-    /**
-     * `32` : s-tab:
-     * <[\t][CHARACTER TABULATION][0x9]>
-     */
-    `s-tab`('\t'),
-
-    /**
-     * `33` : s-white:
-     * [->s-space |
-     *    ->s-tab]
-     */
-    `s-white`(`s-space` or `s-tab`),
-
-    /**
-     * `34` : ns-char:
-     * (->nb-char - ->s-white)
-     */
-    `ns-char`(`nb-char` - `s-white`),
-
-    /**
-     * `35` : ns-dec-digit:
-     * [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]
-     */
-    `ns-dec-digit`('0'..'9'),
-
-    /**
-     * `36` : ns-hex-digit:
-     * [->ns-dec-digit |
-     *    [<[A][LATIN CAPITAL LETTER A][0x41]>-<[F][LATIN CAPITAL LETTER F][0x46]>] |
-     *    [<[a][LATIN SMALL LETTER A][0x61]>-<[f][LATIN SMALL LETTER F][0x66]>]]
-     */
-    `ns-hex-digit`(`ns-dec-digit` or 'A'..'F' or 'a'..'f'),
-
-    /**
-     * `37` : ns-ascii-letter:
-     * [[<[A][LATIN CAPITAL LETTER A][0x41]>-<[Z][LATIN CAPITAL LETTER Z][0x5a]>] |
-     *    [<[a][LATIN SMALL LETTER A][0x61]>-<[z][LATIN SMALL LETTER Z][0x7a]>]]
-     */
-    `ns-ascii-letter`('A'..'Z' or 'a'..'z'),
-
-    /**
-     * `38` : ns-word-char:
-     * [->ns-dec-digit |
-     *    ->ns-ascii-letter |
-     *    <[-][HYPHEN-MINUS][0x2d]>]
-     */
-    `ns-word-char`(`ns-dec-digit` or `ns-ascii-letter` or '-'),
-
-    /**
-     * `39` : ns-uri-char:
-     * <[%][PERCENT SIGN][0x25]> + ->ns-hex-digit + [->ns-hex-digit |
-     *    ->ns-word-char |
-     *    <[#][NUMBER SIGN][0x23]> |
-     *    <[;][SEMICOLON][0x3b]> |
-     *    <[/][SOLIDUS][0x2f]> |
-     *    <[?][QUESTION MARK][0x3f]> |
-     *    <[:][COLON][0x3a]> |
-     *    <[@][COMMERCIAL AT][0x40]> |
-     *    <[&][AMPERSAND][0x26]> |
-     *    <[=][EQUALS SIGN][0x3d]> |
-     *    <[+][PLUS SIGN][0x2b]> |
-     *    <[$][DOLLAR SIGN][0x24]> |
-     *    <[,][COMMA][0x2c]> |
-     *    <[_][LOW LINE][0x5f]> |
-     *    <[.][FULL STOP][0x2e]> |
-     *    <[!][EXCLAMATION MARK][0x21]> |
-     *    <[~][TILDE][0x7e]> |
-     *    <[*][ASTERISK][0x2a]> |
-     *    <[\'][APOSTROPHE][0x27]> |
-     *    <[(][LEFT PARENTHESIS][0x28]> |
-     *    <[)][RIGHT PARENTHESIS][0x29]> |
-     *    <[[][LEFT SQUARE BRACKET][0x5b]> |
-     *    <[]][RIGHT SQUARE BRACKET][0x5d]>]
-     */
-    `ns-uri-char`('%' + `ns-hex-digit` + `ns-hex-digit` or `ns-word-char` or '#' or ';' or '/' or '?' or ':' or '@' or '&' or '=' or '+' or '$' or ',' or '_' or '.' or '!' or '~' or '*' or '\'' or '(' or ')' or '[' or ']'),
-
-    /**
-     * `40` : ns-tag-char:
-     * (->ns-uri-char - ->c-tag - ->c-flow-indicator)
-     */
-    `ns-tag-char`(`ns-uri-char` - `c-tag` - `c-flow-indicator`),
-
-    /**
-     * `41` : c-escape:
-     * <[\\][REVERSE SOLIDUS][0x5c]>
-     */
-    `c-escape`('\\'),
-
-    /**
-     * `42` : ns-esc-null:
-     * <[0][DIGIT ZERO][0x30]>
-     */
-    `ns-esc-null`('0'),
-
-    /**
-     * `43` : ns-esc-bell:
-     * <[a][LATIN SMALL LETTER A][0x61]>
-     */
-    `ns-esc-bell`('a'),
-
-    /**
-     * `44` : ns-esc-backspace:
-     * <[b][LATIN SMALL LETTER B][0x62]>
-     */
-    `ns-esc-backspace`('b'),
-
-    /**
-     * `45` : ns-esc-horizontal-tab:
-     * [<[t][LATIN SMALL LETTER T][0x74]> |
-     *    <[\t][CHARACTER TABULATION][0x9]>]
-     */
-    `ns-esc-horizontal-tab`('t' or '\t'),
-
-    /**
-     * `46` : ns-esc-line-feed:
-     * <[n][LATIN SMALL LETTER N][0x6e]>
-     */
-    `ns-esc-line-feed`('n'),
-
-    /**
-     * `47` : ns-esc-vertical-tab:
-     * <[v][LATIN SMALL LETTER V][0x76]>
-     */
-    `ns-esc-vertical-tab`('v'),
-
-    /**
-     * `48` : ns-esc-form-feed:
-     * <[f][LATIN SMALL LETTER F][0x66]>
-     */
-    `ns-esc-form-feed`('f'),
-
-    /**
-     * `49` : ns-esc-carriage-return:
-     * <[r][LATIN SMALL LETTER R][0x72]>
-     */
-    `ns-esc-carriage-return`('r'),
-
-    /**
-     * `50` : ns-esc-escape:
-     * <[e][LATIN SMALL LETTER E][0x65]>
-     */
-    `ns-esc-escape`('e'),
-
-    /**
-     * `51` : ns-esc-space:
-     * <[ ][SPACE][0x20]>
-     */
-    `ns-esc-space`(' '),
-
-    /**
-     * `52` : ns-esc-double-quote:
-     * ->c-double-quote
-     */
-    `ns-esc-double-quote`(`c-double-quote`),
-
-    /**
-     * `53` : ns-esc-slash:
-     * <[/][SOLIDUS][0x2f]>
-     */
-    `ns-esc-slash`('/'),
-
-    /**
-     * `54` : ns-esc-backslash:
-     * ->c-escape
-     */
-    `ns-esc-backslash`(`c-escape`),
-
-    /**
-     * `55` : ns-esc-next-line:
-     * <[N][LATIN CAPITAL LETTER N][0x4e]>
-     */
-    `ns-esc-next-line`('N'),
-
-    /**
-     * `56` : ns-esc-non-breaking-space:
-     * <[_][LOW LINE][0x5f]>
-     */
-    `ns-esc-non-breaking-space`('_'),
-
-    /**
-     * `57` : ns-esc-line-separator:
-     * <[L][LATIN CAPITAL LETTER L][0x4c]>
-     */
-    `ns-esc-line-separator`('L'),
-
-    /**
-     * `58` : ns-esc-paragraph-separator:
-     * <[P][LATIN CAPITAL LETTER P][0x50]>
-     */
-    `ns-esc-paragraph-separator`('P'),
-
-    /**
-     * `59` : ns-esc-8-bit:
-     * <[x][LATIN SMALL LETTER X][0x78]> + (->ns-hex-digit × 2)
-     */
-    `ns-esc-8-bit`('x' + `ns-hex-digit` * 2),
-
-    /**
-     * `60` : ns-esc-16-bit:
-     * <[u][LATIN SMALL LETTER U][0x75]> + (->ns-hex-digit × 4)
-     */
-    `ns-esc-16-bit`('u' + `ns-hex-digit` * 4),
-
-    /**
-     * `61` : ns-esc-32-bit:
-     * <[U][LATIN CAPITAL LETTER U][0x55]> + (->ns-hex-digit × 8)
-     */
-    `ns-esc-32-bit`('U' + `ns-hex-digit` * 8),
-
-    /**
-     * `62` : c-ns-esc-char:
-     * ->c-escape + [->ns-esc-null |
-     *    ->ns-esc-bell |
-     *    ->ns-esc-backspace |
-     *    ->ns-esc-horizontal-tab |
-     *    ->ns-esc-line-feed |
-     *    ->ns-esc-vertical-tab |
-     *    ->ns-esc-form-feed |
-     *    ->ns-esc-carriage-return |
-     *    ->ns-esc-escape |
-     *    ->ns-esc-space |
-     *    ->ns-esc-double-quote |
-     *    ->ns-esc-slash |
-     *    ->ns-esc-backslash |
-     *    ->ns-esc-next-line |
-     *    ->ns-esc-non-breaking-space |
-     *    ->ns-esc-line-separator |
-     *    ->ns-esc-paragraph-separator |
-     *    ->ns-esc-8-bit |
-     *    ->ns-esc-16-bit |
-     *    ->ns-esc-32-bit]
-     */
-    `c-ns-esc-char`(`c-escape` + `ns-esc-null` or `ns-esc-bell` or `ns-esc-backspace` or `ns-esc-horizontal-tab` or `ns-esc-line-feed` or `ns-esc-vertical-tab` or `ns-esc-form-feed` or `ns-esc-carriage-return` or `ns-esc-escape` or `ns-esc-space` or `ns-esc-double-quote` or `ns-esc-slash` or `ns-esc-backslash` or `ns-esc-next-line` or `ns-esc-non-breaking-space` or `ns-esc-line-separator` or `ns-esc-paragraph-separator` or `ns-esc-8-bit` or `ns-esc-16-bit` or `ns-esc-32-bit`),
-
-    /**
-     * `66` : s-separate-in-line:
-     * [(->s-white × +) |
-     *    ->Start of line]
-     */
-    `s-separate-in-line`(`s-white` * once_or_more or startOfLine),
-
-    /**
-     * `72` : b-as-space:
-     * ->b-break
-     */
-    `b-as-space`(`b-break`),
-
-    /**
-     * `75` : c-nb-comment-text:
-     * ->c-comment + (->nb-char × *)
-     */
-    `c-nb-comment-text`(`c-comment` + `nb-char` * zero_or_more),
-
-    /**
-     * `76` : b-comment:
-     * [->b-non-content |
-     *    ->End of file]
-     */
-    `b-comment`(`b-non-content` or EOF),
-
-    /**
-     * `77` : s-b-comment:
-     * (->s-separate-in-line + (->c-nb-comment-text × ?) × ?) + ->b-comment
-     */
-    `s-b-comment`((`s-separate-in-line` + `c-nb-comment-text` * zero_or_once) * zero_or_once + `b-comment`),
-
-    /**
-     * `78` : l-comment:
-     * ->s-separate-in-line + (->c-nb-comment-text × ?) + ->b-comment
-     */
-    `l-comment`(`s-separate-in-line` + `c-nb-comment-text` * zero_or_once + `b-comment`),
-
-    /**
-     * `79` : s-l-comments:
-     * [->s-b-comment |
-     *    ->Start of line] + (->l-comment × *)
-     */
-    `s-l-comments`(`s-b-comment` or startOfLine + `l-comment` * zero_or_more),
-
-    /**
-     * `82` : l-directive:
-     * ->c-directive + [->ns-yaml-directive |
-     *    ->ns-tag-directive |
-     *    ->ns-reserved-directive] + ->s-l-comments
-     */
-    `l-directive`(undefined /* TODO forward reference */),
-
-    /**
-     * `83` : ns-reserved-directive:
-     * ->ns-directive-name + (->s-separate-in-line + ->ns-directive-parameter × *)
-     */
-    `ns-reserved-directive`(undefined /* TODO forward reference */),
-
-    /**
-     * `84` : ns-directive-name:
-     * (->ns-char × +)
-     */
-    `ns-directive-name`(`ns-char` * once_or_more),
-
-    /**
-     * `85` : ns-directive-parameter:
-     * (->ns-char × +)
-     */
-    `ns-directive-parameter`(`ns-char` * once_or_more),
-
-    /**
-     * `86` : ns-yaml-directive:
-     * <[Y][LATIN CAPITAL LETTER Y][0x59]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[M][LATIN CAPITAL LETTER M][0x4d]> + <[L][LATIN CAPITAL LETTER L][0x4c]> + ->s-separate-in-line + ->ns-yaml-version
-     */
-    `ns-yaml-directive`(undefined /* TODO forward reference */),
-
-    /**
-     * `87` : ns-yaml-version:
-     * (->ns-dec-digit × +) + <[.][FULL STOP][0x2e]> + (->ns-dec-digit × +)
-     */
-    `ns-yaml-version`(`ns-dec-digit` * once_or_more + '.' + `ns-dec-digit` * once_or_more),
-
-    /**
-     * `88` : ns-tag-directive:
-     * <[T][LATIN CAPITAL LETTER T][0x54]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[G][LATIN CAPITAL LETTER G][0x47]> + ->s-separate-in-line + ->c-tag-handle + ->s-separate-in-line + ->ns-tag-prefix
-     */
-    `ns-tag-directive`(undefined /* TODO forward reference */),
-
-    /**
-     * `89` : c-tag-handle:
-     * [->c-named-tag-handle |
-     *    ->c-secondary-tag-handle |
-     *    ->c-primary-tag-handle]
-     */
-    `c-tag-handle`(undefined /* TODO forward reference */),
-
-    /**
-     * `90` : c-primary-tag-handle:
-     * ->c-tag
-     */
-    `c-primary-tag-handle`(`c-tag`),
-
-    /**
-     * `91` : c-secondary-tag-handle:
-     * ->c-tag + ->c-tag
-     */
-    `c-secondary-tag-handle`(`c-tag` + `c-tag`),
-
-    /**
-     * `92` : c-named-tag-handle:
-     * ->c-tag + (->ns-word-char × +) + ->c-tag
-     */
-    `c-named-tag-handle`(`c-tag` + `ns-word-char` * once_or_more + `c-tag`),
-
-    /**
-     * `93` : ns-tag-prefix:
-     * [->c-ns-local-tag-prefix |
-     *    ->ns-global-tag-prefix]
-     */
-    `ns-tag-prefix`(undefined /* TODO forward reference */),
-
-    /**
-     * `94` : c-ns-local-tag-prefix:
-     * ->c-tag + (->ns-uri-char × *)
-     */
-    `c-ns-local-tag-prefix`(`c-tag` + `ns-uri-char` * zero_or_more),
-
-    /**
-     * `95` : ns-global-tag-prefix:
-     * ->ns-tag-char + (->ns-uri-char × *)
-     */
-    `ns-global-tag-prefix`(`ns-tag-char` + `ns-uri-char` * zero_or_more),
-
-    /**
-     * `97` : c-ns-tag-property:
-     * [->c-verbatim-tag |
-     *    ->c-ns-shorthand-tag |
-     *    ->c-non-specific-tag]
-     */
-    `c-ns-tag-property`(undefined /* TODO forward reference */),
-
-    /**
-     * `98` : c-verbatim-tag:
-     * ->c-tag + <[<][LESS-THAN SIGN][0x3c]> + (->ns-uri-char × +) + <[>][GREATER-THAN SIGN][0x3e]>
-     */
-    `c-verbatim-tag`(`c-tag` + '<' + `ns-uri-char` * once_or_more + '>'),
-
-    /**
-     * `99` : c-ns-shorthand-tag:
-     * ->c-tag-handle + (->ns-tag-char × +)
-     */
-    `c-ns-shorthand-tag`(`c-tag-handle` + `ns-tag-char` * once_or_more),
-
-    /**
-     * `100` : c-non-specific-tag:
-     * ->c-tag
-     */
-    `c-non-specific-tag`(`c-tag`),
-
-    /**
-     * `101` : c-ns-anchor-property:
-     * ->c-anchor + ->ns-anchor-name
-     */
-    `c-ns-anchor-property`(undefined /* TODO forward reference */),
-
-    /**
-     * `102` : ns-anchor-char:
-     * (->ns-char - ->c-flow-indicator)
-     */
-    `ns-anchor-char`(`ns-char` - `c-flow-indicator`),
-
-    /**
-     * `103` : ns-anchor-name:
-     * (->ns-anchor-char × +)
-     */
-    `ns-anchor-name`(`ns-anchor-char` * once_or_more),
-
-    /**
-     * `104` : c-ns-alias-node:
-     * ->c-alias + ->ns-anchor-name
-     */
-    `c-ns-alias-node`(`c-alias` + `ns-anchor-name`),
-
-    /**
-     * `105` : e-scalar:
-     * ->Empty
-     */
-    `e-scalar`(empty),
-
-    /**
-     * `106` : e-node:
-     * ->e-scalar
-     */
-    `e-node`(`e-scalar`),
-
-    /**
-     * `107` : nb-double-char:
-     * [->c-ns-esc-char |
-     *    (->nb-json - ->c-escape - ->c-double-quote)]
-     */
-    `nb-double-char`(`c-ns-esc-char` or `nb-json` - `c-escape` - `c-double-quote`),
-
-    /**
-     * `108` : ns-double-char:
-     * (->nb-double-char - ->s-white)
-     */
-    `ns-double-char`(`nb-double-char` - `s-white`),
-
-    /**
-     * `111` : nb-double-one-line:
-     * (->nb-double-char × *)
-     */
-    `nb-double-one-line`(`nb-double-char` * zero_or_more),
-
-    /**
-     * `114` : nb-ns-double-in-line:
-     * ((->s-white × *) + ->ns-double-char × *)
-     */
-    `nb-ns-double-in-line`(`s-white` * zero_or_more + `ns-double-char` * zero_or_more),
-
-    /**
-     * `117` : c-quoted-quote:
-     * ->c-single-quote + ->c-single-quote
-     */
-    `c-quoted-quote`(`c-single-quote` + `c-single-quote`),
-
-    /**
-     * `118` : nb-single-char:
-     * [->c-quoted-quote |
-     *    (->nb-json - ->c-single-quote)]
-     */
-    `nb-single-char`(`c-quoted-quote` or `nb-json` - `c-single-quote`),
-
-    /**
-     * `119` : ns-single-char:
-     * (->nb-single-char - ->s-white)
-     */
-    `ns-single-char`(`nb-single-char` - `s-white`),
-
-    /**
-     * `122` : nb-single-one-line:
-     * (->nb-single-char × *)
-     */
-    `nb-single-one-line`(`nb-single-char` * zero_or_more),
-
-    /**
-     * `123` : nb-ns-single-in-line:
-     * ((->s-white × *) + ->ns-single-char × *)
-     */
-    `nb-ns-single-in-line`(`s-white` * zero_or_more + `ns-single-char` * zero_or_more),
-
-    /**
-     * `128` : ns-plain-safe-out:
-     * ->ns-char
-     */
-    `ns-plain-safe-out`(`ns-char`),
-
-    /**
-     * `129` : ns-plain-safe-in:
-     * (->ns-char - ->c-flow-indicator)
-     */
-    `ns-plain-safe-in`(`ns-char` - `c-flow-indicator`),
-
-    /**
-     * `193` : ns-s-block-map-implicit-key:
-     * [->c-s-implicit-json-key(c) |
-     *    ->ns-s-implicit-yaml-key(c)]
-     */
-    `ns-s-block-map-implicit-key`(undefined /* TODO global variable */),
-
-    /**
-     * `202` : l-document-prefix:
-     * (->c-byte-order-mark × ?) + (->l-comment × *)
-     */
-    `l-document-prefix`(`c-byte-order-mark` * zero_or_once + `l-comment` * zero_or_more),
-
-    /**
-     * `203` : c-directives-end:
-     * <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]>
-     */
-    `c-directives-end`('-' + '-' + '-'),
-
-    /**
-     * `204` : c-document-end:
-     * <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]>
-     */
-    `c-document-end`('.' + '.' + '.'),
-
-    /**
-     * `205` : l-document-suffix:
-     * ->c-document-end + ->s-l-comments
-     */
-    `l-document-suffix`(`c-document-end` + `s-l-comments`),
-
-    /**
-     * `206` : c-forbidden:
-     * ->Start of line + [->c-directives-end |
-     *    ->c-document-end] + [->b-char |
-     *    ->s-white |
-     *    ->End of file]
-     */
-    `c-forbidden`(startOfLine + `c-directives-end` or `c-document-end` + `b-char` or `s-white` or EOF),
-
-    /**
-     * `207` : l-bare-document:
-     * ->s-l+block-node(n,c) + ->Excluding c-forbidden content
-     */
-    `l-bare-document`(undefined /* TODO global variable */),
-
-    /**
-     * `208` : l-explicit-document:
-     * ->c-directives-end + [->l-bare-document |
-     *    ->e-node + ->s-l-comments]
-     */
-    `l-explicit-document`(`c-directives-end` + `l-bare-document` or (`e-node` + `s-l-comments`)),
-
-    /**
-     * `209` : l-directive-document:
-     * (->l-directive × +) + ->l-explicit-document
-     */
-    `l-directive-document`(`l-directive` * once_or_more + `l-explicit-document`),
-
-    /**
-     * `210` : l-any-document:
-     * [->l-directive-document |
-     *    ->l-explicit-document |
-     *    ->l-bare-document]
-     */
-    `l-any-document`(`l-directive-document` or `l-explicit-document` or `l-bare-document`),
-
-    /**
-     * `211` : l-yaml-stream:
-     * (->l-document-prefix × *) + (->l-any-document × ?) + ((->l-document-suffix × +) + (->l-document-prefix × *) + [(->l-any-document × ?) |
-     *    (->l-document-prefix × *) + (->l-explicit-document × ?)] × *)
-     */
-    `l-yaml-stream`(`l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once + (`l-document-suffix` * once_or_more + `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once or (`l-document-prefix` * zero_or_more + `l-explicit-document` * zero_or_once)) * zero_or_more),
-    ;
-
-
-    constructor(codePoint: Char) : this(symbol(codePoint))
-    constructor(range: CharRange) : this(range.toCodePointRange())
-    constructor(range: CodePointRange) : this(symbol(range))
-
-    override fun match(reader: CodePointReader): Match = this.token.match(reader)
-}
-
-private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
-private infix fun Char.or(that: Token) = symbol(this) or that
-private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))
-private infix fun Token.or(that: String): Token = or(symbol(that))
-private infix fun Token.or(that: Char): Token = or(symbol(that))
-private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this)..CodePoint.of(that))
-private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
-private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
-private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
-private infix operator fun Char.plus(token: Token) = symbol(this) + token
-private infix operator fun Token.plus(that: Char) = this + symbol(that)
-private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
 private val EOF = symbol(CodePoint.EOF)
-private val followedByAnNsPlainSafe = undefined
-private val anNsCharPreceding = undefined
-private val atMost1024CharactersAltogether = undefined
+
+
+/**
+ * `1` : c-printable:
+ * [<[\t][CHARACTER TABULATION][0x9]> |
+ *    <[\n][LINE FEED (LF)][0xa]> |
+ *    <[\r][CARRIAGE RETURN (CR)][0xd]> |
+ *    [<[ ][SPACE][0x20]>-<[~][TILDE][0x7e]>] |
+ *    <[\u0085][NEXT LINE (NEL)][0x85]> |
+ *    [<[ ][NO-BREAK SPACE][0xa0]>-<[퟿][?][0xd7ff]>] |
+ *    [<[][PRIVATE USE AREA E000][0xe000]>-<[�][REPLACEMENT CHARACTER][0xfffd]>] |
+ *    [<[\uD800\uDC00][LINEAR B SYLLABLE B008 A][0x10000]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
+ */
+val `c-printable` = token("c-printable", '\t' or '\n' or '\r' or ' '..'~' or '\u0085' or ' '..'퟿' or ''..'�' or "\uD800\uDC00".."\uDBFF\uDFFF")
+
+/**
+ * `2` : nb-json:
+ * [<[\t][CHARACTER TABULATION][0x9]> |
+ *    [<[ ][SPACE][0x20]>-<[\uDBFF\uDFFF][?][0x10ffff]>]]
+ */
+val `nb-json` = token("nb-json", '\t' or ' '.."\uDBFF\uDFFF")
+
+/**
+ * `3` : c-byte-order-mark:
+ * <[\uFEFF][ZERO WIDTH NO-BREAK SPACE][0xfeff]>
+ */
+val `c-byte-order-mark` = token("c-byte-order-mark", '\uFEFF')
+
+/**
+ * `4` : c-sequence-entry:
+ * <[-][HYPHEN-MINUS][0x2d]>
+ */
+val `c-sequence-entry` = token("c-sequence-entry", '-')
+
+/**
+ * `5` : c-mapping-key:
+ * <[?][QUESTION MARK][0x3f]>
+ */
+val `c-mapping-key` = token("c-mapping-key", '?')
+
+/**
+ * `6` : c-mapping-value:
+ * <[:][COLON][0x3a]>
+ */
+val `c-mapping-value` = token("c-mapping-value", ':')
+
+/**
+ * `7` : c-collect-entry:
+ * <[,][COMMA][0x2c]>
+ */
+val `c-collect-entry` = token("c-collect-entry", ',')
+
+/**
+ * `8` : c-sequence-start:
+ * <[[][LEFT SQUARE BRACKET][0x5b]>
+ */
+val `c-sequence-start` = token("c-sequence-start", '[')
+
+/**
+ * `9` : c-sequence-end:
+ * <[]][RIGHT SQUARE BRACKET][0x5d]>
+ */
+val `c-sequence-end` = token("c-sequence-end", ']')
+
+/**
+ * `10` : c-mapping-start:
+ * <[{][LEFT CURLY BRACKET][0x7b]>
+ */
+val `c-mapping-start` = token("c-mapping-start", '{')
+
+/**
+ * `11` : c-mapping-end:
+ * <[}][RIGHT CURLY BRACKET][0x7d]>
+ */
+val `c-mapping-end` = token("c-mapping-end", '}')
+
+/**
+ * `12` : c-comment:
+ * <[#][NUMBER SIGN][0x23]>
+ */
+val `c-comment` = token("c-comment", '#')
+
+/**
+ * `13` : c-anchor:
+ * <[&][AMPERSAND][0x26]>
+ */
+val `c-anchor` = token("c-anchor", '&')
+
+/**
+ * `14` : c-alias:
+ * <[*][ASTERISK][0x2a]>
+ */
+val `c-alias` = token("c-alias", '*')
+
+/**
+ * `15` : c-tag:
+ * <[!][EXCLAMATION MARK][0x21]>
+ */
+val `c-tag` = token("c-tag", '!')
+
+/**
+ * `16` : c-literal:
+ * <[|][VERTICAL LINE][0x7c]>
+ */
+val `c-literal` = token("c-literal", '|')
+
+/**
+ * `17` : c-folded:
+ * <[>][GREATER-THAN SIGN][0x3e]>
+ */
+val `c-folded` = token("c-folded", '>')
+
+/**
+ * `18` : c-single-quote:
+ * <[\'][APOSTROPHE][0x27]>
+ */
+val `c-single-quote` = token("c-single-quote", '\'')
+
+/**
+ * `19` : c-double-quote:
+ * <["][QUOTATION MARK][0x22]>
+ */
+val `c-double-quote` = token("c-double-quote", '"')
+
+/**
+ * `20` : c-directive:
+ * <[%][PERCENT SIGN][0x25]>
+ */
+val `c-directive` = token("c-directive", '%')
+
+/**
+ * `21` : c-reserved:
+ * [<[@][COMMERCIAL AT][0x40]> |
+ *    <[`][GRAVE ACCENT][0x60]>]
+ */
+val `c-reserved` = token("c-reserved", '@' or '`')
+
+/**
+ * `22` : c-indicator:
+ * [->c-sequence-entry |
+ *    ->c-mapping-key |
+ *    ->c-mapping-value |
+ *    ->c-collect-entry |
+ *    ->c-sequence-start |
+ *    ->c-sequence-end |
+ *    ->c-mapping-start |
+ *    ->c-mapping-end |
+ *    ->c-comment |
+ *    ->c-anchor |
+ *    ->c-alias |
+ *    ->c-tag |
+ *    ->c-literal |
+ *    ->c-folded |
+ *    ->c-single-quote |
+ *    ->c-double-quote |
+ *    ->c-directive |
+ *    ->c-reserved]
+ */
+val `c-indicator` = token("c-indicator", `c-sequence-entry` or `c-mapping-key` or `c-mapping-value` or `c-collect-entry` or `c-sequence-start` or `c-sequence-end` or `c-mapping-start` or `c-mapping-end` or `c-comment` or `c-anchor` or `c-alias` or `c-tag` or `c-literal` or `c-folded` or `c-single-quote` or `c-double-quote` or `c-directive` or `c-reserved`)
+
+/**
+ * `23` : c-flow-indicator:
+ * [->c-collect-entry |
+ *    ->c-sequence-start |
+ *    ->c-sequence-end |
+ *    ->c-mapping-start |
+ *    ->c-mapping-end]
+ */
+val `c-flow-indicator` = token("c-flow-indicator", `c-collect-entry` or `c-sequence-start` or `c-sequence-end` or `c-mapping-start` or `c-mapping-end`)
+
+/**
+ * `24` : b-line-feed:
+ * <[\n][LINE FEED (LF)][0xa]>
+ */
+val `b-line-feed` = token("b-line-feed", '\n')
+
+/**
+ * `25` : b-carriage-return:
+ * <[\r][CARRIAGE RETURN (CR)][0xd]>
+ */
+val `b-carriage-return` = token("b-carriage-return", '\r')
+
+/**
+ * `26` : b-char:
+ * [->b-line-feed |
+ *    ->b-carriage-return]
+ */
+val `b-char` = token("b-char", `b-line-feed` or `b-carriage-return`)
+
+/**
+ * `27` : nb-char:
+ * (->c-printable - ->b-char - ->c-byte-order-mark)
+ */
+val `nb-char` = token("nb-char", `c-printable` - `b-char` - `c-byte-order-mark`)
+
+/**
+ * `28` : b-break:
+ * [->b-carriage-return + ->b-line-feed |
+ *    ->b-carriage-return |
+ *    ->b-line-feed]
+ */
+val `b-break` = token("b-break", (`b-carriage-return` + `b-line-feed`) or `b-carriage-return` or `b-line-feed`)
+
+/**
+ * `29` : b-as-line-feed:
+ * ->b-break
+ */
+val `b-as-line-feed` = token("b-as-line-feed", `b-break`)
+
+/**
+ * `30` : b-non-content:
+ * ->b-break
+ */
+val `b-non-content` = token("b-non-content", `b-break`)
+
+/**
+ * `31` : s-space:
+ * <[ ][SPACE][0x20]>
+ */
+val `s-space` = token("s-space", ' ')
+
+/**
+ * `32` : s-tab:
+ * <[\t][CHARACTER TABULATION][0x9]>
+ */
+val `s-tab` = token("s-tab", '\t')
+
+/**
+ * `33` : s-white:
+ * [->s-space |
+ *    ->s-tab]
+ */
+val `s-white` = token("s-white", `s-space` or `s-tab`)
+
+/**
+ * `34` : ns-char:
+ * (->nb-char - ->s-white)
+ */
+val `ns-char` = token("ns-char", `nb-char` - `s-white`)
+
+/**
+ * `35` : ns-dec-digit:
+ * [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]
+ */
+val `ns-dec-digit` = token("ns-dec-digit", '0'..'9')
+
+/**
+ * `36` : ns-hex-digit:
+ * [->ns-dec-digit |
+ *    [<[A][LATIN CAPITAL LETTER A][0x41]>-<[F][LATIN CAPITAL LETTER F][0x46]>] |
+ *    [<[a][LATIN SMALL LETTER A][0x61]>-<[f][LATIN SMALL LETTER F][0x66]>]]
+ */
+val `ns-hex-digit` = token("ns-hex-digit", `ns-dec-digit` or 'A'..'F' or 'a'..'f')
+
+/**
+ * `37` : ns-ascii-letter:
+ * [[<[A][LATIN CAPITAL LETTER A][0x41]>-<[Z][LATIN CAPITAL LETTER Z][0x5a]>] |
+ *    [<[a][LATIN SMALL LETTER A][0x61]>-<[z][LATIN SMALL LETTER Z][0x7a]>]]
+ */
+val `ns-ascii-letter` = token("ns-ascii-letter", 'A'..'Z' or 'a'..'z')
+
+/**
+ * `38` : ns-word-char:
+ * [->ns-dec-digit |
+ *    ->ns-ascii-letter |
+ *    <[-][HYPHEN-MINUS][0x2d]>]
+ */
+val `ns-word-char` = token("ns-word-char", `ns-dec-digit` or `ns-ascii-letter` or '-')
+
+/**
+ * `39` : ns-uri-char:
+ * <[%][PERCENT SIGN][0x25]> + ->ns-hex-digit + [->ns-hex-digit |
+ *    ->ns-word-char |
+ *    <[#][NUMBER SIGN][0x23]> |
+ *    <[;][SEMICOLON][0x3b]> |
+ *    <[/][SOLIDUS][0x2f]> |
+ *    <[?][QUESTION MARK][0x3f]> |
+ *    <[:][COLON][0x3a]> |
+ *    <[@][COMMERCIAL AT][0x40]> |
+ *    <[&][AMPERSAND][0x26]> |
+ *    <[=][EQUALS SIGN][0x3d]> |
+ *    <[+][PLUS SIGN][0x2b]> |
+ *    <[$][DOLLAR SIGN][0x24]> |
+ *    <[,][COMMA][0x2c]> |
+ *    <[_][LOW LINE][0x5f]> |
+ *    <[.][FULL STOP][0x2e]> |
+ *    <[!][EXCLAMATION MARK][0x21]> |
+ *    <[~][TILDE][0x7e]> |
+ *    <[*][ASTERISK][0x2a]> |
+ *    <[\'][APOSTROPHE][0x27]> |
+ *    <[(][LEFT PARENTHESIS][0x28]> |
+ *    <[)][RIGHT PARENTHESIS][0x29]> |
+ *    <[[][LEFT SQUARE BRACKET][0x5b]> |
+ *    <[]][RIGHT SQUARE BRACKET][0x5d]>]
+ */
+val `ns-uri-char` = token("ns-uri-char", '%' + `ns-hex-digit` + `ns-hex-digit` or `ns-word-char` or '#' or ';' or '/' or '?' or ':' or '@' or '&' or '=' or '+' or '$' or ',' or '_' or '.' or '!' or '~' or '*' or '\'' or '(' or ')' or '[' or ']')
+
+/**
+ * `40` : ns-tag-char:
+ * (->ns-uri-char - ->c-tag - ->c-flow-indicator)
+ */
+val `ns-tag-char` = token("ns-tag-char", `ns-uri-char` - `c-tag` - `c-flow-indicator`)
+
+/**
+ * `41` : c-escape:
+ * <[\\][REVERSE SOLIDUS][0x5c]>
+ */
+val `c-escape` = token("c-escape", '\\')
+
+/**
+ * `42` : ns-esc-null:
+ * <[0][DIGIT ZERO][0x30]>
+ */
+val `ns-esc-null` = token("ns-esc-null", '0')
+
+/**
+ * `43` : ns-esc-bell:
+ * <[a][LATIN SMALL LETTER A][0x61]>
+ */
+val `ns-esc-bell` = token("ns-esc-bell", 'a')
+
+/**
+ * `44` : ns-esc-backspace:
+ * <[b][LATIN SMALL LETTER B][0x62]>
+ */
+val `ns-esc-backspace` = token("ns-esc-backspace", 'b')
+
+/**
+ * `45` : ns-esc-horizontal-tab:
+ * [<[t][LATIN SMALL LETTER T][0x74]> |
+ *    <[\t][CHARACTER TABULATION][0x9]>]
+ */
+val `ns-esc-horizontal-tab` = token("ns-esc-horizontal-tab", 't' or '\t')
+
+/**
+ * `46` : ns-esc-line-feed:
+ * <[n][LATIN SMALL LETTER N][0x6e]>
+ */
+val `ns-esc-line-feed` = token("ns-esc-line-feed", 'n')
+
+/**
+ * `47` : ns-esc-vertical-tab:
+ * <[v][LATIN SMALL LETTER V][0x76]>
+ */
+val `ns-esc-vertical-tab` = token("ns-esc-vertical-tab", 'v')
+
+/**
+ * `48` : ns-esc-form-feed:
+ * <[f][LATIN SMALL LETTER F][0x66]>
+ */
+val `ns-esc-form-feed` = token("ns-esc-form-feed", 'f')
+
+/**
+ * `49` : ns-esc-carriage-return:
+ * <[r][LATIN SMALL LETTER R][0x72]>
+ */
+val `ns-esc-carriage-return` = token("ns-esc-carriage-return", 'r')
+
+/**
+ * `50` : ns-esc-escape:
+ * <[e][LATIN SMALL LETTER E][0x65]>
+ */
+val `ns-esc-escape` = token("ns-esc-escape", 'e')
+
+/**
+ * `51` : ns-esc-space:
+ * <[ ][SPACE][0x20]>
+ */
+val `ns-esc-space` = token("ns-esc-space", ' ')
+
+/**
+ * `52` : ns-esc-double-quote:
+ * ->c-double-quote
+ */
+val `ns-esc-double-quote` = token("ns-esc-double-quote", `c-double-quote`)
+
+/**
+ * `53` : ns-esc-slash:
+ * <[/][SOLIDUS][0x2f]>
+ */
+val `ns-esc-slash` = token("ns-esc-slash", '/')
+
+/**
+ * `54` : ns-esc-backslash:
+ * ->c-escape
+ */
+val `ns-esc-backslash` = token("ns-esc-backslash", `c-escape`)
+
+/**
+ * `55` : ns-esc-next-line:
+ * <[N][LATIN CAPITAL LETTER N][0x4e]>
+ */
+val `ns-esc-next-line` = token("ns-esc-next-line", 'N')
+
+/**
+ * `56` : ns-esc-non-breaking-space:
+ * <[_][LOW LINE][0x5f]>
+ */
+val `ns-esc-non-breaking-space` = token("ns-esc-non-breaking-space", '_')
+
+/**
+ * `57` : ns-esc-line-separator:
+ * <[L][LATIN CAPITAL LETTER L][0x4c]>
+ */
+val `ns-esc-line-separator` = token("ns-esc-line-separator", 'L')
+
+/**
+ * `58` : ns-esc-paragraph-separator:
+ * <[P][LATIN CAPITAL LETTER P][0x50]>
+ */
+val `ns-esc-paragraph-separator` = token("ns-esc-paragraph-separator", 'P')
+
+/**
+ * `59` : ns-esc-8-bit:
+ * <[x][LATIN SMALL LETTER X][0x78]> + (->ns-hex-digit × 2)
+ */
+val `ns-esc-8-bit` = token("ns-esc-8-bit", 'x' + `ns-hex-digit` * 2)
+
+/**
+ * `60` : ns-esc-16-bit:
+ * <[u][LATIN SMALL LETTER U][0x75]> + (->ns-hex-digit × 4)
+ */
+val `ns-esc-16-bit` = token("ns-esc-16-bit", 'u' + `ns-hex-digit` * 4)
+
+/**
+ * `61` : ns-esc-32-bit:
+ * <[U][LATIN CAPITAL LETTER U][0x55]> + (->ns-hex-digit × 8)
+ */
+val `ns-esc-32-bit` = token("ns-esc-32-bit", 'U' + `ns-hex-digit` * 8)
+
+/**
+ * `62` : c-ns-esc-char:
+ * ->c-escape + [->ns-esc-null |
+ *    ->ns-esc-bell |
+ *    ->ns-esc-backspace |
+ *    ->ns-esc-horizontal-tab |
+ *    ->ns-esc-line-feed |
+ *    ->ns-esc-vertical-tab |
+ *    ->ns-esc-form-feed |
+ *    ->ns-esc-carriage-return |
+ *    ->ns-esc-escape |
+ *    ->ns-esc-space |
+ *    ->ns-esc-double-quote |
+ *    ->ns-esc-slash |
+ *    ->ns-esc-backslash |
+ *    ->ns-esc-next-line |
+ *    ->ns-esc-non-breaking-space |
+ *    ->ns-esc-line-separator |
+ *    ->ns-esc-paragraph-separator |
+ *    ->ns-esc-8-bit |
+ *    ->ns-esc-16-bit |
+ *    ->ns-esc-32-bit]
+ */
+val `c-ns-esc-char` = token("c-ns-esc-char", `c-escape` + `ns-esc-null` or `ns-esc-bell` or `ns-esc-backspace` or `ns-esc-horizontal-tab` or `ns-esc-line-feed` or `ns-esc-vertical-tab` or `ns-esc-form-feed` or `ns-esc-carriage-return` or `ns-esc-escape` or `ns-esc-space` or `ns-esc-double-quote` or `ns-esc-slash` or `ns-esc-backslash` or `ns-esc-next-line` or `ns-esc-non-breaking-space` or `ns-esc-line-separator` or `ns-esc-paragraph-separator` or `ns-esc-8-bit` or `ns-esc-16-bit` or `ns-esc-32-bit`)
+
+/**
+ * `66` : s-separate-in-line:
+ * [(->s-white × +) |
+ *    ->Start of line]
+ */
+val `s-separate-in-line` = token("s-separate-in-line", `s-white` * once_or_more or startOfLine)
+
+/**
+ * `72` : b-as-space:
+ * ->b-break
+ */
+val `b-as-space` = token("b-as-space", `b-break`)
+
+/**
+ * `75` : c-nb-comment-text:
+ * ->c-comment + (->nb-char × *)
+ */
+val `c-nb-comment-text` = token("c-nb-comment-text", `c-comment` + `nb-char` * zero_or_more)
+
+/**
+ * `76` : b-comment:
+ * [->b-non-content |
+ *    ->End of file]
+ */
+val `b-comment` = token("b-comment", `b-non-content` or EOF)
+
+/**
+ * `77` : s-b-comment:
+ * (->s-separate-in-line + (->c-nb-comment-text × ?) × ?) + ->b-comment
+ */
+val `s-b-comment` = token("s-b-comment", (`s-separate-in-line` + `c-nb-comment-text` * zero_or_once) * zero_or_once + `b-comment`)
+
+/**
+ * `78` : l-comment:
+ * ->s-separate-in-line + (->c-nb-comment-text × ?) + ->b-comment
+ */
+val `l-comment` = token("l-comment", `s-separate-in-line` + `c-nb-comment-text` * zero_or_once + `b-comment`)
+
+/**
+ * `79` : s-l-comments:
+ * [->s-b-comment |
+ *    ->Start of line] + (->l-comment × *)
+ */
+val `s-l-comments` = token("s-l-comments", `s-b-comment` or startOfLine + `l-comment` * zero_or_more)
+
+/**
+ * `82` : l-directive:
+ * ->c-directive + [->ns-yaml-directive |
+ *    ->ns-tag-directive |
+ *    ->ns-reserved-directive] + ->s-l-comments
+ */
+val `l-directive` = token("l-directive", undefined /* TODO forward reference */)
+
+/**
+ * `83` : ns-reserved-directive:
+ * ->ns-directive-name + (->s-separate-in-line + ->ns-directive-parameter × *)
+ */
+val `ns-reserved-directive` = token("ns-reserved-directive", undefined /* TODO forward reference */)
+
+/**
+ * `84` : ns-directive-name:
+ * (->ns-char × +)
+ */
+val `ns-directive-name` = token("ns-directive-name", `ns-char` * once_or_more)
+
+/**
+ * `85` : ns-directive-parameter:
+ * (->ns-char × +)
+ */
+val `ns-directive-parameter` = token("ns-directive-parameter", `ns-char` * once_or_more)
+
+/**
+ * `86` : ns-yaml-directive:
+ * <[Y][LATIN CAPITAL LETTER Y][0x59]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[M][LATIN CAPITAL LETTER M][0x4d]> + <[L][LATIN CAPITAL LETTER L][0x4c]> + ->s-separate-in-line + ->ns-yaml-version
+ */
+val `ns-yaml-directive` = token("ns-yaml-directive", undefined /* TODO forward reference */)
+
+/**
+ * `87` : ns-yaml-version:
+ * (->ns-dec-digit × +) + <[.][FULL STOP][0x2e]> + (->ns-dec-digit × +)
+ */
+val `ns-yaml-version` = token("ns-yaml-version", `ns-dec-digit` * once_or_more + '.' + `ns-dec-digit` * once_or_more)
+
+/**
+ * `88` : ns-tag-directive:
+ * <[T][LATIN CAPITAL LETTER T][0x54]> + <[A][LATIN CAPITAL LETTER A][0x41]> + <[G][LATIN CAPITAL LETTER G][0x47]> + ->s-separate-in-line + ->c-tag-handle + ->s-separate-in-line + ->ns-tag-prefix
+ */
+val `ns-tag-directive` = token("ns-tag-directive", undefined /* TODO forward reference */)
+
+/**
+ * `89` : c-tag-handle:
+ * [->c-named-tag-handle |
+ *    ->c-secondary-tag-handle |
+ *    ->c-primary-tag-handle]
+ */
+val `c-tag-handle` = token("c-tag-handle", undefined /* TODO forward reference */)
+
+/**
+ * `90` : c-primary-tag-handle:
+ * ->c-tag
+ */
+val `c-primary-tag-handle` = token("c-primary-tag-handle", `c-tag`)
+
+/**
+ * `91` : c-secondary-tag-handle:
+ * ->c-tag + ->c-tag
+ */
+val `c-secondary-tag-handle` = token("c-secondary-tag-handle", `c-tag` + `c-tag`)
+
+/**
+ * `92` : c-named-tag-handle:
+ * ->c-tag + (->ns-word-char × +) + ->c-tag
+ */
+val `c-named-tag-handle` = token("c-named-tag-handle", `c-tag` + `ns-word-char` * once_or_more + `c-tag`)
+
+/**
+ * `93` : ns-tag-prefix:
+ * [->c-ns-local-tag-prefix |
+ *    ->ns-global-tag-prefix]
+ */
+val `ns-tag-prefix` = token("ns-tag-prefix", undefined /* TODO forward reference */)
+
+/**
+ * `94` : c-ns-local-tag-prefix:
+ * ->c-tag + (->ns-uri-char × *)
+ */
+val `c-ns-local-tag-prefix` = token("c-ns-local-tag-prefix", `c-tag` + `ns-uri-char` * zero_or_more)
+
+/**
+ * `95` : ns-global-tag-prefix:
+ * ->ns-tag-char + (->ns-uri-char × *)
+ */
+val `ns-global-tag-prefix` = token("ns-global-tag-prefix", `ns-tag-char` + `ns-uri-char` * zero_or_more)
+
+/**
+ * `97` : c-ns-tag-property:
+ * [->c-verbatim-tag |
+ *    ->c-ns-shorthand-tag |
+ *    ->c-non-specific-tag]
+ */
+val `c-ns-tag-property` = token("c-ns-tag-property", undefined /* TODO forward reference */)
+
+/**
+ * `98` : c-verbatim-tag:
+ * ->c-tag + <[<][LESS-THAN SIGN][0x3c]> + (->ns-uri-char × +) + <[>][GREATER-THAN SIGN][0x3e]>
+ */
+val `c-verbatim-tag` = token("c-verbatim-tag", `c-tag` + '<' + `ns-uri-char` * once_or_more + '>')
+
+/**
+ * `99` : c-ns-shorthand-tag:
+ * ->c-tag-handle + (->ns-tag-char × +)
+ */
+val `c-ns-shorthand-tag` = token("c-ns-shorthand-tag", `c-tag-handle` + `ns-tag-char` * once_or_more)
+
+/**
+ * `100` : c-non-specific-tag:
+ * ->c-tag
+ */
+val `c-non-specific-tag` = token("c-non-specific-tag", `c-tag`)
+
+/**
+ * `101` : c-ns-anchor-property:
+ * ->c-anchor + ->ns-anchor-name
+ */
+val `c-ns-anchor-property` = token("c-ns-anchor-property", undefined /* TODO forward reference */)
+
+/**
+ * `102` : ns-anchor-char:
+ * (->ns-char - ->c-flow-indicator)
+ */
+val `ns-anchor-char` = token("ns-anchor-char", `ns-char` - `c-flow-indicator`)
+
+/**
+ * `103` : ns-anchor-name:
+ * (->ns-anchor-char × +)
+ */
+val `ns-anchor-name` = token("ns-anchor-name", `ns-anchor-char` * once_or_more)
+
+/**
+ * `104` : c-ns-alias-node:
+ * ->c-alias + ->ns-anchor-name
+ */
+val `c-ns-alias-node` = token("c-ns-alias-node", `c-alias` + `ns-anchor-name`)
+
+/**
+ * `105` : e-scalar:
+ * ->Empty
+ */
+val `e-scalar` = token("e-scalar", empty)
+
+/**
+ * `106` : e-node:
+ * ->e-scalar
+ */
+val `e-node` = token("e-node", `e-scalar`)
+
+/**
+ * `107` : nb-double-char:
+ * [->c-ns-esc-char |
+ *    (->nb-json - ->c-escape - ->c-double-quote)]
+ */
+val `nb-double-char` = token("nb-double-char", `c-ns-esc-char` or `nb-json` - `c-escape` - `c-double-quote`)
+
+/**
+ * `108` : ns-double-char:
+ * (->nb-double-char - ->s-white)
+ */
+val `ns-double-char` = token("ns-double-char", `nb-double-char` - `s-white`)
+
+/**
+ * `111` : nb-double-one-line:
+ * (->nb-double-char × *)
+ */
+val `nb-double-one-line` = token("nb-double-one-line", `nb-double-char` * zero_or_more)
+
+/**
+ * `114` : nb-ns-double-in-line:
+ * ((->s-white × *) + ->ns-double-char × *)
+ */
+val `nb-ns-double-in-line` = token("nb-ns-double-in-line", `s-white` * zero_or_more + `ns-double-char` * zero_or_more)
+
+/**
+ * `117` : c-quoted-quote:
+ * ->c-single-quote + ->c-single-quote
+ */
+val `c-quoted-quote` = token("c-quoted-quote", `c-single-quote` + `c-single-quote`)
+
+/**
+ * `118` : nb-single-char:
+ * [->c-quoted-quote |
+ *    (->nb-json - ->c-single-quote)]
+ */
+val `nb-single-char` = token("nb-single-char", `c-quoted-quote` or `nb-json` - `c-single-quote`)
+
+/**
+ * `119` : ns-single-char:
+ * (->nb-single-char - ->s-white)
+ */
+val `ns-single-char` = token("ns-single-char", `nb-single-char` - `s-white`)
+
+/**
+ * `122` : nb-single-one-line:
+ * (->nb-single-char × *)
+ */
+val `nb-single-one-line` = token("nb-single-one-line", `nb-single-char` * zero_or_more)
+
+/**
+ * `123` : nb-ns-single-in-line:
+ * ((->s-white × *) + ->ns-single-char × *)
+ */
+val `nb-ns-single-in-line` = token("nb-ns-single-in-line", `s-white` * zero_or_more + `ns-single-char` * zero_or_more)
+
+/**
+ * `128` : ns-plain-safe-out:
+ * ->ns-char
+ */
+val `ns-plain-safe-out` = token("ns-plain-safe-out", `ns-char`)
+
+/**
+ * `129` : ns-plain-safe-in:
+ * (->ns-char - ->c-flow-indicator)
+ */
+val `ns-plain-safe-in` = token("ns-plain-safe-in", `ns-char` - `c-flow-indicator`)
+
+/**
+ * `193` : ns-s-block-map-implicit-key:
+ * [->c-s-implicit-json-key(c) |
+ *    ->ns-s-implicit-yaml-key(c)]
+ */
+val `ns-s-block-map-implicit-key` = token("ns-s-block-map-implicit-key", undefined /* TODO global variable */)
+
+/**
+ * `202` : l-document-prefix:
+ * (->c-byte-order-mark × ?) + (->l-comment × *)
+ */
+val `l-document-prefix` = token("l-document-prefix", `c-byte-order-mark` * zero_or_once + `l-comment` * zero_or_more)
+
+/**
+ * `203` : c-directives-end:
+ * <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]>
+ */
+val `c-directives-end` = token("c-directives-end", '-' + '-' + '-')
+
+/**
+ * `204` : c-document-end:
+ * <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]>
+ */
+val `c-document-end` = token("c-document-end", '.' + '.' + '.')
+
+/**
+ * `205` : l-document-suffix:
+ * ->c-document-end + ->s-l-comments
+ */
+val `l-document-suffix` = token("l-document-suffix", `c-document-end` + `s-l-comments`)
+
+/**
+ * `206` : c-forbidden:
+ * ->Start of line + [->c-directives-end |
+ *    ->c-document-end] + [->b-char |
+ *    ->s-white |
+ *    ->End of file]
+ */
+val `c-forbidden` = token("c-forbidden", startOfLine + `c-directives-end` or `c-document-end` + `b-char` or `s-white` or EOF)
+
+/**
+ * `207` : l-bare-document:
+ * ->s-l+block-node(n,c) + ->Excluding c-forbidden content
+ */
+val `l-bare-document` = token("l-bare-document", undefined /* TODO global variable */)
+
+/**
+ * `208` : l-explicit-document:
+ * ->c-directives-end + [->l-bare-document |
+ *    ->e-node + ->s-l-comments]
+ */
+val `l-explicit-document` = token("l-explicit-document", `c-directives-end` + `l-bare-document` or (`e-node` + `s-l-comments`))
+
+/**
+ * `209` : l-directive-document:
+ * (->l-directive × +) + ->l-explicit-document
+ */
+val `l-directive-document` = token("l-directive-document", `l-directive` * once_or_more + `l-explicit-document`)
+
+/**
+ * `210` : l-any-document:
+ * [->l-directive-document |
+ *    ->l-explicit-document |
+ *    ->l-bare-document]
+ */
+val `l-any-document` = token("l-any-document", `l-directive-document` or `l-explicit-document` or `l-bare-document`)
+
+/**
+ * `211` : l-yaml-stream:
+ * (->l-document-prefix × *) + (->l-any-document × ?) + ((->l-document-suffix × +) + (->l-document-prefix × *) + [(->l-any-document × ?) |
+ *    (->l-document-prefix × *) + (->l-explicit-document × ?)] × *)
+ */
+val `l-yaml-stream` = token("l-yaml-stream", `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once + (`l-document-suffix` * once_or_more + `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once or (`l-document-prefix` * zero_or_more + `l-explicit-document` * zero_or_once)) * zero_or_more)
 
 /**
  * `63` : s-indent(n):
@@ -1605,3 +1543,19 @@ fun `s-l+block-collection`(n: Int, c: InOutMode) = (`s-separate`(n, c) + `c-ns-p
  * <c> = ->block-in ⇒ ->n
  */
 fun `seq-spaces`(n: Int, c: InOutMode)= undefined /* TODO other */
+
+private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
+private infix fun Char.or(that: Token) = symbol(this) or that
+private infix fun CharRange.or(that: CharRange): Token = symbol(CodePoint.of(this.first)..CodePoint.of(this.last)) or symbol(CodePoint.of(that.first)..CodePoint.of(that.last))
+private infix fun Token.or(that: String): Token = or(symbol(that))
+private infix fun Token.or(that: Char): Token = or(symbol(that))
+private infix operator fun Char.rangeTo(that: Char) = symbol(CodePoint.of(this)..CodePoint.of(that))
+private infix operator fun Char.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
+private infix operator fun String.rangeTo(that: String) = symbol(CodePoint.of(this)..CodePoint.of(that))
+private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
+private infix operator fun Char.plus(token: Token) = symbol(this) + token
+private infix operator fun Token.plus(that: Char) = this + symbol(that)
+private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
+private val followedByAnNsPlainSafe = undefined
+private val anNsCharPreceding = undefined
+private val atMost1024CharactersAltogether = undefined

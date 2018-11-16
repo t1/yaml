@@ -3,13 +3,6 @@ package com.github.t1.yaml.parser
 import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Directive
 import com.github.t1.yaml.model.Document
-import com.github.t1.yaml.parser.YamlTokens.`b-break`
-import com.github.t1.yaml.parser.YamlTokens.`c-byte-order-mark`
-import com.github.t1.yaml.parser.YamlTokens.`c-comment`
-import com.github.t1.yaml.parser.YamlTokens.`c-directive`
-import com.github.t1.yaml.parser.YamlTokens.`c-directives-end`
-import com.github.t1.yaml.parser.YamlTokens.`c-document-end`
-import com.github.t1.yaml.parser.YamlTokens.`s-space`
 import java.io.Reader
 
 class DocumentParser(reader: Reader) {

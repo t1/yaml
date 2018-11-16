@@ -114,6 +114,8 @@ data class Match(
         } else Match(false)
 }
 
+fun token(name: String, char: Char) = symbol(char) named name
+fun token(name: String, charRange: CharRange) = symbol(charRange.toCodePointRange()) named name
 fun token(string: String) = token(CodePoint.allOf(string))
 fun token(codePoints: List<CodePoint>) =
     when (codePoints.size) {
