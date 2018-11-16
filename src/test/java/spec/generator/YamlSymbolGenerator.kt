@@ -112,29 +112,23 @@ class YamlSymbolGenerator(private val spec: Spec) {
         fun write() {
             write(HEADER)
 
-            for (production in productions.filter { production -> production.args.isEmpty() }) {
+            for (production in productions) {
                 try {
-                    ProductionWriter(production).writeToken()
+                    ProductionWriter(production).write()
                 } catch (e: Exception) {
-                    throw RuntimeException("can't write enum entry for ${production.counter}: ${production.key}", e)
-                }
-            }
-
-            for (production in productions.filter { production -> !production.args.isEmpty() }) {
-                try {
-                    ProductionWriter(production).writeTokenFactory()
-                } catch (e: Exception) {
-                    throw RuntimeException("can't write factory method for ${production.counter}: ${production.key}", e)
+                    throw RuntimeException("can't write production for ${production.counter}: ${production.key}", e)
                 }
             }
 
             write(FOOTER)
         }
 
-        private inner class ProductionWriter(val production: Production) {
+        private inner class ProductionWriter(private val production: Production) {
             private val visitor = ProductionVisitor()
 
-            fun writeToken() {
+            fun write() = if (production.args.isEmpty()) writeToken() else writeTokenFactory()
+
+            private fun writeToken() {
                 write(comment())
                 write("val `${production.name}` = token(\"${production.name}\", ")
                 when (production.counter) {
@@ -145,7 +139,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 write(")\n")
             }
 
-            fun writeTokenFactory() {
+            private fun writeTokenFactory() {
                 write(comment())
                 write("fun `${funName()}`(")
                 writeArgs()

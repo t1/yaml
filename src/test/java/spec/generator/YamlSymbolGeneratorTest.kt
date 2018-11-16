@@ -125,6 +125,19 @@ class YamlSymbolGeneratorTest {
         assertThat(written).isEqualTo(source(
             "\n" +
                 "/**\n" +
+                " * `0` : foo(c):\n" +
+                " * <c> = ->x ⇒ <[1][DIGIT ONE][0x31]>\n" +
+                " * <c> = ->y ⇒ <[2][DIGIT TWO][0x32]>\n" +
+                " * <c> = ->z ⇒ <[3][DIGIT THREE][0x33]>\n" +
+                " */\n" +
+                "fun `foo`(c: InOutMode) = when (c) {\n" +
+                "    `x` -> '1' named \"foo(\$c)\"\n" +
+                "    `y` -> '2' named \"foo(\$c)\"\n" +
+                "    `z` -> '3' named \"foo(\$c)\"\n" +
+                "    else -> error(\"unexpected `c` value `\$c`\")\n" +
+                "}\n" +
+                "\n" +
+                "/**\n" +
                 " * `1` : x:\n" +
                 " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
                 " */\n" +
@@ -140,20 +153,7 @@ class YamlSymbolGeneratorTest {
                 " * `3` : z:\n" +
                 " * <[z][LATIN SMALL LETTER Z][0x7a]>\n" +
                 " */\n" +
-                "val `z` = token(\"z\", 'z')\n" +
-                "\n" +
-                "/**\n" +
-                " * `0` : foo(c):\n" +
-                " * <c> = ->x ⇒ <[1][DIGIT ONE][0x31]>\n" +
-                " * <c> = ->y ⇒ <[2][DIGIT TWO][0x32]>\n" +
-                " * <c> = ->z ⇒ <[3][DIGIT THREE][0x33]>\n" +
-                " */\n" +
-                "fun `foo`(c: InOutMode) = when (c) {\n" +
-                "    `x` -> '1' named \"foo(\$c)\"\n" +
-                "    `y` -> '2' named \"foo(\$c)\"\n" +
-                "    `z` -> '3' named \"foo(\$c)\"\n" +
-                "    else -> error(\"unexpected `c` value `\$c`\")\n" +
-                "}\n"))
+                "val `z` = token(\"z\", 'z')\n"))
     }
 
     @Test fun shouldGenerateSwitchProductionToRefWithArgs() {
@@ -167,10 +167,23 @@ class YamlSymbolGeneratorTest {
             eq(variable("d"), ref(z)) to ref(bar)
         ))
 
-        val written = generate(foo, bar, x, y, z)
+        val written = generate(foo, x, y, z, bar)
 
         assertThat(written).isEqualTo(source(
             "\n" +
+                "/**\n" +
+                " * `0` : foo(n,c):\n" +
+                " * <d> = ->x ⇒ ->bar(n)\n" +
+                " * <d> = ->y ⇒ ->bar(n)\n" +
+                " * <d> = ->z ⇒ ->bar(n)\n" +
+                " */\n" +
+                "fun `foo`(n: Int, c: InOutMode) = when (d) {\n" +
+                "    `x` -> `bar`(n) named \"foo(\$d)\"\n" +
+                "    `y` -> `bar`(n) named \"foo(\$d)\"\n" +
+                "    `z` -> `bar`(n) named \"foo(\$d)\"\n" +
+                "    else -> error(\"unexpected `d` value `\$d`\")\n" +
+                "}\n" +
+                "\n" +
                 "/**\n" +
                 " * `1` : x:\n" +
                 " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
@@ -188,19 +201,6 @@ class YamlSymbolGeneratorTest {
                 " * <[z][LATIN SMALL LETTER Z][0x7a]>\n" +
                 " */\n" +
                 "val `z` = token(\"z\", 'z')\n" +
-                "\n" +
-                "/**\n" +
-                " * `0` : foo(n,c):\n" +
-                " * <d> = ->x ⇒ ->bar(n)\n" +
-                " * <d> = ->y ⇒ ->bar(n)\n" +
-                " * <d> = ->z ⇒ ->bar(n)\n" +
-                " */\n" +
-                "fun `foo`(n: Int, c: InOutMode) = when (d) {\n" +
-                "    `x` -> `bar`(n) named \"foo(\$d)\"\n" +
-                "    `y` -> `bar`(n) named \"foo(\$d)\"\n" +
-                "    `z` -> `bar`(n) named \"foo(\$d)\"\n" +
-                "    else -> error(\"unexpected `d` value `\$d`\")\n" +
-                "}\n" +
                 "\n" +
                 "/**\n" +
                 " * `4` : bar(n):\n" +

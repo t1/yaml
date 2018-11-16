@@ -494,6 +494,37 @@ val `ns-esc-32-bit` = token("ns-esc-32-bit", 'U' + `ns-hex-digit` * 8)
 val `c-ns-esc-char` = token("c-ns-esc-char", `c-escape` + `ns-esc-null` or `ns-esc-bell` or `ns-esc-backspace` or `ns-esc-horizontal-tab` or `ns-esc-line-feed` or `ns-esc-vertical-tab` or `ns-esc-form-feed` or `ns-esc-carriage-return` or `ns-esc-escape` or `ns-esc-space` or `ns-esc-double-quote` or `ns-esc-slash` or `ns-esc-backslash` or `ns-esc-next-line` or `ns-esc-non-breaking-space` or `ns-esc-line-separator` or `ns-esc-paragraph-separator` or `ns-esc-8-bit` or `ns-esc-16-bit` or `ns-esc-32-bit`)
 
 /**
+ * `63` : s-indent(n):
+ * (->s-space × n)
+ */
+fun `s-indent`(n: Int): Token {
+    val token = `s-space` * n
+    return token("s-indent($n)") { token.match(it) }
+}
+
+/**
+ * `64` : s-indent(<n):
+ * (->s-space × m /* Where m < n */)
+ */
+fun `s-indent≪`(n: Int) = token("s-indent(<$n)") { reader ->
+    val match = reader.mark { reader.readWhile { reader -> `s-space`.match(reader).codePoints } }
+    if (match.size >= n) return@token Match(matches = false)
+    reader.expect(match)
+    return@token Match(matches = true, codePoints = match)
+}
+
+/**
+ * `65` : s-indent(≤n):
+ * (->s-space × m /* Where m ≤ n */)
+ */
+fun `s-indent≤`(n: Int) = token("s-indent(≤$n)") { reader ->
+    val match = reader.mark { reader.readWhile { reader -> `s-space`.match(reader).codePoints } }
+    if (match.size > n) return@token Match(matches = false)
+    reader.expect(match)
+    return@token Match(matches = true, codePoints = match)
+}
+
+/**
  * `66` : s-separate-in-line:
  * [(->s-white × +) |
  *    ->Start of line]
@@ -501,10 +532,63 @@ val `c-ns-esc-char` = token("c-ns-esc-char", `c-escape` + `ns-esc-null` or `ns-e
 val `s-separate-in-line` = token("s-separate-in-line", `s-white` * once_or_more or startOfLine)
 
 /**
+ * `67` : s-line-prefix(n,c):
+ * <c> = ->block-out ⇒ ->s-block-line-prefix(n)
+ * <c> = ->block-in ⇒ ->s-block-line-prefix(n)
+ * <c> = ->flow-out ⇒ ->s-flow-line-prefix(n)
+ * <c> = ->flow-in ⇒ ->s-flow-line-prefix(n)
+ */
+fun `s-line-prefix`(n: Int, c: InOutMode) = when (c) {
+    `block-out` -> `s-block-line-prefix`(n) named "s-line-prefix($c)"
+    `block-in` -> `s-block-line-prefix`(n) named "s-line-prefix($c)"
+    `flow-out` -> `s-flow-line-prefix`(n) named "s-line-prefix($c)"
+    `flow-in` -> `s-flow-line-prefix`(n) named "s-line-prefix($c)"
+    else -> error("unexpected `c` value `$c`")
+}
+
+/**
+ * `68` : s-block-line-prefix(n):
+ * ->s-indent(n)
+ */
+fun `s-block-line-prefix`(n: Int) = `s-indent`(n)
+
+/**
+ * `69` : s-flow-line-prefix(n):
+ * ->s-indent(n) + (->s-separate-in-line × ?)
+ */
+fun `s-flow-line-prefix`(n: Int) = `s-indent`(n) + `s-separate-in-line` * zero_or_once
+
+/**
+ * `70` : l-empty(n,c):
+ * [->s-line-prefix(n,c) |
+ *    ->s-indent(n)] + ->b-as-line-feed
+ */
+fun `l-empty`(n: Int, c: InOutMode) = `s-line-prefix`(n, c) or `s-indent`(n) + `b-as-line-feed`
+
+/**
+ * `71` : b-l-trimmed(n,c):
+ * ->b-non-content + (->l-empty(n,c) × +)
+ */
+fun `b-l-trimmed`(n: Int, c: InOutMode) = `b-non-content` + `l-empty`(n, c) * once_or_more
+
+/**
  * `72` : b-as-space:
  * ->b-break
  */
 val `b-as-space` = token("b-as-space", `b-break`)
+
+/**
+ * `73` : b-l-folded(n,c):
+ * [->b-l-trimmed(n,c) |
+ *    ->b-as-space]
+ */
+fun `b-l-folded`(n: Int, c: InOutMode) = `b-l-trimmed`(n, c) or `b-as-space`
+
+/**
+ * `74` : s-flow-folded(n):
+ * (->s-separate-in-line × ?) + ->b-l-folded(n,c) + ->s-flow-line-prefix(n)
+ */
+fun `s-flow-folded`(n: Int)= undefined /* TODO global variable */
 
 /**
  * `75` : c-nb-comment-text:
@@ -537,6 +621,32 @@ val `l-comment` = token("l-comment", `s-separate-in-line` + `c-nb-comment-text` 
  *    ->Start of line] + (->l-comment × *)
  */
 val `s-l-comments` = token("s-l-comments", `s-b-comment` or startOfLine + `l-comment` * zero_or_more)
+
+/**
+ * `80` : s-separate(n,c):
+ * <c> = ->block-out ⇒ ->s-separate-lines(n)
+ * <c> = ->block-in ⇒ ->s-separate-lines(n)
+ * <c> = ->flow-out ⇒ ->s-separate-lines(n)
+ * <c> = ->flow-in ⇒ ->s-separate-lines(n)
+ * <c> = ->block-key ⇒ ->s-separate-in-line
+ * <c> = ->flow-key ⇒ ->s-separate-in-line
+ */
+fun `s-separate`(n: Int, c: InOutMode) = when (c) {
+    `block-out` -> `s-separate-lines`(n) named "s-separate($c)"
+    `block-in` -> `s-separate-lines`(n) named "s-separate($c)"
+    `flow-out` -> `s-separate-lines`(n) named "s-separate($c)"
+    `flow-in` -> `s-separate-lines`(n) named "s-separate($c)"
+    `block-key` -> `s-separate-in-line` named "s-separate($c)"
+    `flow-key` -> `s-separate-in-line` named "s-separate($c)"
+    else -> error("unexpected `c` value `$c`")
+}
+
+/**
+ * `81` : s-separate-lines(n):
+ * [->s-l-comments + ->s-flow-line-prefix(n) |
+ *    ->s-separate-in-line]
+ */
+fun `s-separate-lines`(n: Int) = (`s-l-comments` + `s-flow-line-prefix`(n)) or `s-separate-in-line`
 
 /**
  * `82` : l-directive:
@@ -628,6 +738,13 @@ val `c-ns-local-tag-prefix` = token("c-ns-local-tag-prefix", `c-tag` + `ns-uri-c
 val `ns-global-tag-prefix` = token("ns-global-tag-prefix", `ns-tag-char` + `ns-uri-char` * zero_or_more)
 
 /**
+ * `96` : c-ns-properties(n,c):
+ * [->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) |
+ *    ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)]
+ */
+fun `c-ns-properties`(n: Int, c: InOutMode) = (`c-ns-tag-property` + (`s-separate`(n, c) + `c-ns-anchor-property`) * zero_or_once) or (`c-ns-anchor-property` + (`s-separate`(n, c) + `c-ns-tag-property`) * zero_or_once)
+
+/**
  * `97` : c-ns-tag-property:
  * [->c-verbatim-tag |
  *    ->c-ns-shorthand-tag |
@@ -703,252 +820,6 @@ val `nb-double-char` = token("nb-double-char", `c-ns-esc-char` or `nb-json` - `c
 val `ns-double-char` = token("ns-double-char", `nb-double-char` - `s-white`)
 
 /**
- * `111` : nb-double-one-line:
- * (->nb-double-char × *)
- */
-val `nb-double-one-line` = token("nb-double-one-line", `nb-double-char` * zero_or_more)
-
-/**
- * `114` : nb-ns-double-in-line:
- * ((->s-white × *) + ->ns-double-char × *)
- */
-val `nb-ns-double-in-line` = token("nb-ns-double-in-line", `s-white` * zero_or_more + `ns-double-char` * zero_or_more)
-
-/**
- * `117` : c-quoted-quote:
- * ->c-single-quote + ->c-single-quote
- */
-val `c-quoted-quote` = token("c-quoted-quote", `c-single-quote` + `c-single-quote`)
-
-/**
- * `118` : nb-single-char:
- * [->c-quoted-quote |
- *    (->nb-json - ->c-single-quote)]
- */
-val `nb-single-char` = token("nb-single-char", `c-quoted-quote` or `nb-json` - `c-single-quote`)
-
-/**
- * `119` : ns-single-char:
- * (->nb-single-char - ->s-white)
- */
-val `ns-single-char` = token("ns-single-char", `nb-single-char` - `s-white`)
-
-/**
- * `122` : nb-single-one-line:
- * (->nb-single-char × *)
- */
-val `nb-single-one-line` = token("nb-single-one-line", `nb-single-char` * zero_or_more)
-
-/**
- * `123` : nb-ns-single-in-line:
- * ((->s-white × *) + ->ns-single-char × *)
- */
-val `nb-ns-single-in-line` = token("nb-ns-single-in-line", `s-white` * zero_or_more + `ns-single-char` * zero_or_more)
-
-/**
- * `128` : ns-plain-safe-out:
- * ->ns-char
- */
-val `ns-plain-safe-out` = token("ns-plain-safe-out", `ns-char`)
-
-/**
- * `129` : ns-plain-safe-in:
- * (->ns-char - ->c-flow-indicator)
- */
-val `ns-plain-safe-in` = token("ns-plain-safe-in", `ns-char` - `c-flow-indicator`)
-
-/**
- * `193` : ns-s-block-map-implicit-key:
- * [->c-s-implicit-json-key(c) |
- *    ->ns-s-implicit-yaml-key(c)]
- */
-val `ns-s-block-map-implicit-key` = token("ns-s-block-map-implicit-key", undefined /* TODO global variable */)
-
-/**
- * `202` : l-document-prefix:
- * (->c-byte-order-mark × ?) + (->l-comment × *)
- */
-val `l-document-prefix` = token("l-document-prefix", `c-byte-order-mark` * zero_or_once + `l-comment` * zero_or_more)
-
-/**
- * `203` : c-directives-end:
- * <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]>
- */
-val `c-directives-end` = token("c-directives-end", '-' + '-' + '-')
-
-/**
- * `204` : c-document-end:
- * <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]>
- */
-val `c-document-end` = token("c-document-end", '.' + '.' + '.')
-
-/**
- * `205` : l-document-suffix:
- * ->c-document-end + ->s-l-comments
- */
-val `l-document-suffix` = token("l-document-suffix", `c-document-end` + `s-l-comments`)
-
-/**
- * `206` : c-forbidden:
- * ->Start of line + [->c-directives-end |
- *    ->c-document-end] + [->b-char |
- *    ->s-white |
- *    ->End of file]
- */
-val `c-forbidden` = token("c-forbidden", startOfLine + `c-directives-end` or `c-document-end` + `b-char` or `s-white` or EOF)
-
-/**
- * `207` : l-bare-document:
- * ->s-l+block-node(n,c) + ->Excluding c-forbidden content
- */
-val `l-bare-document` = token("l-bare-document", undefined /* TODO global variable */)
-
-/**
- * `208` : l-explicit-document:
- * ->c-directives-end + [->l-bare-document |
- *    ->e-node + ->s-l-comments]
- */
-val `l-explicit-document` = token("l-explicit-document", `c-directives-end` + `l-bare-document` or (`e-node` + `s-l-comments`))
-
-/**
- * `209` : l-directive-document:
- * (->l-directive × +) + ->l-explicit-document
- */
-val `l-directive-document` = token("l-directive-document", `l-directive` * once_or_more + `l-explicit-document`)
-
-/**
- * `210` : l-any-document:
- * [->l-directive-document |
- *    ->l-explicit-document |
- *    ->l-bare-document]
- */
-val `l-any-document` = token("l-any-document", `l-directive-document` or `l-explicit-document` or `l-bare-document`)
-
-/**
- * `211` : l-yaml-stream:
- * (->l-document-prefix × *) + (->l-any-document × ?) + ((->l-document-suffix × +) + (->l-document-prefix × *) + [(->l-any-document × ?) |
- *    (->l-document-prefix × *) + (->l-explicit-document × ?)] × *)
- */
-val `l-yaml-stream` = token("l-yaml-stream", `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once + (`l-document-suffix` * once_or_more + `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once or (`l-document-prefix` * zero_or_more + `l-explicit-document` * zero_or_once)) * zero_or_more)
-
-/**
- * `63` : s-indent(n):
- * (->s-space × n)
- */
-fun `s-indent`(n: Int): Token {
-    val token = `s-space` * n
-    return token("s-indent($n)") { token.match(it) }
-}
-
-/**
- * `64` : s-indent(<n):
- * (->s-space × m /* Where m < n */)
- */
-fun `s-indent≪`(n: Int) = token("s-indent(<$n)") { reader ->
-    val match = reader.mark { reader.readWhile { reader -> `s-space`.match(reader).codePoints } }
-    if (match.size >= n) return@token Match(matches = false)
-    reader.expect(match)
-    return@token Match(matches = true, codePoints = match)
-}
-
-/**
- * `65` : s-indent(≤n):
- * (->s-space × m /* Where m ≤ n */)
- */
-fun `s-indent≤`(n: Int) = token("s-indent(≤$n)") { reader ->
-    val match = reader.mark { reader.readWhile { reader -> `s-space`.match(reader).codePoints } }
-    if (match.size > n) return@token Match(matches = false)
-    reader.expect(match)
-    return@token Match(matches = true, codePoints = match)
-}
-
-/**
- * `67` : s-line-prefix(n,c):
- * <c> = ->block-out ⇒ ->s-block-line-prefix(n)
- * <c> = ->block-in ⇒ ->s-block-line-prefix(n)
- * <c> = ->flow-out ⇒ ->s-flow-line-prefix(n)
- * <c> = ->flow-in ⇒ ->s-flow-line-prefix(n)
- */
-fun `s-line-prefix`(n: Int, c: InOutMode) = when (c) {
-    `block-out` -> `s-block-line-prefix`(n) named "s-line-prefix($c)"
-    `block-in` -> `s-block-line-prefix`(n) named "s-line-prefix($c)"
-    `flow-out` -> `s-flow-line-prefix`(n) named "s-line-prefix($c)"
-    `flow-in` -> `s-flow-line-prefix`(n) named "s-line-prefix($c)"
-    else -> error("unexpected `c` value `$c`")
-}
-
-/**
- * `68` : s-block-line-prefix(n):
- * ->s-indent(n)
- */
-fun `s-block-line-prefix`(n: Int) = `s-indent`(n)
-
-/**
- * `69` : s-flow-line-prefix(n):
- * ->s-indent(n) + (->s-separate-in-line × ?)
- */
-fun `s-flow-line-prefix`(n: Int) = `s-indent`(n) + `s-separate-in-line` * zero_or_once
-
-/**
- * `70` : l-empty(n,c):
- * [->s-line-prefix(n,c) |
- *    ->s-indent(n)] + ->b-as-line-feed
- */
-fun `l-empty`(n: Int, c: InOutMode) = `s-line-prefix`(n, c) or `s-indent`(n) + `b-as-line-feed`
-
-/**
- * `71` : b-l-trimmed(n,c):
- * ->b-non-content + (->l-empty(n,c) × +)
- */
-fun `b-l-trimmed`(n: Int, c: InOutMode) = `b-non-content` + `l-empty`(n, c) * once_or_more
-
-/**
- * `73` : b-l-folded(n,c):
- * [->b-l-trimmed(n,c) |
- *    ->b-as-space]
- */
-fun `b-l-folded`(n: Int, c: InOutMode) = `b-l-trimmed`(n, c) or `b-as-space`
-
-/**
- * `74` : s-flow-folded(n):
- * (->s-separate-in-line × ?) + ->b-l-folded(n,c) + ->s-flow-line-prefix(n)
- */
-fun `s-flow-folded`(n: Int)= undefined /* TODO global variable */
-
-/**
- * `80` : s-separate(n,c):
- * <c> = ->block-out ⇒ ->s-separate-lines(n)
- * <c> = ->block-in ⇒ ->s-separate-lines(n)
- * <c> = ->flow-out ⇒ ->s-separate-lines(n)
- * <c> = ->flow-in ⇒ ->s-separate-lines(n)
- * <c> = ->block-key ⇒ ->s-separate-in-line
- * <c> = ->flow-key ⇒ ->s-separate-in-line
- */
-fun `s-separate`(n: Int, c: InOutMode) = when (c) {
-    `block-out` -> `s-separate-lines`(n) named "s-separate($c)"
-    `block-in` -> `s-separate-lines`(n) named "s-separate($c)"
-    `flow-out` -> `s-separate-lines`(n) named "s-separate($c)"
-    `flow-in` -> `s-separate-lines`(n) named "s-separate($c)"
-    `block-key` -> `s-separate-in-line` named "s-separate($c)"
-    `flow-key` -> `s-separate-in-line` named "s-separate($c)"
-    else -> error("unexpected `c` value `$c`")
-}
-
-/**
- * `81` : s-separate-lines(n):
- * [->s-l-comments + ->s-flow-line-prefix(n) |
- *    ->s-separate-in-line]
- */
-fun `s-separate-lines`(n: Int) = (`s-l-comments` + `s-flow-line-prefix`(n)) or `s-separate-in-line`
-
-/**
- * `96` : c-ns-properties(n,c):
- * [->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) |
- *    ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)]
- */
-fun `c-ns-properties`(n: Int, c: InOutMode) = (`c-ns-tag-property` + (`s-separate`(n, c) + `c-ns-anchor-property`) * zero_or_once) or (`c-ns-anchor-property` + (`s-separate`(n, c) + `c-ns-tag-property`) * zero_or_once)
-
-/**
  * `109` : c-double-quoted(n,c):
  * ->c-double-quote + ->nb-double-text(n,c) + ->c-double-quote
  */
@@ -970,6 +841,12 @@ fun `nb-double-text`(n: Int, c: InOutMode) = when (c) {
 }
 
 /**
+ * `111` : nb-double-one-line:
+ * (->nb-double-char × *)
+ */
+val `nb-double-one-line` = token("nb-double-one-line", `nb-double-char` * zero_or_more)
+
+/**
  * `112` : s-double-escaped(n):
  * (->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c) × *) + ->s-flow-line-prefix(n)
  */
@@ -981,6 +858,12 @@ fun `s-double-escaped`(n: Int)= undefined /* TODO global variable */
  *    ->s-flow-folded(n)]
  */
 fun `s-double-break`(n: Int) = `s-double-escaped`(n) or `s-flow-folded`(n)
+
+/**
+ * `114` : nb-ns-double-in-line:
+ * ((->s-white × *) + ->ns-double-char × *)
+ */
+val `nb-ns-double-in-line` = token("nb-ns-double-in-line", `s-white` * zero_or_more + `ns-double-char` * zero_or_more)
 
 /**
  * `115` : s-double-next-line(n):
@@ -995,6 +878,25 @@ fun `s-double-next-line`(n: Int)= undefined /* TODO recursion */
  *    (->s-white × *)]
  */
 fun `nb-double-multi-line`(n: Int) = `nb-ns-double-in-line` + `s-double-next-line`(n) or `s-white` * zero_or_more
+
+/**
+ * `117` : c-quoted-quote:
+ * ->c-single-quote + ->c-single-quote
+ */
+val `c-quoted-quote` = token("c-quoted-quote", `c-single-quote` + `c-single-quote`)
+
+/**
+ * `118` : nb-single-char:
+ * [->c-quoted-quote |
+ *    (->nb-json - ->c-single-quote)]
+ */
+val `nb-single-char` = token("nb-single-char", `c-quoted-quote` or `nb-json` - `c-single-quote`)
+
+/**
+ * `119` : ns-single-char:
+ * (->nb-single-char - ->s-white)
+ */
+val `ns-single-char` = token("ns-single-char", `nb-single-char` - `s-white`)
 
 /**
  * `120` : c-single-quoted(n,c):
@@ -1016,6 +918,18 @@ fun `nb-single-text`(n: Int, c: InOutMode) = when (c) {
     `flow-key` -> `nb-single-one-line` named "nb-single-text($c)"
     else -> error("unexpected `c` value `$c`")
 }
+
+/**
+ * `122` : nb-single-one-line:
+ * (->nb-single-char × *)
+ */
+val `nb-single-one-line` = token("nb-single-one-line", `nb-single-char` * zero_or_more)
+
+/**
+ * `123` : nb-ns-single-in-line:
+ * ((->s-white × *) + ->ns-single-char × *)
+ */
+val `nb-ns-single-in-line` = token("nb-ns-single-in-line", `s-white` * zero_or_more + `ns-single-char` * zero_or_more)
 
 /**
  * `124` : s-single-next-line(n):
@@ -1054,6 +968,18 @@ fun `ns-plain-safe`(c: InOutMode) = when (c) {
     `flow-key` -> `ns-plain-safe-in` named "ns-plain-safe($c)"
     else -> error("unexpected `c` value `$c`")
 }
+
+/**
+ * `128` : ns-plain-safe-out:
+ * ->ns-char
+ */
+val `ns-plain-safe-out` = token("ns-plain-safe-out", `ns-char`)
+
+/**
+ * `129` : ns-plain-safe-in:
+ * (->ns-char - ->c-flow-indicator)
+ */
+val `ns-plain-safe-in` = token("ns-plain-safe-in", `ns-char` - `c-flow-indicator`)
 
 /**
  * `130` : ns-plain-char(c):
@@ -1491,6 +1417,13 @@ fun `l-block-map-explicit-value`(n: Int)= undefined /* TODO global variable */
 fun `ns-l-block-map-implicit-entry`(n: Int) = `ns-s-block-map-implicit-key` or `e-node` + `c-l-block-map-implicit-value`(n)
 
 /**
+ * `193` : ns-s-block-map-implicit-key:
+ * [->c-s-implicit-json-key(c) |
+ *    ->ns-s-implicit-yaml-key(c)]
+ */
+val `ns-s-block-map-implicit-key` = token("ns-s-block-map-implicit-key", undefined /* TODO global variable */)
+
+/**
  * `194` : c-l-block-map-implicit-value(n):
  * ->c-mapping-value + [->s-l+block-node(n,c) |
  *    ->e-node + ->s-l-comments]
@@ -1543,6 +1476,73 @@ fun `s-l+block-collection`(n: Int, c: InOutMode) = (`s-separate`(n, c) + `c-ns-p
  * <c> = ->block-in ⇒ ->n
  */
 fun `seq-spaces`(n: Int, c: InOutMode)= undefined /* TODO other */
+
+/**
+ * `202` : l-document-prefix:
+ * (->c-byte-order-mark × ?) + (->l-comment × *)
+ */
+val `l-document-prefix` = token("l-document-prefix", `c-byte-order-mark` * zero_or_once + `l-comment` * zero_or_more)
+
+/**
+ * `203` : c-directives-end:
+ * <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]> + <[-][HYPHEN-MINUS][0x2d]>
+ */
+val `c-directives-end` = token("c-directives-end", '-' + '-' + '-')
+
+/**
+ * `204` : c-document-end:
+ * <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]> + <[.][FULL STOP][0x2e]>
+ */
+val `c-document-end` = token("c-document-end", '.' + '.' + '.')
+
+/**
+ * `205` : l-document-suffix:
+ * ->c-document-end + ->s-l-comments
+ */
+val `l-document-suffix` = token("l-document-suffix", `c-document-end` + `s-l-comments`)
+
+/**
+ * `206` : c-forbidden:
+ * ->Start of line + [->c-directives-end |
+ *    ->c-document-end] + [->b-char |
+ *    ->s-white |
+ *    ->End of file]
+ */
+val `c-forbidden` = token("c-forbidden", startOfLine + `c-directives-end` or `c-document-end` + `b-char` or `s-white` or EOF)
+
+/**
+ * `207` : l-bare-document:
+ * ->s-l+block-node(n,c) + ->Excluding c-forbidden content
+ */
+val `l-bare-document` = token("l-bare-document", undefined /* TODO global variable */)
+
+/**
+ * `208` : l-explicit-document:
+ * ->c-directives-end + [->l-bare-document |
+ *    ->e-node + ->s-l-comments]
+ */
+val `l-explicit-document` = token("l-explicit-document", `c-directives-end` + `l-bare-document` or (`e-node` + `s-l-comments`))
+
+/**
+ * `209` : l-directive-document:
+ * (->l-directive × +) + ->l-explicit-document
+ */
+val `l-directive-document` = token("l-directive-document", `l-directive` * once_or_more + `l-explicit-document`)
+
+/**
+ * `210` : l-any-document:
+ * [->l-directive-document |
+ *    ->l-explicit-document |
+ *    ->l-bare-document]
+ */
+val `l-any-document` = token("l-any-document", `l-directive-document` or `l-explicit-document` or `l-bare-document`)
+
+/**
+ * `211` : l-yaml-stream:
+ * (->l-document-prefix × *) + (->l-any-document × ?) + ((->l-document-suffix × +) + (->l-document-prefix × *) + [(->l-any-document × ?) |
+ *    (->l-document-prefix × *) + (->l-explicit-document × ?)] × *)
+ */
+val `l-yaml-stream` = token("l-yaml-stream", `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once + (`l-document-suffix` * once_or_more + `l-document-prefix` * zero_or_more + `l-any-document` * zero_or_once or (`l-document-prefix` * zero_or_more + `l-explicit-document` * zero_or_once)) * zero_or_more)
 
 private infix fun Char.or(that: Char) = symbol(this) or symbol(that)
 private infix fun Char.or(that: Token) = symbol(this) or that
