@@ -63,6 +63,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more\n" +
             "import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once\n" +
             "import com.github.t1.yaml.tools.empty\n" +
+            "import com.github.t1.yaml.tools.endOfFile\n" +
             "import com.github.t1.yaml.tools.startOfLine\n" +
             "import com.github.t1.yaml.tools.symbol\n" +
             "import com.github.t1.yaml.tools.toCodePointRange\n" +
@@ -85,7 +86,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "private val followedByAnNsPlainSafe = undefined\n" +
             "private val anNsCharPreceding = undefined\n" +
             "private val atMost1024CharactersAltogether = undefined\n" +
-            "private val EOF = symbol(CodePoint.EOF)\n" +
             "\n"
     }
 
@@ -103,7 +103,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
     ) {
         private val productions = spec.productions
         private val externalRefMap = mapOf(
-            "End of file" to "EOF",
+            "End of file" to "endOfFile",
             "Empty" to "empty",
             "Start of line" to "startOfLine",
             "Followed by an ns-plain-safe(c)" to "followedByAnNsPlainSafe",

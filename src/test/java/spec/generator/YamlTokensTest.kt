@@ -7,12 +7,11 @@ import com.github.t1.yaml.parser.`ns-directive-name`
 import com.github.t1.yaml.parser.`ns-esc-16-bit`
 import com.github.t1.yaml.parser.`ns-esc-32-bit`
 import com.github.t1.yaml.parser.`ns-esc-8-bit`
+import com.github.t1.yaml.parser.`s-double-next-line`
 import com.github.t1.yaml.parser.`s-indent`
 import com.github.t1.yaml.parser.`s-indent≤`
 import com.github.t1.yaml.parser.`s-indent≪`
 import com.github.t1.yaml.parser.`s-separate-in-line`
-import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
-import com.github.t1.yaml.tools.symbol
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -164,7 +163,7 @@ import org.junit.jupiter.api.Test
         "U012345670" matches "U01234567"
     }
 
-    @Test fun `token with once_or_more or startOfLine`() {
+    @Test fun `s-separate-in-line`() {
         token = `s-separate-in-line` // [(->s-white × +) | ->Start of line]
 
         "x y".afterRead('x') matches " "
@@ -179,7 +178,7 @@ import org.junit.jupiter.api.Test
         "   x" matches "   "
     }
 
-    @Test fun `token with zero_or_more minus tokens`() {
+    @Test fun `ns-directive-name`() {
         token = `ns-directive-name` // * (->ns-char × +)
 
         " x" doesnt match
@@ -187,7 +186,7 @@ import org.junit.jupiter.api.Test
         "xy " matches "xy"
     }
 
-    @Test fun `token with comment and zero_or_more minus tokens`() {
+    @Test fun `c-nb-comment-text`() {
         token = `c-nb-comment-text` // ->c-comment + (->nb-char × *)
 
         "x#" doesnt match
@@ -200,16 +199,7 @@ import org.junit.jupiter.api.Test
         "#xy\uFEFF" matches "#xy"
     }
 
-    @Test fun `token with zero_or_once`() {
-        token = symbol('x') * zero_or_once
-
-        "y" matches ""
-        "x" matches "x"
-        "x#" matches "x"
-        "#x" matches ""
-    }
-
-    @Disabled @Test fun `l-document-prefix`() {
+    @Test fun `l-document-prefix`() {
         token = `l-document-prefix` // (->c-byte-order-mark × ?) + (->l-comment × *)
 
         "x" matches ""

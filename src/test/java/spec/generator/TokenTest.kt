@@ -6,6 +6,7 @@ import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
 import com.github.t1.yaml.tools.empty
+import com.github.t1.yaml.tools.endOfFile
 import com.github.t1.yaml.tools.startOfLine
 import com.github.t1.yaml.tools.symbol
 import com.github.t1.yaml.tools.token
@@ -295,5 +296,12 @@ class TokenTest : TokenTestTools() {
         token = symbol('x') named "foo"
 
         assertThat(token.toString()).isEqualTo("foo")
+    }
+
+    @Test fun `EOF should match empty`() {
+        token = endOfFile
+
+        "x" doesnt match
+        "" matches ""
     }
 }

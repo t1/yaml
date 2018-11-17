@@ -1,5 +1,6 @@
 package com.github.t1.yaml.tools
 
+import com.github.t1.yaml.tools.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.CodePointReader.Mark
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
@@ -54,10 +55,8 @@ interface Token {
 
     operator fun times(mode: RepeatMode): Token = when (mode) {
         zero_or_once -> token("${this@Token}?") { reader ->
-            val match = reader.mark { this@Token.match(reader) }
-            if (!match.matches) return@token Match(matches = true) // zero length
-            reader.expect(match.codePoints)
-            return@token match
+            val match = reader.read { this@Token.match(reader) }
+            if (match.matches) match else Match(matches = true) // zero length hit
         }
         zero_or_more -> token("${this@Token}*") { reader ->
             reader.matchMore(mutableListOf())
@@ -91,6 +90,11 @@ data class Match(
     /** All the code points matching or an empty list, if it doesn't match. Not that there are empty matches, i.e. it matches, but has zero code points */
     val codePoints: List<CodePoint> = listOf()
 ) {
+    init {
+        if (!matches) require(codePoints.isEmpty()) { "unexpected code points for non-match: $codePoints" }
+        require(codePoints.none { it == EOF }) { "unexpected EOF in: $codePoints" }
+    }
+
     val size: Int get() = codePoints.size
 
     /** short-circuit variant of `or(that: Match)` */
@@ -138,6 +142,7 @@ private fun CodePointReader.read(body: (Mark) -> Match): Match {
 val empty = token("empty") { Match(matches = true) }
 val startOfLine = token("startOfLine") { Match(matches = it.isStartOfLine) }
 val whitespace = Symbol("whitespace", CodePoint::isWhitespace)
+val endOfFile = token("EOF") { Match(matches = it.isEndOfFile) }
 
 fun token(description: String, token: Token) = token(description) { token.match(it) }
 fun token(description: String, match: (CodePointReader) -> Match) = object : Token {

@@ -30,6 +30,7 @@ import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
 import com.github.t1.yaml.tools.empty
+import com.github.t1.yaml.tools.endOfFile
 import com.github.t1.yaml.tools.startOfLine
 import com.github.t1.yaml.tools.symbol
 import com.github.t1.yaml.tools.toCodePointRange
@@ -52,7 +53,6 @@ private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointR
 private val followedByAnNsPlainSafe = undefined
 private val anNsCharPreceding = undefined
 private val atMost1024CharactersAltogether = undefined
-private val EOF = symbol(CodePoint.EOF)
 
 
 /**
@@ -616,7 +616,7 @@ val `c-nb-comment-text` = token("c-nb-comment-text", `c-comment` + `nb-char` * z
  * [->b-non-content |
  *    ->End of file]
  */
-val `b-comment` = token("b-comment", `b-non-content` or EOF)
+val `b-comment` = token("b-comment", `b-non-content` or endOfFile)
 
 /**
  * `77` : s-b-comment:
@@ -1539,7 +1539,7 @@ val `l-document-suffix` = token("l-document-suffix", `c-document-end` + `s-l-com
  *    ->s-white |
  *    ->End of file]
  */
-val `c-forbidden` = token("c-forbidden", startOfLine + `c-directives-end` or `c-document-end` + `b-char` or `s-white` or EOF)
+val `c-forbidden` = token("c-forbidden", startOfLine + `c-directives-end` or `c-document-end` + `b-char` or `s-white` or endOfFile)
 
 /**
  * `207` : l-bare-document:

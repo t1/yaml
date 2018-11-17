@@ -511,7 +511,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo:\n" +
             " * ->End of file\n" +
             " */\n" +
-            "val `foo` = token(\"foo\", EOF)\n"))
+            "val `foo` = token(\"foo\", endOfFile)\n"))
     }
 
     @Test fun shouldGenerateEmptyRefProduction() {
