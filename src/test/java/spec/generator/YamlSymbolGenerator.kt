@@ -55,8 +55,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.parser.InOutMode.`flow-key`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`flow-out`\n" +
             "import com.github.t1.yaml.tools.CodePoint\n" +
-            "import com.github.t1.yaml.tools.CodePointRange\n" +
-            "import com.github.t1.yaml.tools.CodePointReader\n" +
             "import com.github.t1.yaml.tools.Match\n" +
             "import com.github.t1.yaml.tools.Token\n" +
             "import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more\n" +
@@ -107,7 +105,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "Empty" to "empty",
             "Start of line" to "startOfLine",
             "Followed by an ns-plain-safe(c)" to "followedByAnNsPlainSafe",
-            "Followed by an ns-plain-safe(c) )" to "followedByAnNsPlainSafe", // BUG-IN-SPEC
             "An ns-char preceding" to "anNsCharPreceding",
             "At most 1024 characters altogether" to "atMost1024CharactersAltogether",
             "flow-key" to "`flow-key`",
@@ -178,24 +175,20 @@ class YamlSymbolGenerator(private val spec: Spec) {
             private fun writeToken() {
                 write(comment())
                 write("val `${production.name}` = token(\"${production.name}\", ")
-                when (production.counter) {
-                    in setOf(193, 207) -> write("undefined /* TODO global variable */")
-                    else -> production.expression.guide(visitor)
-                }
+                production.expression.guide(visitor)
                 write(")\n")
             }
 
             private fun writeTokenFactory() {
                 write(comment())
-                write("fun `${funName()}`(")
+                val name = production.name.replace('<', '≪') // '<' is not allowed in method names
+                write("fun `$name`(")
                 writeArgs()
                 write(")")
                 if (production.isRecursive) write(": Token")
                 when {
-                    production.counter in setOf(74, 112, 154, 155, 168, 170, 171, 174, 176, 178, 180, 184, 190, 191, 194, 197) ->
-                        write("= undefined /* TODO global variable */\n")
                     production.counter in setOf(136, 162, 163, 164, 165, 166, 183, 187, 201) -> write("= undefined /* TODO other */\n")
-                    onlyArgOrEmpty.startsWith("<") || onlyArgOrEmpty.startsWith("≤") -> writeLessFun(onlyArgOrEmpty[0])
+                    name.endsWith("≪") || name.endsWith("≤") -> writeLessFun()
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
                     production.expression is RepeatedExpression -> visitor.writeFun(production.expression)
                     production.expression is SwitchExpression -> visitor.writeFun(production.expression)
@@ -214,15 +207,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     " */\n"
             }
 
-            private fun funName() = production.name +
-                when { // consider only the first arg for extending the method name... good enough for YAML 1.2
-                    onlyArgOrEmpty.startsWith("<") -> "≪" // '<' is an illegal character for a method name... much-less is not
-                    onlyArgOrEmpty.startsWith("≤") -> "≤"
-                    else -> ""
-                }
-
-            private val onlyArgOrEmpty: String get() = production.args.takeIf { it.size == 1 }?.get(0) ?: ""
-
             private fun writeArgs() = production.args.forEach {
                 if (it != production.args[0])
                     write(", ")
@@ -236,12 +220,13 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 })
             }
 
-            private fun writeLessFun(comparison: Char) {
+            private fun writeLessFun() {
+                val comparison = production.name[production.name.length - 1]
                 val repeatedExpression = production.expression as RepeatedExpression
-                require(repeatedExpression.repetitions == "m") { "unexpected repetitions '${repeatedExpression.repetitions}'" }
-                require(repeatedExpression.comment == "Where m $comparison n") { "unexpected repeat comment '${repeatedExpression.comment}'" }
+                assertThat(repeatedExpression.repetitions).isEqualTo("m")
+                assertThat(repeatedExpression.comment).isEqualTo("Where m $comparison n")
                 write("" +
-                    " = token(\"${production.name}($comparison\$n)\") { reader ->\n" +
+                    " = token(\"${production.key}\") { reader ->\n" +
                     "    val match = reader.mark { reader.readWhile { reader -> ")
                 repeatedExpression.expression.guide(visitor)
                 val negatedComparison = when (comparison) {
@@ -271,10 +256,10 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 // ------------------------------ reference
                 fun writeFun(reference: ReferenceExpression) = write(" = ${refCall(reference)}\n")
 
-                override fun visit(reference: ReferenceExpression) = write(externalRefMap[reference.ref] ?: refCall(reference))
+                override fun visit(reference: ReferenceExpression) = write(externalRefMap[reference.name] ?: refCall(reference))
 
                 private fun refCall(reference: ReferenceExpression): String =
-                    with(spec[reference.ref]) { "`$name`${argsKey.replace(",", ", ")}" }
+                    with(spec[reference.key]) { "`${name.replace('<', '≪')}`${argsKey.replace(",", ", ")}" }
 
 
                 // ------------------------------ repeated
@@ -351,16 +336,16 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 fun writeFun(switch: SwitchExpression) = switch.guide(SwitchVisitor(switch))
             }
 
-            private inner class SwitchVisitor(val switch: SwitchExpression) : ProductionVisitor() {
+            private inner class SwitchVisitor(switch: SwitchExpression) : ProductionVisitor() {
                 val variableName: String
 
                 init {
-                    require(switch.balanced) { "unexpected balanced switch '$switch'" }
+                    assertThat(switch.balanced).isTrue()
                     variableName = ((switch.cases[0] as EqualsExpression).left as VariableExpression).name
                     for (i in 0 until switch.cases.size) {
                         val case = switch.cases[i] as EqualsExpression
                         val left = case.left as VariableExpression
-                        require(left.name == variableName)
+                        assertThat(left.name).isEqualTo(variableName)
                     }
                     write(" = when ($variableName) {\n")
                 }

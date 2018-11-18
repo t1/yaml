@@ -223,4 +223,8 @@ import org.junit.jupiter.api.Test
         "\r" doesnt match
         "\uFEFF" doesnt match
     }
+
+    @Disabled @Test fun `s-double-next-line(3)`() {
+        token = `s-double-next-line`(3) // `s-double-break`(n) + (`ns-double-char` + `nb-ns-double-in-line` + `s-double-next-line`(n) or `s-white` * zero_or_more) * zero_or_once
+    }
 }

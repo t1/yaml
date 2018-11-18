@@ -23,9 +23,8 @@ class Spec(val productions: List<Production>) {
         for (production in productions) {
             production.expression.guide(object : OrIgnoreVisitor() {
                 override fun visit(reference: ReferenceExpression) {
-                    val ref = reference.ref
-                    if (index[ref] == null) externalRefs += ref
-                    else production.references[ref] = index[ref]!!
+                    if (index[reference.key] == null) externalRefs += reference.key
+                    else production.references[reference.key] = index[reference.key]!!
                 }
             })
         }

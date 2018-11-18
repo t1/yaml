@@ -126,8 +126,16 @@ abstract class Expression {
         }
     }
 
-    open class ReferenceExpression(val ref: String) : Expression() {
-        override fun toString(): String = "->$ref"
+    open class ReferenceExpression(val name: String, val args: List<Pair<String, String>> = listOf()) : Expression() {
+        override fun toString() = "->$name" + if (args.isEmpty()) "" else inParentheses {
+            if (it.first == it.second) it.first else "${it.first} = ${it.second}"
+        }
+
+        val key get() = name + if (args.isEmpty()) "" else inParentheses { it.first }
+
+        private fun inParentheses(transform: (Pair<String, String>) -> String) =
+            args.joinToString(",", "(", ")", transform = transform)
+
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 

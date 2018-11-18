@@ -518,7 +518,7 @@ fun `s-indent`(n: Int): Token {
 }
 
 /**
- * `64` : s-indent(<n):
+ * `64` : s-indent<(n):
  * (->s-space × m /* Where m < n */)
  */
 fun `s-indent≪`(n: Int) = token("s-indent(<$n)") { reader ->
@@ -529,7 +529,7 @@ fun `s-indent≪`(n: Int) = token("s-indent(<$n)") { reader ->
 }
 
 /**
- * `65` : s-indent(≤n):
+ * `65` : s-indent≤(n):
  * (->s-space × m /* Where m ≤ n */)
  */
 fun `s-indent≤`(n: Int) = token("s-indent(≤$n)") { reader ->
@@ -576,9 +576,9 @@ fun `s-flow-line-prefix`(n: Int) = `s-indent`(n) + `s-separate-in-line` * zero_o
 /**
  * `70` : l-empty(n,c):
  * [->s-line-prefix(n,c) |
- *    ->s-indent(n)] + ->b-as-line-feed
+ *    ->s-indent<(n)] + ->b-as-line-feed
  */
-fun `l-empty`(n: Int, c: InOutMode) = `s-line-prefix`(n, c) or `s-indent`(n) + `b-as-line-feed`
+fun `l-empty`(n: Int, c: InOutMode) = `s-line-prefix`(n, c) or `s-indent≪`(n) + `b-as-line-feed`
 
 /**
  * `71` : b-l-trimmed(n,c):
@@ -601,7 +601,7 @@ fun `b-l-folded`(n: Int, c: InOutMode) = `b-l-trimmed`(n, c) or `b-as-space`
 
 /**
  * `74` : s-flow-folded(n):
- * (->s-separate-in-line × ?) + ->b-l-folded(n,c) + ->s-flow-line-prefix(n)
+ * (->s-separate-in-line × ?) + ->b-l-folded(n,c = flow-in) + ->s-flow-line-prefix(n)
  */
 fun `s-flow-folded`(n: Int)= undefined /* TODO global variable */
 
@@ -879,7 +879,7 @@ val `nb-double-one-line` = token("nb-double-one-line", `nb-double-char` * zero_o
 
 /**
  * `112` : s-double-escaped(n):
- * (->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c) × *) + ->s-flow-line-prefix(n)
+ * (->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c = flow-in) × *) + ->s-flow-line-prefix(n)
  */
 fun `s-double-escaped`(n: Int)= undefined /* TODO global variable */
 
@@ -981,7 +981,7 @@ fun `nb-single-multi-line`(n: Int) = `nb-ns-single-in-line` + `s-single-next-lin
  * [(->ns-char - ->c-indicator) |
  *    [->c-mapping-key |
  *    ->c-mapping-value |
- *    ->c-sequence-entry] + ->Followed by an ns-plain-safe(c) )]
+ *    ->c-sequence-entry] + ->Followed by an ns-plain-safe(c)]
  */
 fun `ns-plain-first`(c: InOutMode) = `ns-char` - `c-indicator` or (`c-mapping-key` or `c-mapping-value` or `c-sequence-entry` + followedByAnNsPlainSafe)
 
@@ -1073,9 +1073,9 @@ fun `in-flow`(c: InOutMode)= undefined /* TODO other */
 
 /**
  * `137` : c-flow-sequence(n,c):
- * ->c-sequence-start + (->s-separate(n,c) × ?) + ->ns-s-flow-seq-entries(n,c) + ->in-flow(c) + (->ns-s-flow-seq-entries(n,c) × ?) + ->c-sequence-end
+ * ->c-sequence-start + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c = ->in-flow(c)) × ?) + ->c-sequence-end
  */
-fun `c-flow-sequence`(n: Int, c: InOutMode) = `c-sequence-start` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-seq-entries`(n, c) + `in-flow`(c) + `ns-s-flow-seq-entries`(n, c) * zero_or_once + `c-sequence-end`
+fun `c-flow-sequence`(n: Int, c: InOutMode) = `c-sequence-start` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-seq-entries`(n, c) * zero_or_once + `c-sequence-end`
 
 /**
  * `138` : ns-s-flow-seq-entries(n,c):
@@ -1092,9 +1092,9 @@ fun `ns-flow-seq-entry`(n: Int, c: InOutMode) = `ns-flow-pair`(n, c) or `ns-flow
 
 /**
  * `140` : c-flow-mapping(n,c):
- * ->c-mapping-start + (->s-separate(n,c) × ?) + ->ns-s-flow-map-entries(n,c) + ->in-flow(c) + (->ns-s-flow-map-entries(n,c) × ?) + ->c-mapping-end
+ * ->c-mapping-start + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c = ->in-flow(c)) × ?) + ->c-mapping-end
  */
-fun `c-flow-mapping`(n: Int, c: InOutMode) = `c-mapping-start` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-map-entries`(n, c) + `in-flow`(c) + `ns-s-flow-map-entries`(n, c) * zero_or_once + `c-mapping-end`
+fun `c-flow-mapping`(n: Int, c: InOutMode) = `c-mapping-start` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-map-entries`(n, c) * zero_or_once + `c-mapping-end`
 
 /**
  * `141` : ns-s-flow-map-entries(n,c):
@@ -1175,25 +1175,25 @@ fun `ns-flow-pair-entry`(n: Int, c: InOutMode) = `ns-flow-pair-yaml-key-entry`(n
 
 /**
  * `152` : ns-flow-pair-yaml-key-entry(n,c):
- * ->ns-s-implicit-yaml-key(c) + ->c-ns-flow-map-separate-value(n,c)
+ * ->ns-s-implicit-yaml-key(c = flow-key) + ->c-ns-flow-map-separate-value(n,c)
  */
 fun `ns-flow-pair-yaml-key-entry`(n: Int, c: InOutMode) = `ns-s-implicit-yaml-key`(c) + `c-ns-flow-map-separate-value`(n, c)
 
 /**
  * `153` : c-ns-flow-pair-json-key-entry(n,c):
- * ->c-s-implicit-json-key(c) + ->c-ns-flow-map-adjacent-value(n,c)
+ * ->c-s-implicit-json-key(c = flow-key) + ->c-ns-flow-map-adjacent-value(n,c)
  */
 fun `c-ns-flow-pair-json-key-entry`(n: Int, c: InOutMode) = `c-s-implicit-json-key`(c) + `c-ns-flow-map-adjacent-value`(n, c)
 
 /**
  * `154` : ns-s-implicit-yaml-key(c):
- * ->ns-flow-yaml-node(n,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether
+ * ->ns-flow-yaml-node(n = n/a,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether
  */
 fun `ns-s-implicit-yaml-key`(c: InOutMode)= undefined /* TODO global variable */
 
 /**
  * `155` : c-s-implicit-json-key(c):
- * ->c-flow-json-node(n,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether
+ * ->c-flow-json-node(n = n/a,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether
  */
 fun `c-s-implicit-json-key`(c: InOutMode)= undefined /* TODO global variable */
 
@@ -1286,31 +1286,31 @@ fun `l-chomped-empty`(n: Int, t: String)= undefined /* TODO other */
 
 /**
  * `167` : l-strip-empty(n):
- * (->s-indent(n) + ->b-non-content × *) + (->l-trail-comments(n) × ?)
+ * (->s-indent≤(n) + ->b-non-content × *) + (->l-trail-comments(n) × ?)
  */
-fun `l-strip-empty`(n: Int) = (`s-indent`(n) + `b-non-content`) * zero_or_more + `l-trail-comments`(n) * zero_or_once
+fun `l-strip-empty`(n: Int) = (`s-indent≤`(n) + `b-non-content`) * zero_or_more + `l-trail-comments`(n) * zero_or_once
 
 /**
  * `168` : l-keep-empty(n):
- * (->l-empty(n,c) × *) + (->l-trail-comments(n) × ?)
+ * (->l-empty(n,c = block-in) × *) + (->l-trail-comments(n) × ?)
  */
 fun `l-keep-empty`(n: Int)= undefined /* TODO global variable */
 
 /**
  * `169` : l-trail-comments(n):
- * ->s-indent(n) + ->c-nb-comment-text + ->b-comment + (->l-comment × *)
+ * ->s-indent<(n) + ->c-nb-comment-text + ->b-comment + (->l-comment × *)
  */
-fun `l-trail-comments`(n: Int) = `s-indent`(n) + `c-nb-comment-text` + `b-comment` + `l-comment` * zero_or_more
+fun `l-trail-comments`(n: Int) = `s-indent≪`(n) + `c-nb-comment-text` + `b-comment` + `l-comment` * zero_or_more
 
 /**
  * `170` : c-l+literal(n):
- * ->c-literal + ->c-b-block-header(m,t) + ->l-literal-content(n,t)
+ * ->c-literal + ->c-b-block-header(m,t) + ->l-literal-content(n = n+m,t)
  */
 fun `c-l+literal`(n: Int)= undefined /* TODO global variable */
 
 /**
  * `171` : l-nb-literal-text(n):
- * (->l-empty(n,c) × *) + ->s-indent(n) + (->nb-char × +)
+ * (->l-empty(n,c = block-in) × *) + ->s-indent(n) + (->nb-char × +)
  */
 fun `l-nb-literal-text`(n: Int)= undefined /* TODO global variable */
 
@@ -1328,7 +1328,7 @@ fun `l-literal-content`(n: Int, t: String) = (`l-nb-literal-text`(n) + `b-nb-lit
 
 /**
  * `174` : c-l+folded(n):
- * ->c-folded + ->c-b-block-header(m,t) + ->l-folded-content(n,t)
+ * ->c-folded + ->c-b-block-header(m,t) + ->l-folded-content(n = n+m,t)
  */
 fun `c-l+folded`(n: Int)= undefined /* TODO global variable */
 
@@ -1340,7 +1340,7 @@ fun `s-nb-folded-text`(n: Int) = `s-indent`(n) + `ns-char` + `nb-char` * zero_or
 
 /**
  * `176` : l-nb-folded-lines(n):
- * ->s-nb-folded-text(n) + (->b-l-folded(n,c) + ->s-nb-folded-text(n) × *)
+ * ->s-nb-folded-text(n) + (->b-l-folded(n,c = block-in) + ->s-nb-folded-text(n) × *)
  */
 fun `l-nb-folded-lines`(n: Int)= undefined /* TODO global variable */
 
@@ -1352,7 +1352,7 @@ fun `s-nb-spaced-text`(n: Int) = `s-indent`(n) + `s-white` + `nb-char` * zero_or
 
 /**
  * `178` : b-l-spaced(n):
- * ->b-as-line-feed + (->l-empty(n,c) × *)
+ * ->b-as-line-feed + (->l-empty(n,c = block-in) × *)
  */
 fun `b-l-spaced`(n: Int)= undefined /* TODO global variable */
 
@@ -1364,7 +1364,7 @@ fun `l-nb-spaced-lines`(n: Int) = `s-nb-spaced-text`(n) + (`b-l-spaced`(n) + `s-
 
 /**
  * `180` : l-nb-same-lines(n):
- * (->l-empty(n,c) × *) + [->l-nb-folded-lines(n) |
+ * (->l-empty(n,c = block-in) × *) + [->l-nb-folded-lines(n) |
  *    ->l-nb-spaced-lines(n)]
  */
 fun `l-nb-same-lines`(n: Int)= undefined /* TODO global variable */
@@ -1383,20 +1383,20 @@ fun `l-folded-content`(n: Int, t: String) = (`l-nb-diff-lines`(n) + `b-chomped-l
 
 /**
  * `183` : l+block-sequence(n):
- * (->s-indent(n) + ->c-l-block-seq-entry(n) × +) + ->For some fixed auto-detected m > 0
+ * (->s-indent(n = n+m) + ->c-l-block-seq-entry(n = n+m) × +) + ->For some fixed auto-detected m > 0
  */
 fun `l+block-sequence`(n: Int)= undefined /* TODO other */
 
 /**
  * `184` : c-l-block-seq-entry(n):
- * ->c-sequence-entry + ->s-l+block-indented(n,c)
+ * ->c-sequence-entry + ->s-l+block-indented(n,c = block-in)
  */
 fun `c-l-block-seq-entry`(n: Int)= undefined /* TODO global variable */
 
 /**
  * `185` : s-l+block-indented(n,c):
- * [->s-indent(n) + [->ns-l-compact-sequence(n) |
- *    ->ns-l-compact-mapping(n)] |
+ * [->s-indent(n = m) + [->ns-l-compact-sequence(n = n+1+m) |
+ *    ->ns-l-compact-mapping(n = n+1+m)] |
  *    ->s-l+block-node(n,c) |
  *    ->e-node + ->s-l-comments]
  */
@@ -1410,7 +1410,7 @@ fun `ns-l-compact-sequence`(n: Int) = `c-l-block-seq-entry`(n) + (`s-indent`(n) 
 
 /**
  * `187` : l+block-mapping(n):
- * (->s-indent(n) + ->ns-l-block-map-entry(n) × +) + ->For some fixed auto-detected m > 0
+ * (->s-indent(n = n+m) + ->ns-l-block-map-entry(n = n+m) × +) + ->For some fixed auto-detected m > 0
  */
 fun `l+block-mapping`(n: Int)= undefined /* TODO other */
 
@@ -1430,13 +1430,13 @@ fun `c-l-block-map-explicit-entry`(n: Int) = `c-l-block-map-explicit-key`(n) + `
 
 /**
  * `190` : c-l-block-map-explicit-key(n):
- * ->c-mapping-key + ->s-l+block-indented(n,c)
+ * ->c-mapping-key + ->s-l+block-indented(n,c = block-out)
  */
 fun `c-l-block-map-explicit-key`(n: Int)= undefined /* TODO global variable */
 
 /**
  * `191` : l-block-map-explicit-value(n):
- * ->s-indent(n) + ->c-mapping-value + ->s-l+block-indented(n,c)
+ * ->s-indent(n) + ->c-mapping-value + ->s-l+block-indented(n,c = block-out)
  */
 fun `l-block-map-explicit-value`(n: Int)= undefined /* TODO global variable */
 
@@ -1449,14 +1449,14 @@ fun `ns-l-block-map-implicit-entry`(n: Int) = `ns-s-block-map-implicit-key` or `
 
 /**
  * `193` : ns-s-block-map-implicit-key:
- * [->c-s-implicit-json-key(c) |
- *    ->ns-s-implicit-yaml-key(c)]
+ * [->c-s-implicit-json-key(c = block-key) |
+ *    ->ns-s-implicit-yaml-key(c = block-key)]
  */
 val `ns-s-block-map-implicit-key` = token("ns-s-block-map-implicit-key", undefined /* TODO global variable */)
 
 /**
  * `194` : c-l-block-map-implicit-value(n):
- * ->c-mapping-value + [->s-l+block-node(n,c) |
+ * ->c-mapping-value + [->s-l+block-node(n,c = block-out) |
  *    ->e-node + ->s-l-comments]
  */
 fun `c-l-block-map-implicit-value`(n: Int)= undefined /* TODO global variable */
@@ -1476,7 +1476,7 @@ fun `s-l+block-node`(n: Int, c: InOutMode) = `s-l+block-in-block`(n, c) or `s-l+
 
 /**
  * `197` : s-l+flow-in-block(n):
- * ->s-separate(n,c) + ->ns-flow-node(n,c) + ->s-l-comments
+ * ->s-separate(n = n+1,c = flow-out) + ->ns-flow-node(n = n+1,c = flow-out) + ->s-l-comments
  */
 fun `s-l+flow-in-block`(n: Int)= undefined /* TODO global variable */
 
@@ -1489,17 +1489,17 @@ fun `s-l+block-in-block`(n: Int, c: InOutMode) = `s-l+block-scalar`(n, c) or `s-
 
 /**
  * `199` : s-l+block-scalar(n,c):
- * ->s-separate(n,c) + (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + [->c-l+literal(n) |
+ * ->s-separate(n = n+1,c) + (->c-ns-properties(n = n+1,c) + ->s-separate(n = n+1,c) × ?) + [->c-l+literal(n) |
  *    ->c-l+folded(n)]
  */
 fun `s-l+block-scalar`(n: Int, c: InOutMode) = `s-separate`(n, c) + (`c-ns-properties`(n, c) + `s-separate`(n, c)) * zero_or_once + `c-l+literal`(n) or `c-l+folded`(n)
 
 /**
  * `200` : s-l+block-collection(n,c):
- * (->s-separate(n,c) + ->c-ns-properties(n,c) × ?) + ->s-l-comments + ->l+block-sequence(n) + ->seq-spaces(n,c) + [->l+block-sequence(n) |
+ * (->s-separate(n = n+1,c) + ->c-ns-properties(n = n+1,c) × ?) + ->s-l-comments + [->l+block-sequence(n = ->seq-spaces(n,c)) |
  *    ->l+block-mapping(n)]
  */
-fun `s-l+block-collection`(n: Int, c: InOutMode) = (`s-separate`(n, c) + `c-ns-properties`(n, c)) * zero_or_once + `s-l-comments` + `l+block-sequence`(n) + `seq-spaces`(n, c) + `l+block-sequence`(n) or `l+block-mapping`(n)
+fun `s-l+block-collection`(n: Int, c: InOutMode) = (`s-separate`(n, c) + `c-ns-properties`(n, c)) * zero_or_once + `s-l-comments` + `l+block-sequence`(n) or `l+block-mapping`(n)
 
 /**
  * `201` : seq-spaces(n,c):
@@ -1543,7 +1543,7 @@ val `c-forbidden` = token("c-forbidden", startOfLine + `c-directives-end` or `c-
 
 /**
  * `207` : l-bare-document:
- * ->s-l+block-node(n,c) + ->Excluding c-forbidden content
+ * ->s-l+block-node(n = -1,c = block-in) + ->Excluding c-forbidden content
  */
 val `l-bare-document` = token("l-bare-document", undefined /* TODO global variable */)
 

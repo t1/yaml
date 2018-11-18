@@ -86,7 +86,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun shouldGenerateRecursiveRefProduction() {
-        val production = Production(0, "foo", listOf("n"), ReferenceExpression("foo(n)"))
+        val production = Production(0, "foo", listOf("n"), ReferenceExpression("foo", listOf("n" to "n")))
 
         val written = generate(production)
 
@@ -243,16 +243,16 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun shouldGenerateProductionWithLessArg() {
-        val production = Production(0, "foo", listOf("<n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
+        val production = Production(0, "foo<", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
 
         val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "/**\n" +
-            " * `0` : foo(<n):\n" +
+            " * `0` : foo<(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
             " */\n" +
-            "fun `foo≪`(n: Int) = token(\"foo(<\$n)\") { reader ->\n" +
+            "fun `foo≪`(n: Int) = token(\"foo<(n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size >= n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
@@ -261,16 +261,16 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun shouldGenerateProductionWithLessEqArg() {
-        val production = Production(0, "foo", listOf("≤n"), RepeatedExpression(codePoint('x'), "m", "Where m ≤ n"))
+        val production = Production(0, "foo≤", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m ≤ n"))
 
         val written = generate(production)
 
         assertThat(written).isEqualTo(source("\n" +
             "/**\n" +
-            " * `0` : foo(≤n):\n" +
+            " * `0` : foo≤(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m ≤ n */)\n" +
             " */\n" +
-            "fun `foo≤`(n: Int) = token(\"foo(≤\$n)\") { reader ->\n" +
+            "fun `foo≤`(n: Int) = token(\"foo≤(n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size > n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
@@ -315,6 +315,32 @@ class YamlSymbolGeneratorTest {
             "fun `bar`(n: Int): Token {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
+            "}\n"))
+    }
+
+    @Test fun shouldGenerateReferenceToProductionWithLessThanArg() {
+        val bar = Production(1, "bar<", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
+        val foo = Production(0, "foo", listOf("n"), ref(bar))
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * ->bar<(n)\n" +
+            " */\n" +
+            "fun `foo`(n: Int) = `bar≪`(n)\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar<(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
+            " */\n" +
+            "fun `bar≪`(n: Int) = token(\"bar<(n)\") { reader ->\n" +
+            "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
+            "    if (match.size >= n) return@token Match(matches = false)\n" +
+            "    reader.expect(match)\n" +
+            "    return@token Match(matches = true, codePoints = match)\n" +
             "}\n"))
     }
 

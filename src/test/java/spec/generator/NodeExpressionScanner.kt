@@ -22,7 +22,7 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
         return if (more()) "in node " + i + ": [" + (if (nextText == null) node() else nextText) + "]" else "<end>"
     }
 
-    private fun node(): Node {
+    fun node(): Node {
         return nodes[i]
     }
 
@@ -117,3 +117,15 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
         readElement()
     }
 }
+
+val Node.name: String get() = nodeName()
+val Node.className: String get() = attr("class")
+val Node.text: String get() = (this as Element).text()
+
+fun Node.parent(predicate: (Node) -> Boolean): Node {
+    var node = this
+    while (!predicate(node)) node = node.parentNode()
+    return node
+}
+
+fun Node.child(predicate: (Node) -> Boolean): Node = this.childNodes().first(predicate)

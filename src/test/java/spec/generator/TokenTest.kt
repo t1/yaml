@@ -2,6 +2,7 @@ package spec.generator
 
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
+import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
@@ -14,6 +15,7 @@ import com.github.t1.yaml.tools.undefined
 import com.github.t1.yaml.tools.whitespace
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class TokenTest : TokenTestTools() {
@@ -303,5 +305,15 @@ class TokenTest : TokenTestTools() {
 
         "x" doesnt match
         "" matches ""
+    }
+
+    @Disabled @Test fun `recursive factory`() {
+        fun foo(n: Int): Token = symbol('x') + foo(n) or symbol('y')
+        token = foo(3)
+
+        "y" matches "y"
+        "xy" matches "xy"
+        "yx" matches "y"
+        "z" doesnt match
     }
 }
