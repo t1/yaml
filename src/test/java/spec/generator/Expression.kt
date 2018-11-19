@@ -127,14 +127,14 @@ abstract class Expression {
     }
 
     open class ReferenceExpression(val name: String, val args: List<Pair<String, String>> = listOf()) : Expression() {
-        override fun toString() = "->$name" + if (args.isEmpty()) "" else inParentheses {
+        override fun toString() = "->$name" + inParentheses {
             if (it.first == it.second) it.first else "${it.first} = ${it.second}"
         }
 
-        val key get() = name + if (args.isEmpty()) "" else inParentheses { it.first }
+        val key get() = name + inParentheses { it.first }
 
         private fun inParentheses(transform: (Pair<String, String>) -> String) =
-            args.joinToString(",", "(", ")", transform = transform)
+            if (args.isEmpty()) "" else args.joinToString(",", "(", ")", transform = transform)
 
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
@@ -234,9 +234,10 @@ abstract class Expression {
                 sub.beforeSwitchItem()
                 cases[i].guide(sub)
                 sub.betweenSwitchCaseAndValue()
-                if (expressions.size > i)
+                if (expressions.size > i) {
                     expressions[i].guide(sub)
-                sub.afterSwitchItem()
+                    sub.afterSwitchItem(cases[i], expressions[i])
+                }
             }
             visitor.leave(this)
             visitor.afterCollection(this)

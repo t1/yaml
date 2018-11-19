@@ -81,9 +81,10 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "private infix operator fun Char.plus(token: Token) = symbol(this) + token\n" +
             "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
             "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n" +
-            "private val followedByAnNsPlainSafe = undefined\n" +
             "private val anNsCharPreceding = undefined\n" +
             "private val atMost1024CharactersAltogether = undefined\n" +
+            "private val excludingCForbiddenContent = undefined\n" +
+            "private val followedByAnNsPlainSafe = undefined\n" +
             "\n"
     }
 
@@ -184,10 +185,11 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 val name = production.name.replace('<', '≪') // '<' is not allowed in method names
                 write("fun `$name`(")
                 writeArgs()
-                write(")")
-                if (production.isRecursive) write(": Token")
+                write("): Token")
+                if (production.isRecursive) write(" /* TODO recursive */")
                 when {
-                    production.counter in setOf(136, 162, 163, 164, 165, 166, 183, 187, 201) -> write("= undefined /* TODO other */\n")
+                    production.counter in setOf(170, 174, 185) -> write("= undefined /* TODO global variable */\n")
+                    production.counter in setOf(162, 163, 164, 165, 166, 183, 187) -> write("= undefined /* TODO other */\n")
                     name.endsWith("≪") || name.endsWith("≤") -> writeLessFun()
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
                     production.expression is RepeatedExpression -> visitor.writeFun(production.expression)
@@ -258,13 +260,13 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
                 override fun visit(reference: ReferenceExpression) = write(externalRefMap[reference.name] ?: refCall(reference))
 
-                private fun refCall(reference: ReferenceExpression): String =
-                    with(spec[reference.key]) { "`${name.replace('<', '≪')}`${argsKey.replace(",", ", ")}" }
+                private fun refCall(ref: ReferenceExpression): String = "`${ref.name.replace('<', '≪')}`" +
+                    if (ref.args.isEmpty()) "" else ref.args.joinToString(",", "(", ")") { externalRefMap[it.second] ?: it.second }
 
 
                 // ------------------------------ repeated
                 fun writeFun(repeat: RepeatedExpression) {
-                    write(": Token {\n" +
+                    write(" {\n" +
                         "    val token = ")
                     repeat.guide(this)
                     write("\n")
@@ -354,7 +356,10 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
                 override fun beforeSwitchItem() = write("    ")
                 override fun betweenSwitchCaseAndValue() = write(" -> ")
-                override fun afterSwitchItem() = write(" named \"${production.name}(\$$variableName)\"\n")
+                override fun afterSwitchItem(case: Expression, value: Expression) {
+                    if (value is ReferenceExpression && externalRefMap.containsKey(value.name)) write("\n")
+                    else write(" named \"${production.name}(\$$variableName)\"\n")
+                }
 
                 override fun visit(equals: EqualsExpression) = this
                 override fun visit(variable: VariableExpression) {}

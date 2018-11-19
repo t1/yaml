@@ -61,7 +61,7 @@ interface Visitor {
     fun visit(switch: SwitchExpression): Visitor
     fun beforeSwitchItem() {}
     fun betweenSwitchCaseAndValue() {}
-    fun afterSwitchItem() {}
+    fun afterSwitchItem(case: Expression, value: Expression) {}
     fun leave(switch: SwitchExpression) {}
 }
 

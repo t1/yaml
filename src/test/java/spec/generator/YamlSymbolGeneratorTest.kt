@@ -18,13 +18,13 @@ import java.io.StringWriter
 import java.util.Arrays.asList
 
 class YamlSymbolGeneratorTest {
-    @Test fun shouldGenerateEmptySource() {
+    @Test fun `empty source`() {
         val written = generate()
 
         assertThat(written).isEqualTo(source(""))
     }
 
-    @Test fun shouldGenerateCodePointProduction() {
+    @Test fun `simple code point`() {
         val production = production(codePoint('x'))
 
         val written = generate(production)
@@ -37,7 +37,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'x')\n"))
     }
 
-    @Test fun shouldGenerateBigCodePointProduction() {
+    @Test fun `big code point`() {
         val production = production(CodePointExpression(CodePoint.of(0x10428)))
 
         val written = generate(production)
@@ -50,7 +50,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", \"\\uD801\\uDC28\")\n"))
     }
 
-    @Test fun shouldGenerateThreeCodePointSequenceProduction() {
+    @Test fun `three code point sequence`() {
         val production = production(seq(codePoint('a'), codePoint('b'), codePoint('c')))
 
         val written = generate(production)
@@ -63,7 +63,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'a' + 'b' + 'c')\n"))
     }
 
-    @Test fun shouldGenerateRefProduction() {
+    @Test fun `simple ref`() {
         val bar = Production(1, "bar", listOf(), codePoint('x'))
         val foo = production(ref(bar))
 
@@ -85,7 +85,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", `bar`)\n"))
     }
 
-    @Test fun shouldGenerateRecursiveRefProduction() {
+    @Test fun `recursive ref`() {
         val production = Production(0, "foo", listOf("n"), ReferenceExpression("foo", listOf("n" to "n")))
 
         val written = generate(production)
@@ -95,10 +95,10 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->foo(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int): Token = `foo`(n)\n")) // Kotlin needs the explicit return type here
+            "fun `foo`(n: Int): Token /* TODO recursive */ = `foo`(n)\n"))
     }
 
-    @Test fun shouldGenerateCodePointRangeProduction() {
+    @Test fun `code point range`() {
         val production = production(range('0', '9'))
 
         val written = generate(production)
@@ -111,20 +111,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", '0'..'9')\n"))
     }
 
-    @Test fun shouldGenerateRepeatProduction() {
-        val production = production(RepeatedExpression(codePoint('x'), "4"))
-
-        val written = generate(production)
-
-        assertThat(written).isEqualTo(source("\n" +
-            "/**\n" +
-            " * `0` : foo:\n" +
-            " * (<[x][LATIN SMALL LETTER X][0x78]> × 4)\n" +
-            " */\n" +
-            "val `foo` = token(\"foo\", 'x' * 4)\n"))
-    }
-
-    @Test fun shouldGenerateSwitchProduction() {
+    @Test fun `switch to code points`() {
         val x = Production(1, "x", listOf(), codePoint('x'))
         val y = Production(2, "y", listOf(), codePoint('y'))
         val z = Production(3, "z", listOf(), codePoint('z'))
@@ -144,7 +131,7 @@ class YamlSymbolGeneratorTest {
             " * <c> = ->y ⇒ <[2][DIGIT TWO][0x32]>\n" +
             " * <c> = ->z ⇒ <[3][DIGIT THREE][0x33]>\n" +
             " */\n" +
-            "fun `foo`(c: InOutMode) = when (c) {\n" +
+            "fun `foo`(c: InOutMode): Token = when (c) {\n" +
             "    `x` -> '1' named \"foo(\$c)\"\n" +
             "    `y` -> '2' named \"foo(\$c)\"\n" +
             "    `z` -> '3' named \"foo(\$c)\"\n" +
@@ -170,7 +157,7 @@ class YamlSymbolGeneratorTest {
             "val `z` = token(\"z\", 'z')\n"))
     }
 
-    @Test fun shouldGenerateSwitchProductionToRefWithArgs() {
+    @Test fun `switch to ref with args`() {
         val x = Production(1, "x", listOf(), codePoint('x'))
         val y = Production(2, "y", listOf(), codePoint('y'))
         val z = Production(3, "z", listOf(), codePoint('z'))
@@ -191,7 +178,7 @@ class YamlSymbolGeneratorTest {
             " * <d> = ->y ⇒ ->bar(n)\n" +
             " * <d> = ->z ⇒ ->bar(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int, c: InOutMode) = when (d) {\n" +
+            "fun `foo`(n: Int, c: InOutMode): Token = when (d) {\n" +
             "    `x` -> `bar`(n) named \"foo(\$d)\"\n" +
             "    `y` -> `bar`(n) named \"foo(\$d)\"\n" +
             "    `z` -> `bar`(n) named \"foo(\$d)\"\n" +
@@ -226,7 +213,7 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Test fun shouldGenerateProductionWithOneArg() {
+    @Test fun `with one arg`() {
         val production = Production(0, "foo", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
 
         val written = generate(production)
@@ -242,7 +229,7 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Test fun shouldGenerateProductionWithLessArg() {
+    @Test fun `with less-then arg`() {
         val production = Production(0, "foo<", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
 
         val written = generate(production)
@@ -252,7 +239,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo<(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
             " */\n" +
-            "fun `foo≪`(n: Int) = token(\"foo<(n)\") { reader ->\n" +
+            "fun `foo≪`(n: Int): Token = token(\"foo<(n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size >= n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
@@ -260,7 +247,7 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Test fun shouldGenerateProductionWithLessEqArg() {
+    @Test fun `with less-then-or-equal arg`() {
         val production = Production(0, "foo≤", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m ≤ n"))
 
         val written = generate(production)
@@ -270,7 +257,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo≤(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m ≤ n */)\n" +
             " */\n" +
-            "fun `foo≤`(n: Int) = token(\"foo≤(n)\") { reader ->\n" +
+            "fun `foo≤`(n: Int): Token = token(\"foo≤(n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size > n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
@@ -278,7 +265,7 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Test fun shouldGenerateProductionWithTwoArgs() {
+    @Test fun `with two args`() {
         val production = Production(0, "foo", listOf("c", "n"), RepeatedExpression(codePoint('x'), "n"))
 
         val written = generate(production)
@@ -294,7 +281,7 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Test fun shouldGenerateReferenceWithArgsProduction() {
+    @Test fun `ref with args`() {
         val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
         val foo = Production(0, "foo", listOf("n"), ref(bar))
 
@@ -306,7 +293,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->bar(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) = `bar`(n)\n" +
+            "fun `foo`(n: Int): Token = `bar`(n)\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar(n):\n" +
@@ -318,7 +305,7 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Test fun shouldGenerateReferenceToProductionWithLessThanArg() {
+    @Test fun `reference to production with less-than arg`() {
         val bar = Production(1, "bar<", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
         val foo = Production(0, "foo", listOf("n"), ref(bar))
 
@@ -330,13 +317,13 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->bar<(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) = `bar≪`(n)\n" +
+            "fun `foo`(n: Int): Token = `bar≪`(n)\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar<(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
             " */\n" +
-            "fun `bar≪`(n: Int) = token(\"bar<(n)\") { reader ->\n" +
+            "fun `bar≪`(n: Int): Token = token(\"bar<(n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size >= n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
@@ -344,7 +331,7 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Test fun shouldGenerateProductionWithMinus() {
+    @Test fun `with minus in name`() {
         val production = Production(0, "c-foo", listOf(), codePoint('x'))
 
         val written = generate(production)
@@ -357,7 +344,7 @@ class YamlSymbolGeneratorTest {
             "val `c-foo` = token(\"c-foo\", 'x')\n"))
     }
 
-    @Test fun shouldGenerateProductionWithPlus() {
+    @Test fun `with plus in name`() {
         val production = Production(0, "c+foo", listOf(), codePoint('x'))
 
         val written = generate(production)
@@ -371,7 +358,7 @@ class YamlSymbolGeneratorTest {
     }
 
 
-    @Test fun shouldGenerateAlternativeReferencesProduction() {
+    @Test fun `alternative references`() {
         val ref1 = Production(1, "ref1", listOf(), codePoint('x'))
         val ref2 = Production(2, "ref2", listOf(), codePoint('y'))
         val foo = production(alt(ref(ref1), ref(ref2)))
@@ -403,7 +390,7 @@ class YamlSymbolGeneratorTest {
     }
 
 
-    @Test fun shouldGenerateAlternativeCodePointsProduction() {
+    @Test fun `alternative code points`() {
         val production = production(alt(codePoint('a'), codePoint('b')))
 
         val written = generate(production)
@@ -417,7 +404,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'a' or 'b')\n"))
     }
 
-    @Test fun shouldGenerateMixedAlternativesProduction() {
+    @Test fun `alternative of ref or code point`() {
         val bar = Production(1, "bar", listOf(), codePoint('x'))
         val foo = production(alt(ref(bar), codePoint('b')))
 
@@ -440,7 +427,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", `bar` or 'b')\n"))
     }
 
-    @Test fun shouldGenerateAlternativeOfCodePointOrRangeProduction() {
+    @Test fun `alternative of code point or range`() {
         val production = production(alt(codePoint('\t'), range(CodePoint.of(' '), CodePoint.of(0x10ffff))))
 
         val written = generate(production)
@@ -454,7 +441,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", '\\t' or ' '..\"\\uDBFF\\uDFFF\")\n"))
     }
 
-    @Test fun shouldGenerateAlternativeOfSequenceAndReferenceProduction() {
+    @Test fun `alternative of sequence and reference or references`() {
         val a = Production(1, "a", listOf(), codePoint('a'))
         val b = Production(2, "b", listOf(), codePoint('b'))
         val foo = production(alt(seq(ref(a), ref(b)), ref(a), ref(b)))
@@ -485,7 +472,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", (`a` + `b`) or `a` or `b`)\n"))
     }
 
-    @Test fun shouldGenerateSequenceOfReferenceAndRepeatProduction() {
+    @Test fun `sequence of reference and repeat`() {
         val a = Production(1, "a", listOf(), codePoint('a'))
         val b = Production(2, "b", listOf(), codePoint('b'))
         val foo = production(seq(ref(a), RepeatedExpression(ref(b), "?")))
@@ -514,7 +501,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", `a` + `b` * zero_or_once)\n"))
     }
 
-    @Test fun shouldGenerateMinusRefProduction() {
+    @Test fun `code point minus minus`() {
         val production = production(MinusExpression(codePoint('a')).minus(codePoint('b')).minus(codePoint('c')))
 
         val written = generate(production)
@@ -527,7 +514,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'a' - 'b' - 'c')\n"))
     }
 
-    @Test fun shouldGenerateEndOfFileRefProduction() {
+    @Test fun `end of file ref`() {
         val production = production(ReferenceExpression("End of file"))
 
         val written = generate(production)
@@ -540,7 +527,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", endOfFile)\n"))
     }
 
-    @Test fun shouldGenerateEmptyRefProduction() {
+    @Test fun `empty ref`() {
         val production = production(ReferenceExpression("Empty"))
 
         val written = generate(production)
@@ -553,7 +540,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", empty)\n"))
     }
 
-    @Test fun shouldGenerateRepeatThreeTimesProduction() {
+    @Test fun `repeat three times`() {
         val production = production(RepeatedExpression(codePoint('x'), "3"))
 
         val written = generate(production)
@@ -566,7 +553,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'x' * 3)\n"))
     }
 
-    @Test fun shouldGenerateRepeatZeroOrOneTimesProduction() {
+    @Test fun `repeat zero or one times`() {
         val production = production(RepeatedExpression(codePoint('x'), "?"))
 
         val written = generate(production)
@@ -579,7 +566,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'x' * zero_or_once)\n"))
     }
 
-    @Test fun shouldGenerateRepeatZeroOrMoreTimesProduction() {
+    @Test fun `repeat zero or more times`() {
         val production = production(RepeatedExpression(codePoint('x'), "*"))
 
         val written = generate(production)
@@ -592,7 +579,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'x' * zero_or_more)\n"))
     }
 
-    @Test fun shouldGenerateRepeatOnceOrMoreTimesProduction() {
+    @Test fun `repeat once or more times`() {
         val production = production(RepeatedExpression(codePoint('x'), "+"))
 
         val written = generate(production)
@@ -605,7 +592,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'x' * once_or_more)\n"))
     }
 
-    @Test fun shouldGenerateSequenceWithRepeatTwiceProduction() {
+    @Test fun `sequence with repeat twice`() {
         val production = production(seq(codePoint('x'), RepeatedExpression(codePoint('y'), "2")))
 
         val written = generate(production)
@@ -618,7 +605,7 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'x' + 'y' * 2)\n"))
     }
 
-    @Test fun shouldGenerateParameterizedSequenceWithRepeatTwiceProduction() {
+    @Test fun `parameterized sequence with repeat twice`() {
         val production = Production(0, "foo", listOf("n"), seq(codePoint('x'), RepeatedExpression(codePoint('y'), "n")))
 
         val written = generate(production)
@@ -628,7 +615,59 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * <[x][LATIN SMALL LETTER X][0x78]> + (<[y][LATIN SMALL LETTER Y][0x79]> × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) = 'x' + 'y' * n\n"))
+            "fun `foo`(n: Int): Token = 'x' + 'y' * n\n"))
+    }
+
+    @Test fun `reference with n+1 arg`() {
+        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "?"))
+        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to "n+1")))
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * ->bar(n = n+1)\n" +
+            " */\n" +
+            "fun `foo`(n: Int): Token = `bar`(n+1)\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × ?)\n" +
+            " */\n" +
+            "fun `bar`(n: Int): Token {\n" +
+            "    val token = 'x' * zero_or_once\n" +
+            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
+            "}\n"))
+    }
+
+    @Test fun `reference with flow-in arg`() {
+        val bar = Production(1, "bar", listOf("c"), switch(
+            eq(variable("c"), ReferenceExpression("flow-in")) to ReferenceExpression("flow-out"),
+            eq(variable("c"), ReferenceExpression("flow-out")) to ReferenceExpression("flow-in")))
+        val foo = Production(0, "foo", listOf(), ReferenceExpression(bar.name, listOf("c" to "flow-in")))
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "// 0: foo -> [1]\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar(c):\n" +
+            " * <c> = ->flow-in ⇒ ->flow-out\n" +
+            " * <c> = ->flow-out ⇒ ->flow-in\n" +
+            " */\n" +
+            "fun `bar`(c: InOutMode): Token = when (c) {\n" +
+            "    `flow-in` -> `flow-out`\n" +
+            "    `flow-out` -> `flow-in`\n" +
+            "    else -> error(\"unexpected `c` value `\$c`\")\n" +
+            "}\n" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo:\n" +
+            " * ->bar(c = flow-in)\n" +
+            " */\n" +
+            "val `foo` = token(\"foo\", `bar`(`flow-in`))\n"))
     }
 
 
@@ -639,7 +678,7 @@ class YamlSymbolGeneratorTest {
 
     private fun range(min: Char, max: Char) = range(CodePoint.of(min), CodePoint.of(max))
     private fun range(min: CodePoint, max: CodePoint) = RangeExpression(codePoint(min), codePoint(max))
-    private fun ref(ref: Production) = ReferenceExpression(ref.key)
+    private fun ref(ref: Production) = ReferenceExpression(ref.name, ref.args.map { it to it })
 
     private fun seq(e1: Expression, e2: Expression, vararg more: Expression): SequenceExpression {
         var out = SequenceExpression.of(e1, e2)
