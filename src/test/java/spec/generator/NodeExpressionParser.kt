@@ -153,7 +153,7 @@ class NodeExpressionParser(nodes: List<Node>) {
 
     data class Ref(
         var name: String,
-        val args: MutableList<Pair<String, String>>,
+        val args: MutableList<Pair<String, Expression>>,
         private var closed: Boolean
     ) {
         private constructor(element: Element) : this(element.href) {
@@ -168,10 +168,13 @@ class NodeExpressionParser(nodes: List<Node>) {
         }
 
         private fun fixName(prefix: String) {
-            if (args.size == 1 && args[0].second.startsWith(prefix)) {
-                name += args[0].second.substring(0, 1)
-                assertThat(args[0].first.startsWith(prefix))
-                args[0] = args[0].first.substring(1) to args[0].second.substring(1)
+            if (args.size == 1) {
+                val value = args[0].second
+                if (value is VariableExpression && value.name.startsWith(prefix)) {
+                    name += value.name.substring(0, 1)
+                    assertThat(args[0].first.startsWith(prefix))
+                    args[0] = args[0].first.substring(1) to VariableExpression(value.name.substring(1))
+                }
             }
         }
 
@@ -203,7 +206,7 @@ class NodeExpressionParser(nodes: List<Node>) {
             args[i] = args[i].copy(first = value)
         }
 
-        private fun setArgValue(i: Int, value: String) {
+        private fun setArgValue(i: Int, value: Expression) {
             args[i] = args[i].copy(second = value)
         }
 
@@ -234,12 +237,12 @@ class NodeExpressionParser(nodes: List<Node>) {
                     return substring(0, end)
                 }
             /** see [readUntilClose] */
-            private val String.parsedArgs: MutableList<Pair<String, String>>
+            private val String.parsedArgs: MutableList<Pair<String, Expression>>
                 get() {
                     val start = indexOf('(')
                     if (start < 0) return mutableListOf()
                     val text = substring(start + 1, length - if (parseHasClosedArgs) 1 else 0)
-                    return text.split(",").map { it to it }.toMutableList()
+                    return text.split(",").map { it to VariableExpression(it) }.toMutableList()
                 }
             /** see [cleanupAndCheck] */
             private val String.parseHasClosedArgs: Boolean get() = !contains('(') || last() == ')'
@@ -251,7 +254,7 @@ class NodeExpressionParser(nodes: List<Node>) {
             val close = next.readElement()
             assertThat("->${close.href}").isEqualTo("$this")
             assertThat(close.text).isEqualTo(")")
-            setArgValue(args.size - 1, argRef.toString())
+            setArgValue(args.size - 1, argRef.toExpression())
             return Ref(name = name, args = args, closed = true)
         }
 

@@ -205,7 +205,7 @@ import test.softly
             " <a href=\"#s-white\">s-white</a>* <a href=\"#c-escape\">“<span class=\"quote\">\\</span>”</a> <a href=\"#b-non-content\">b-non-content</a><br> " +
                 "<a href=\"#l-empty(n,c)\">l-empty(n,flow-in)</a>* <a href=\"#s-flow-line-prefix(n)\">s-flow-line-prefix(n)</a> ")
 
-        assertThat(production.toString()).isEqualTo("`112` : s-double-escaped:\n(->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c = flow-in) × *) + ->s-flow-line-prefix(n)")
+        assertThat(production.toString()).isEqualTo("`112` : s-double-escaped:\n(->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c = <flow-in>) × *) + ->s-flow-line-prefix(n)")
     }
 
     @Test fun `fix 126 - ref-comment`() {
@@ -250,7 +250,7 @@ import test.softly
             "/* At most 1024 characters altogether */ ")
 
         assertThat(production.toString()).isEqualTo("`155` : c-s-implicit-json-key(c):\n" +
-            "->c-flow-json-node(n = n/a,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether")
+            "->c-flow-json-node(n = <n/a>,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether")
     }
 
     @Test fun `switch with comment only case`() {

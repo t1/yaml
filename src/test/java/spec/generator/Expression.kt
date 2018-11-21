@@ -126,14 +126,16 @@ abstract class Expression {
         }
     }
 
-    open class ReferenceExpression(val name: String, val args: List<Pair<String, String>> = listOf()) : Expression() {
+    open class ReferenceExpression(val name: String, val args: List<Pair<String, Expression>> = listOf()) : Expression() {
         override fun toString() = "->$name" + inParentheses {
-            if (it.first == it.second) it.first else "${it.first} = ${it.second}"
+            if (with(it.second) { this is VariableExpression && this.name == it.first }) it.first else "${it.first} = ${it.second}"
         }
 
-        val key get() = name + inParentheses { it.first }
+        val key get() = name + argsKey
 
-        private fun inParentheses(transform: (Pair<String, String>) -> String) =
+        val argsKey get() = inParentheses { it.first }
+
+        private fun inParentheses(transform: (Pair<String, Expression>) -> String) =
             if (args.isEmpty()) "" else args.joinToString(",", "(", ")", transform = transform)
 
         override fun guide(visitor: Visitor) = visitor.visit(this)

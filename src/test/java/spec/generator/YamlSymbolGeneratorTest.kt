@@ -99,7 +99,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `recursive ref`() {
-        val production = Production(0, "foo", listOf("n"), ReferenceExpression("foo", listOf("n" to "n")))
+        val production = Production(0, "foo", listOf("n"), ReferenceExpression("foo", listOf("n" to VariableExpression("n"))))
 
         val written = generate(production)
 
@@ -286,7 +286,7 @@ class YamlSymbolGeneratorTest {
             "}\n"))
     }
 
-    @Test fun `reference to production with less-than arg`() {
+    @Test fun `ref to production with less-than arg`() {
         val bar = Production(1, "bar<", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
         val foo = Production(0, "foo", listOf("n"), ref(bar))
 
@@ -309,6 +309,37 @@ class YamlSymbolGeneratorTest {
             "    if (match.size >= n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
             "    return@token Match(matches = true, codePoints = match)\n" +
+            "}\n"))
+    }
+
+    @Test fun `ref arg with fun result`() {
+        val bis = Production(2, "bis", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
+        val bar = Production(1, "bar", listOf("n"), ref(bis))
+        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to ref(bis))))
+
+        val written = generate(foo, bar, bis)
+
+        assertThat(written).isEqualTo(source("" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * ->bar(n = ->bis(n))\n" +
+            " */\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(`bis`(n)) }\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar(n):\n" +
+            " * ->bis(n)\n" +
+            " */\n" +
+            "fun `bar`(n: Int) = tokenGenerator(\"bar\") { `bis`(n) }\n" +
+            "\n" +
+            "/**\n" +
+            " * `2` : bis(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
+            " */\n" +
+            "fun `bis`(n: Int) {\n" +
+            "    val token = 'x' * m\n" +
+            "    return token(\"bis(\$n)\") { token.match(it) }\n" +
             "}\n"))
     }
 
@@ -601,14 +632,14 @@ class YamlSymbolGeneratorTest {
 
     @Test fun `reference with n+1 arg`() {
         val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "?"))
-        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to "n+1")))
+        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to VariableExpression("n+1"))))
 
         val written = generate(foo, bar)
 
         assertThat(written).isEqualTo(source("\n" +
             "/**\n" +
             " * `0` : foo(n):\n" +
-            " * ->bar(n = n+1)\n" +
+            " * ->bar(n = <n+1>)\n" +
             " */\n" +
             "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n+1) }\n" +
             "\n" +
@@ -626,7 +657,7 @@ class YamlSymbolGeneratorTest {
         val bar = Production(1, "bar", listOf("c"), switch(
             eq(variable("c"), ReferenceExpression("flow-in")) to ReferenceExpression("flow-out"),
             eq(variable("c"), ReferenceExpression("flow-out")) to ReferenceExpression("flow-in")))
-        val foo = Production(0, "foo", listOf(), ReferenceExpression(bar.name, listOf("c" to "flow-in")))
+        val foo = Production(0, "foo", listOf(), ReferenceExpression(bar.name, listOf("c" to ReferenceExpression("flow-in"))))
 
         val written = generate(foo, bar)
 
@@ -646,7 +677,7 @@ class YamlSymbolGeneratorTest {
             "\n" +
             "/**\n" +
             " * `0` : foo:\n" +
-            " * ->bar(c = flow-in)\n" +
+            " * ->bar(c = ->flow-in)\n" +
             " */\n" +
             "val `foo` = token(\"foo\", `bar`(`flow-in`))\n"))
     }
@@ -659,7 +690,7 @@ class YamlSymbolGeneratorTest {
 
     private fun range(min: Char, max: Char) = range(CodePoint.of(min), CodePoint.of(max))
     private fun range(min: CodePoint, max: CodePoint) = RangeExpression(codePoint(min), codePoint(max))
-    private fun ref(ref: Production) = ReferenceExpression(ref.name, ref.args.map { it to it })
+    private fun ref(ref: Production) = ReferenceExpression(ref.name, ref.args.map { it to VariableExpression(it) })
 
     private fun seq(e1: Expression, e2: Expression, vararg more: Expression): SequenceExpression {
         var out = SequenceExpression.of(e1, e2)

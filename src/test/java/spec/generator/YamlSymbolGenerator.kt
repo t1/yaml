@@ -268,7 +268,13 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 override fun visit(reference: ReferenceExpression) = write(externalRefMap[reference.name] ?: refCall(reference))
 
                 private fun refCall(ref: ReferenceExpression): String = "`${ref.name.replace('<', '≪')}`" +
-                    if (ref.args.isEmpty()) "" else ref.args.joinToString(",", "(", ")") { externalRefMap[it.second] ?: it.second }
+                    if (ref.args.isEmpty()) "" else ref.args.joinToString(",", "(", ")") {
+                        when (val value = it.second) {
+                            is VariableExpression -> externalRefMap[value.name] ?: value.name
+                            is ReferenceExpression -> "`${value.name}`${value.argsKey}"
+                            else -> value.toString()
+                        }
+                    }
 
 
                 // ------------------------------ repeated
