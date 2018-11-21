@@ -63,6 +63,19 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", 'a' + 'b' + 'c')\n"))
     }
 
+    @Test fun `code point range`() {
+        val production = production(range('0', '9'))
+
+        val written = generate(production)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo:\n" +
+            " * [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]\n" +
+            " */\n" +
+            "val `foo` = token(\"foo\", '0'..'9')\n"))
+    }
+
     @Test fun `simple ref`() {
         val bar = Production(1, "bar", listOf(), codePoint('x'))
         val foo = production(ref(bar))
@@ -95,119 +108,87 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->foo(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int): Token /* TODO recursive */ = `foo`(n)\n"))
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `foo`(n) }\n"))
     }
 
-    @Test fun `code point range`() {
-        val production = production(range('0', '9'))
+    @Test fun `ref calling ref`() {
+        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
+        val foo = Production(0, "foo", listOf("n"), ref(bar))
 
-        val written = generate(production)
+        val written = generate(foo, bar)
 
         assertThat(written).isEqualTo(source("\n" +
             "/**\n" +
-            " * `0` : foo:\n" +
-            " * [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]\n" +
+            " * `0` : foo(n):\n" +
+            " * ->bar(n)\n" +
             " */\n" +
-            "val `foo` = token(\"foo\", '0'..'9')\n"))
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n) }\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
+            " */\n" +
+            "fun `bar`(n: Int) {\n" +
+            "    val token = 'x' * n\n" +
+            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
+            "}\n"))
     }
 
-    @Test fun `switch to code points`() {
-        val x = Production(1, "x", listOf(), codePoint('x'))
-        val y = Production(2, "y", listOf(), codePoint('y'))
-        val z = Production(3, "z", listOf(), codePoint('z'))
+    @Test fun `switch constants to code points`() {
         val foo = Production(0, "foo", listOf("c"), switch(
-            eq(variable("c"), ref(x)) to codePoint('1'),
-            eq(variable("c"), ref(y)) to codePoint('2'),
-            eq(variable("c"), ref(z)) to codePoint('3')
+            eq(variable("c"), ReferenceExpression("flow-in")) to codePoint('1'),
+            eq(variable("c"), ReferenceExpression("flow-key")) to codePoint('2'),
+            eq(variable("c"), ReferenceExpression("flow-out")) to codePoint('3')
         ))
 
-        val written = generate(foo, x, y, z)
+        val written = generate(foo)
 
         assertThat(written).isEqualTo(source("" +
             "\n" +
             "/**\n" +
             " * `0` : foo(c):\n" +
-            " * <c> = ->x ⇒ <[1][DIGIT ONE][0x31]>\n" +
-            " * <c> = ->y ⇒ <[2][DIGIT TWO][0x32]>\n" +
-            " * <c> = ->z ⇒ <[3][DIGIT THREE][0x33]>\n" +
+            " * <c> = ->flow-in ⇒ <[1][DIGIT ONE][0x31]>\n" +
+            " * <c> = ->flow-key ⇒ <[2][DIGIT TWO][0x32]>\n" +
+            " * <c> = ->flow-out ⇒ <[3][DIGIT THREE][0x33]>\n" +
             " */\n" +
-            "fun `foo`(c: InOutMode): Token = when (c) {\n" +
-            "    `x` -> '1' named \"foo(\$c)\"\n" +
-            "    `y` -> '2' named \"foo(\$c)\"\n" +
-            "    `z` -> '3' named \"foo(\$c)\"\n" +
+            "fun `foo`(c: InOutMode) = when (c) {\n" +
+            "    `flow-in` -> '1' named \"foo(\$c)\"\n" +
+            "    `flow-key` -> '2' named \"foo(\$c)\"\n" +
+            "    `flow-out` -> '3' named \"foo(\$c)\"\n" +
             "    else -> error(\"unexpected `c` value `\$c`\")\n" +
-            "}\n" +
-            "\n" +
-            "/**\n" +
-            " * `1` : x:\n" +
-            " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
-            " */\n" +
-            "val `x` = token(\"x\", 'x')\n" +
-            "\n" +
-            "/**\n" +
-            " * `2` : y:\n" +
-            " * <[y][LATIN SMALL LETTER Y][0x79]>\n" +
-            " */\n" +
-            "val `y` = token(\"y\", 'y')\n" +
-            "\n" +
-            "/**\n" +
-            " * `3` : z:\n" +
-            " * <[z][LATIN SMALL LETTER Z][0x7a]>\n" +
-            " */\n" +
-            "val `z` = token(\"z\", 'z')\n"))
+            "}\n"))
     }
 
-    @Test fun `switch to ref with args`() {
-        val x = Production(1, "x", listOf(), codePoint('x'))
-        val y = Production(2, "y", listOf(), codePoint('y'))
-        val z = Production(3, "z", listOf(), codePoint('z'))
-        val bar = Production(4, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
+    @Test fun `switch constants to ref with args`() {
+        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
         val foo = Production(0, "foo", listOf("n", "c"), switch(
-            eq(variable("d"), ref(x)) to ref(bar),
-            eq(variable("d"), ref(y)) to ref(bar),
-            eq(variable("d"), ref(z)) to ref(bar)
+            eq(variable("d"), ReferenceExpression("flow-in")) to ref(bar),
+            eq(variable("d"), ReferenceExpression("flow-key")) to ref(bar),
+            eq(variable("d"), ReferenceExpression("flow-out")) to ref(bar)
         ))
 
-        val written = generate(foo, x, y, z, bar)
+        val written = generate(foo, bar)
 
         assertThat(written).isEqualTo(source("" +
             "\n" +
             "/**\n" +
             " * `0` : foo(n,c):\n" +
-            " * <d> = ->x ⇒ ->bar(n)\n" +
-            " * <d> = ->y ⇒ ->bar(n)\n" +
-            " * <d> = ->z ⇒ ->bar(n)\n" +
+            " * <d> = ->flow-in ⇒ ->bar(n)\n" +
+            " * <d> = ->flow-key ⇒ ->bar(n)\n" +
+            " * <d> = ->flow-out ⇒ ->bar(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int, c: InOutMode): Token = when (d) {\n" +
-            "    `x` -> `bar`(n) named \"foo(\$d)\"\n" +
-            "    `y` -> `bar`(n) named \"foo(\$d)\"\n" +
-            "    `z` -> `bar`(n) named \"foo(\$d)\"\n" +
+            "fun `foo`(n: Int, c: InOutMode) = tokenGenerator(\"foo\") { when (d) {\n" +
+            "    `flow-in` -> `bar`(n) named \"foo(\$d)\"\n" +
+            "    `flow-key` -> `bar`(n) named \"foo(\$d)\"\n" +
+            "    `flow-out` -> `bar`(n) named \"foo(\$d)\"\n" +
             "    else -> error(\"unexpected `d` value `\$d`\")\n" +
-            "}\n" +
+            "} }\n" +
             "\n" +
             "/**\n" +
-            " * `1` : x:\n" +
-            " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
-            " */\n" +
-            "val `x` = token(\"x\", 'x')\n" +
-            "\n" +
-            "/**\n" +
-            " * `2` : y:\n" +
-            " * <[y][LATIN SMALL LETTER Y][0x79]>\n" +
-            " */\n" +
-            "val `y` = token(\"y\", 'y')\n" +
-            "\n" +
-            "/**\n" +
-            " * `3` : z:\n" +
-            " * <[z][LATIN SMALL LETTER Z][0x7a]>\n" +
-            " */\n" +
-            "val `z` = token(\"z\", 'z')\n" +
-            "\n" +
-            "/**\n" +
-            " * `4` : bar(n):\n" +
+            " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int): Token {\n" +
+            "fun `bar`(n: Int) {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -223,7 +204,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int): Token {\n" +
+            "fun `foo`(n: Int) {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"foo(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -239,7 +220,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo<(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
             " */\n" +
-            "fun `foo≪`(n: Int): Token = token(\"foo<(n)\") { reader ->\n" +
+            "fun `foo≪`(n: Int) = token(\"foo<(n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size >= n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
@@ -257,7 +238,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo≤(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m ≤ n */)\n" +
             " */\n" +
-            "fun `foo≤`(n: Int): Token = token(\"foo≤(n)\") { reader ->\n" +
+            "fun `foo≤`(n: Int) = token(\"foo≤(n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size > n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
@@ -275,7 +256,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(c,n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `foo`(c: InOutMode, n: Int): Token {\n" +
+            "fun `foo`(c: InOutMode, n: Int) {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"foo(\$c, \$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -293,13 +274,13 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->bar(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int): Token = `bar`(n)\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n) }\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int): Token {\n" +
+            "fun `bar`(n: Int) {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -317,13 +298,13 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->bar<(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int): Token = `bar≪`(n)\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar≪`(n) }\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar<(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
             " */\n" +
-            "fun `bar≪`(n: Int): Token = token(\"bar<(n)\") { reader ->\n" +
+            "fun `bar≪`(n: Int) = token(\"bar<(n)\") { reader ->\n" +
             "    val match = reader.mark { reader.readWhile { reader -> 'x'.match(reader).codePoints } }\n" +
             "    if (match.size >= n) return@token Match(matches = false)\n" +
             "    reader.expect(match)\n" +
@@ -615,7 +596,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * <[x][LATIN SMALL LETTER X][0x78]> + (<[y][LATIN SMALL LETTER Y][0x79]> × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int): Token = 'x' + 'y' * n\n"))
+            "fun `foo`(n: Int) = 'x' + 'y' * n\n"))
     }
 
     @Test fun `reference with n+1 arg`() {
@@ -629,13 +610,13 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->bar(n = n+1)\n" +
             " */\n" +
-            "fun `foo`(n: Int): Token = `bar`(n+1)\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n+1) }\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × ?)\n" +
             " */\n" +
-            "fun `bar`(n: Int): Token {\n" +
+            "fun `bar`(n: Int) {\n" +
             "    val token = 'x' * zero_or_once\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -657,7 +638,7 @@ class YamlSymbolGeneratorTest {
             " * <c> = ->flow-in ⇒ ->flow-out\n" +
             " * <c> = ->flow-out ⇒ ->flow-in\n" +
             " */\n" +
-            "fun `bar`(c: InOutMode): Token = when (c) {\n" +
+            "fun `bar`(c: InOutMode) = when (c) {\n" +
             "    `flow-in` -> `flow-out`\n" +
             "    `flow-out` -> `flow-in`\n" +
             "    else -> error(\"unexpected `c` value `\$c`\")\n" +

@@ -144,6 +144,9 @@ val startOfLine = token("startOfLine") { Match(matches = it.isStartOfLine) }
 val whitespace = Symbol("whitespace", CodePoint::isWhitespace)
 val endOfFile = token("EOF") { Match(matches = it.isEndOfFile) }
 
+/** Return a token that lazily generates a token when called. This is important to break recursions between tokens. */
+fun tokenGenerator(description: String, body: () -> Token) = token(description) { reader -> body().match(reader) }
+/** Renames a token */
 fun token(description: String, token: Token) = token(description) { token.match(it) }
 fun token(description: String, match: (CodePointReader) -> Match) = object : Token {
     override fun toString() = description
