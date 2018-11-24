@@ -288,7 +288,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
                 // ------------------------------ repeated
                 fun writeFun(repeat: RepeatedExpression) {
-                    write(" {\n" +
+                    write(" : Token {\n" +
                         "    val token = ")
                     repeat.guide(this)
                     write("\n")

@@ -112,7 +112,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `ref calling ref`() {
-        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
+        val bar = Production(1, "bar", listOf("n"), codePoint('x') * 'n')
         val foo = Production(0, "foo", listOf("n"), ref(bar))
 
         val written = generate(foo, bar)
@@ -128,7 +128,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) {\n" +
+            "fun `bar`(n: Int) : Token {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -160,7 +160,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `switch constants to ref with args`() {
-        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
+        val bar = Production(1, "bar", listOf("n"), codePoint('x') * 'n')
         val foo = Production(0, "foo", listOf("n", "c"), switch(
             eq(variable("d"), ReferenceExpression("flow-in")) to ref(bar),
             eq(variable("d"), ReferenceExpression("flow-key")) to ref(bar),
@@ -188,14 +188,14 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) {\n" +
+            "fun `bar`(n: Int) : Token {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
             "}\n"))
     }
 
     @Test fun `with one arg`() {
-        val production = Production(0, "foo", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
+        val production = Production(0, "foo", listOf("n"), codePoint('x') * 'n')
 
         val written = generate(production)
 
@@ -204,7 +204,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) {\n" +
+            "fun `foo`(n: Int) : Token {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"foo(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -247,7 +247,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `with two args`() {
-        val production = Production(0, "foo", listOf("c", "n"), RepeatedExpression(codePoint('x'), "n"))
+        val production = Production(0, "foo", listOf("c", "n"), codePoint('x') * 'n')
 
         val written = generate(production)
 
@@ -256,14 +256,14 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(c,n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `foo`(c: InOutMode, n: Int) {\n" +
+            "fun `foo`(c: InOutMode, n: Int) : Token {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"foo(\$c, \$n)\") { token.match(it) }\n" +
             "}\n"))
     }
 
     @Test fun `ref with args`() {
-        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
+        val bar = Production(1, "bar", listOf("n"), codePoint('x') * 'n')
         val foo = Production(0, "foo", listOf("n"), ref(bar))
 
         val written = generate(foo, bar)
@@ -280,7 +280,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) {\n" +
+            "fun `bar`(n: Int) : Token {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -313,38 +313,68 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `ref arg with fun result`() {
-        val bis = Production(2, "bis", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
-        val bar = Production(1, "bar", listOf("n"), ref(bis))
-        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to ref(bis))))
+        val baz = Production(2, "baz", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
+        val bar = Production(1, "bar", listOf("n"), ref(baz))
+        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to ref(baz))))
 
-        val written = generate(foo, bar, bis)
+        val written = generate(foo, bar, baz)
 
         assertThat(written).isEqualTo(source("" +
             "\n" +
             "/**\n" +
             " * `0` : foo(n):\n" +
-            " * ->bar(n = ->bis(n))\n" +
+            " * ->bar(n = ->baz(n))\n" +
             " */\n" +
-            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(`bis`(n)) }\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(`baz`(n)) }\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar(n):\n" +
-            " * ->bis(n)\n" +
+            " * ->baz(n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) = tokenGenerator(\"bar\") { `bis`(n) }\n" +
+            "fun `bar`(n: Int) = tokenGenerator(\"bar\") { `baz`(n) }\n" +
             "\n" +
             "/**\n" +
-            " * `2` : bis(n):\n" +
+            " * `2` : baz(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
             " */\n" +
-            "fun `bis`(n: Int) {\n" +
+            "fun `baz`(n: Int) : Token {\n" +
             "    val token = 'x' * m\n" +
-            "    return token(\"bis(\$n)\") { token.match(it) }\n" +
+            "    return token(\"baz(\$n)\") { token.match(it) }\n" +
+            "}\n"))
+    }
+
+    @Test fun `with one argx`() {
+        val baz = Production(2, "baz", listOf("n"), codePoint('y') * 'n')
+        val bar = Production(1, "bar", listOf(), codePoint('x'))
+        val foo = Production(0, "foo", listOf("n"), seq(ref(bar) * '*', ref(baz) * '*'))
+
+        val written = generate(foo, bar, baz)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * (->bar × *) + (->baz(n) × *)\n" +
+            " */\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar` * zero_or_more + `baz`(n) * zero_or_more }\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar:\n" +
+            " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
+            " */\n" +
+            "val `bar` = token(\"bar\", 'x')\n" +
+            "\n" +
+            "/**\n" +
+            " * `2` : baz(n):\n" +
+            " * (<[y][LATIN SMALL LETTER Y][0x79]> × n)\n" +
+            " */\n" +
+            "fun `baz`(n: Int) : Token {\n" +
+            "    val token = 'y' * n\n" +
+            "    return token(\"baz(\$n)\") { token.match(it) }\n" +
             "}\n"))
     }
 
     @Test fun `alternative with fun ref`() {
-        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
+        val bar = Production(1, "bar", listOf("n"), codePoint('x') * 'n')
         val foo = Production(0, "foo", listOf("n"), alt(codePoint('x'), ref(bar)))
 
         val written = generate(foo, bar)
@@ -362,7 +392,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) {\n" +
+            "fun `bar`(n: Int) : Token {\n" +
             "    val token = 'x' * n\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -370,7 +400,7 @@ class YamlSymbolGeneratorTest {
 
     @Test fun `non-fun ref`() {
         val bar = Production(1, "bar", listOf(), codePoint('x'))
-        val foo = Production(0, "foo", listOf("n"), RepeatedExpression(ref(bar), "n"))
+        val foo = Production(0, "foo", listOf("n"), ref(bar) * 'n')
 
         val written = generate(foo, bar)
 
@@ -379,7 +409,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * (->bar × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) {\n" +
+            "fun `foo`(n: Int) : Token {\n" +
             "    val token = `bar` * n\n" +
             "    return token(\"foo(\$n)\") { token.match(it) }\n" +
             "}\n" +
@@ -535,7 +565,7 @@ class YamlSymbolGeneratorTest {
     @Test fun `sequence of reference and repeat`() {
         val a = Production(1, "a", listOf(), codePoint('a'))
         val b = Production(2, "b", listOf(), codePoint('b'))
-        val foo = production(seq(ref(a), RepeatedExpression(ref(b), "?")))
+        val foo = production(seq(ref(a), ref(b) * '?'))
 
         val written = generate(foo, a, b)
 
@@ -601,7 +631,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `repeat three times`() {
-        val production = production(RepeatedExpression(codePoint('x'), "3"))
+        val production = production(codePoint('x') * '3')
 
         val written = generate(production)
 
@@ -614,7 +644,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `repeat zero or one times`() {
-        val production = production(RepeatedExpression(codePoint('x'), "?"))
+        val production = production(codePoint('x') * '?')
 
         val written = generate(production)
 
@@ -627,7 +657,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `repeat zero or more times`() {
-        val production = production(RepeatedExpression(codePoint('x'), "*"))
+        val production = production(codePoint('x') * '*')
 
         val written = generate(production)
 
@@ -640,7 +670,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `repeat once or more times`() {
-        val production = production(RepeatedExpression(codePoint('x'), "+"))
+        val production = production(codePoint('x') * '+')
 
         val written = generate(production)
 
@@ -653,7 +683,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `sequence with repeat twice`() {
-        val production = production(seq(codePoint('x'), RepeatedExpression(codePoint('y'), "2")))
+        val production = production(seq(codePoint('x'), codePoint('y') * '2'))
 
         val written = generate(production)
 
@@ -666,7 +696,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `parameterized sequence with repeat twice`() {
-        val production = Production(0, "foo", listOf("n"), seq(codePoint('x'), RepeatedExpression(codePoint('y'), "n")))
+        val production = Production(0, "foo", listOf("n"), seq(codePoint('x'), codePoint('y') * 'n'))
 
         val written = generate(production)
 
@@ -695,7 +725,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × ?)\n" +
             " */\n" +
-            "fun `bar`(n: Int) {\n" +
+            "fun `bar`(n: Int) : Token {\n" +
             "    val token = 'x' * zero_or_once\n" +
             "    return token(\"bar(\$n)\") { token.match(it) }\n" +
             "}\n"))
@@ -735,6 +765,8 @@ class YamlSymbolGeneratorTest {
 
     private fun codePoint(char: Char) = codePoint(CodePoint.of(char))
     private fun codePoint(codePoint: CodePoint) = CodePointExpression(codePoint)
+
+    private operator fun Expression.times(repetitions: Char) = RepeatedExpression(this, repetitions.toString())
 
     private fun range(min: Char, max: Char) = range(CodePoint.of(min), CodePoint.of(max))
     private fun range(min: CodePoint, max: CodePoint) = RangeExpression(codePoint(min), codePoint(max))
