@@ -514,32 +514,32 @@ val `c-ns-esc-char` = token("c-ns-esc-char", `c-escape` + `ns-esc-null` or `ns-e
  * `63` : s-indent(n):
  * (->s-space × n)
  */
-fun `s-indent`(n: Int) = tokenGenerator("s-indent") {
+fun `s-indent`(n: Int) : Token {
     val token = `s-space` * n
-    token("s-indent($n)") { token.match(it) }
+    return token("s-indent($n)") { token.match(it) }
 }
 
 /**
  * `64` : s-indent<(n):
  * (->s-space × m /* Where m < n */)
  */
-fun `s-indent≪`(n: Int) = tokenGenerator("s-indent≪") { token("s-indent<(n)") { reader ->
+fun `s-indent≪`(n: Int) = token("s-indent<(n)") { reader ->
     val match = reader.mark { reader.readWhile { reader -> `s-space`.match(reader).codePoints } }
     if (match.size >= n) return@token Match(matches = false)
     reader.expect(match)
     return@token Match(matches = true, codePoints = match)
-} }
+}
 
 /**
  * `65` : s-indent≤(n):
  * (->s-space × m /* Where m ≤ n */)
  */
-fun `s-indent≤`(n: Int) = tokenGenerator("s-indent≤") { token("s-indent≤(n)") { reader ->
+fun `s-indent≤`(n: Int) = token("s-indent≤(n)") { reader ->
     val match = reader.mark { reader.readWhile { reader -> `s-space`.match(reader).codePoints } }
     if (match.size > n) return@token Match(matches = false)
     reader.expect(match)
     return@token Match(matches = true, codePoints = match)
-} }
+}
 
 /**
  * `66` : s-separate-in-line:
@@ -580,13 +580,13 @@ fun `s-flow-line-prefix`(n: Int) = tokenGenerator("s-flow-line-prefix") { `s-ind
  * [->s-line-prefix(n,c) |
  *    ->s-indent<(n)] + ->b-as-line-feed
  */
-fun `l-empty`(n: Int, c: InOutMode) = tokenGenerator("l-empty") { `s-line-prefix`(n,c) or `s-indent≪`(n) + `b-as-line-feed` }
+fun `l-empty`(n: Int, c: InOutMode) = tokenGenerator("l-empty") { `s-line-prefix`(n, c) or `s-indent≪`(n) + `b-as-line-feed` }
 
 /**
  * `71` : b-l-trimmed(n,c):
  * ->b-non-content + (->l-empty(n,c) × +)
  */
-fun `b-l-trimmed`(n: Int, c: InOutMode) = tokenGenerator("b-l-trimmed") { `b-non-content` + `l-empty`(n,c) * once_or_more }
+fun `b-l-trimmed`(n: Int, c: InOutMode) = tokenGenerator("b-l-trimmed") { `b-non-content` + `l-empty`(n, c) * once_or_more }
 
 /**
  * `72` : b-as-space:
@@ -599,13 +599,13 @@ val `b-as-space` = token("b-as-space", `b-break`)
  * [->b-l-trimmed(n,c) |
  *    ->b-as-space]
  */
-fun `b-l-folded`(n: Int, c: InOutMode) = tokenGenerator("b-l-folded") { `b-l-trimmed`(n,c) or `b-as-space` }
+fun `b-l-folded`(n: Int, c: InOutMode) = tokenGenerator("b-l-folded") { `b-l-trimmed`(n, c) or `b-as-space` }
 
 /**
  * `74` : s-flow-folded(n):
  * (->s-separate-in-line × ?) + ->b-l-folded(n,c = <flow-in>) + ->s-flow-line-prefix(n)
  */
-fun `s-flow-folded`(n: Int) = tokenGenerator("s-flow-folded") { `s-separate-in-line` * zero_or_once + `b-l-folded`(n,`flow-in`) + `s-flow-line-prefix`(n) }
+fun `s-flow-folded`(n: Int) = tokenGenerator("s-flow-folded") { `s-separate-in-line` * zero_or_once + `b-l-folded`(n, `flow-in`) + `s-flow-line-prefix`(n) }
 
 /**
  * `75` : c-nb-comment-text:
@@ -771,7 +771,7 @@ val `l-directive` = token("l-directive", `c-directive` + `ns-yaml-directive` or 
  * [->c-ns-tag-property + (->s-separate(n,c) + ->c-ns-anchor-property × ?) |
  *    ->c-ns-anchor-property + (->s-separate(n,c) + ->c-ns-tag-property × ?)]
  */
-fun `c-ns-properties`(n: Int, c: InOutMode) = tokenGenerator("c-ns-properties") { (`c-ns-tag-property` + (`s-separate`(n,c) + `c-ns-anchor-property`) * zero_or_once) or (`c-ns-anchor-property` + (`s-separate`(n,c) + `c-ns-tag-property`) * zero_or_once) }
+fun `c-ns-properties`(n: Int, c: InOutMode) = tokenGenerator("c-ns-properties") { (`c-ns-tag-property` + (`s-separate`(n, c) + `c-ns-anchor-property`) * zero_or_once) or (`c-ns-anchor-property` + (`s-separate`(n, c) + `c-ns-tag-property`) * zero_or_once) }
 
 // 97: c-ns-tag-property -> [98, 99, 100]
 
@@ -856,7 +856,7 @@ val `ns-double-char` = token("ns-double-char", `nb-double-char` - `s-white`)
  * `109` : c-double-quoted(n,c):
  * ->c-double-quote + ->nb-double-text(n,c) + ->c-double-quote
  */
-fun `c-double-quoted`(n: Int, c: InOutMode) = tokenGenerator("c-double-quoted") { `c-double-quote` + `nb-double-text`(n,c) + `c-double-quote` }
+fun `c-double-quoted`(n: Int, c: InOutMode) = tokenGenerator("c-double-quoted") { `c-double-quote` + `nb-double-text`(n, c) + `c-double-quote` }
 
 /**
  * `110` : nb-double-text(n,c):
@@ -883,7 +883,7 @@ val `nb-double-one-line` = token("nb-double-one-line", `nb-double-char` * zero_o
  * `112` : s-double-escaped(n):
  * (->s-white × *) + ->c-escape + ->b-non-content + (->l-empty(n,c = <flow-in>) × *) + ->s-flow-line-prefix(n)
  */
-fun `s-double-escaped`(n: Int) = tokenGenerator("s-double-escaped") { `s-white` * zero_or_more + `c-escape` + `b-non-content` + `l-empty`(n,`flow-in`) * zero_or_more + `s-flow-line-prefix`(n) }
+fun `s-double-escaped`(n: Int) = tokenGenerator("s-double-escaped") { `s-white` * zero_or_more + `c-escape` + `b-non-content` + `l-empty`(n, `flow-in`) * zero_or_more + `s-flow-line-prefix`(n) }
 
 /**
  * `113` : s-double-break(n):
@@ -935,7 +935,7 @@ val `ns-single-char` = token("ns-single-char", `nb-single-char` - `s-white`)
  * `120` : c-single-quoted(n,c):
  * ->c-single-quote + ->nb-single-text(n,c) + ->c-single-quote
  */
-fun `c-single-quoted`(n: Int, c: InOutMode) = tokenGenerator("c-single-quoted") { `c-single-quote` + `nb-single-text`(n,c) + `c-single-quote` }
+fun `c-single-quoted`(n: Int, c: InOutMode) = tokenGenerator("c-single-quoted") { `c-single-quote` + `nb-single-text`(n, c) + `c-single-quote` }
 
 /**
  * `121` : nb-single-text(n,c):
@@ -985,7 +985,7 @@ fun `nb-single-multi-line`(n: Int) = tokenGenerator("nb-single-multi-line") { `n
  *    ->c-mapping-value |
  *    ->c-sequence-entry] + ->Followed by an ns-plain-safe(c)]
  */
-fun `ns-plain-first`(c: InOutMode) = tokenGenerator("ns-plain-first") { `ns-char` - `c-indicator` or (`c-mapping-key` or `c-mapping-value` or `c-sequence-entry` + followedByAnNsPlainSafe) }
+fun `ns-plain-first`(c: InOutMode) = `ns-char` - `c-indicator` or (`c-mapping-key` or `c-mapping-value` or `c-sequence-entry` + followedByAnNsPlainSafe)
 
 /**
  * `127` : ns-plain-safe(c):
@@ -994,13 +994,13 @@ fun `ns-plain-first`(c: InOutMode) = tokenGenerator("ns-plain-first") { `ns-char
  * <c> = ->block-key ⇒ ->ns-plain-safe-out
  * <c> = ->flow-key ⇒ ->ns-plain-safe-in
  */
-fun `ns-plain-safe`(c: InOutMode) = tokenGenerator("ns-plain-safe") { when (c) {
+fun `ns-plain-safe`(c: InOutMode) = when (c) {
     `flow-out` -> `ns-plain-safe-out` named "ns-plain-safe($c)"
     `flow-in` -> `ns-plain-safe-in` named "ns-plain-safe($c)"
     `block-key` -> `ns-plain-safe-out` named "ns-plain-safe($c)"
     `flow-key` -> `ns-plain-safe-in` named "ns-plain-safe($c)"
     else -> error("unexpected `c` value `$c`")
-} }
+}
 
 /**
  * `128` : ns-plain-safe-out:
@@ -1030,8 +1030,8 @@ fun `ns-plain-char`(c: InOutMode) = tokenGenerator("ns-plain-char") { `ns-plain-
  * <c> = ->flow-key ⇒ ->ns-plain-one-line(c)
  */
 fun `ns-plain`(n: Int, c: InOutMode) = tokenGenerator("ns-plain") { when (c) {
-    `flow-out` -> `ns-plain-multi-line`(n,c) named "ns-plain($c)"
-    `flow-in` -> `ns-plain-multi-line`(n,c) named "ns-plain($c)"
+    `flow-out` -> `ns-plain-multi-line`(n, c) named "ns-plain($c)"
+    `flow-in` -> `ns-plain-multi-line`(n, c) named "ns-plain($c)"
     `block-key` -> `ns-plain-one-line`(c) named "ns-plain($c)"
     `flow-key` -> `ns-plain-one-line`(c) named "ns-plain($c)"
     else -> error("unexpected `c` value `$c`")
@@ -1062,7 +1062,7 @@ fun `s-ns-plain-next-line`(n: Int, c: InOutMode) = tokenGenerator("s-ns-plain-ne
  * `135` : ns-plain-multi-line(n,c):
  * ->ns-plain-one-line(c) + (->s-ns-plain-next-line(n,c) × *)
  */
-fun `ns-plain-multi-line`(n: Int, c: InOutMode) = tokenGenerator("ns-plain-multi-line") { `ns-plain-one-line`(c) + `s-ns-plain-next-line`(n,c) * zero_or_more }
+fun `ns-plain-multi-line`(n: Int, c: InOutMode) = tokenGenerator("ns-plain-multi-line") { `ns-plain-one-line`(c) + `s-ns-plain-next-line`(n, c) * zero_or_more }
 
 /**
  * `136` : in-flow(c):
@@ -1083,46 +1083,46 @@ fun `in-flow`(c: InOutMode) = when (c) {
  * `137` : c-flow-sequence(n,c):
  * ->c-sequence-start + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c = ->in-flow(c)) × ?) + ->c-sequence-end
  */
-fun `c-flow-sequence`(n: Int, c: InOutMode) = tokenGenerator("c-flow-sequence") { `c-sequence-start` + `s-separate`(n,c) * zero_or_once + `ns-s-flow-seq-entries`(n,`in-flow`(c)) * zero_or_once + `c-sequence-end` }
+fun `c-flow-sequence`(n: Int, c: InOutMode) = tokenGenerator("c-flow-sequence") { `c-sequence-start` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-seq-entries`(n, `in-flow`(c)) * zero_or_once + `c-sequence-end` }
 
 /**
  * `138` : ns-s-flow-seq-entries(n,c):
  * ->ns-flow-seq-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c) × ?) × ?)
  */
-fun `ns-s-flow-seq-entries`(n: Int, c: InOutMode) : Token = tokenGenerator("ns-s-flow-seq-entries") { `ns-flow-seq-entry`(n,c) + `s-separate`(n,c) * zero_or_once + (`c-collect-entry` + `s-separate`(n,c) * zero_or_once + `ns-s-flow-seq-entries`(n,c) * zero_or_once) * zero_or_once }
+fun `ns-s-flow-seq-entries`(n: Int, c: InOutMode) : Token = tokenGenerator("ns-s-flow-seq-entries") { `ns-flow-seq-entry`(n, c) + `s-separate`(n, c) * zero_or_once + (`c-collect-entry` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-seq-entries`(n, c) * zero_or_once) * zero_or_once }
 
 /**
  * `139` : ns-flow-seq-entry(n,c):
  * [->ns-flow-pair(n,c) |
  *    ->ns-flow-node(n,c)]
  */
-fun `ns-flow-seq-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-seq-entry") { `ns-flow-pair`(n,c) or `ns-flow-node`(n,c) }
+fun `ns-flow-seq-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-seq-entry") { `ns-flow-pair`(n, c) or `ns-flow-node`(n, c) }
 
 /**
  * `140` : c-flow-mapping(n,c):
  * ->c-mapping-start + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c = ->in-flow(c)) × ?) + ->c-mapping-end
  */
-fun `c-flow-mapping`(n: Int, c: InOutMode) = tokenGenerator("c-flow-mapping") { `c-mapping-start` + `s-separate`(n,c) * zero_or_once + `ns-s-flow-map-entries`(n,`in-flow`(c)) * zero_or_once + `c-mapping-end` }
+fun `c-flow-mapping`(n: Int, c: InOutMode) = tokenGenerator("c-flow-mapping") { `c-mapping-start` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-map-entries`(n, `in-flow`(c)) * zero_or_once + `c-mapping-end` }
 
 /**
  * `141` : ns-s-flow-map-entries(n,c):
  * ->ns-flow-map-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c) × ?) × ?)
  */
-fun `ns-s-flow-map-entries`(n: Int, c: InOutMode) : Token = tokenGenerator("ns-s-flow-map-entries") { `ns-flow-map-entry`(n,c) + `s-separate`(n,c) * zero_or_once + (`c-collect-entry` + `s-separate`(n,c) * zero_or_once + `ns-s-flow-map-entries`(n,c) * zero_or_once) * zero_or_once }
+fun `ns-s-flow-map-entries`(n: Int, c: InOutMode) : Token = tokenGenerator("ns-s-flow-map-entries") { `ns-flow-map-entry`(n, c) + `s-separate`(n, c) * zero_or_once + (`c-collect-entry` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-map-entries`(n, c) * zero_or_once) * zero_or_once }
 
 /**
  * `142` : ns-flow-map-entry(n,c):
  * [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) |
  *    ->ns-flow-map-implicit-entry(n,c)]
  */
-fun `ns-flow-map-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-map-entry") { (`c-mapping-key` + `s-separate`(n,c) + `ns-flow-map-explicit-entry`(n,c)) or `ns-flow-map-implicit-entry`(n,c) }
+fun `ns-flow-map-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-map-entry") { (`c-mapping-key` + `s-separate`(n, c) + `ns-flow-map-explicit-entry`(n, c)) or `ns-flow-map-implicit-entry`(n, c) }
 
 /**
  * `143` : ns-flow-map-explicit-entry(n,c):
  * [->ns-flow-map-implicit-entry(n,c) |
  *    ->e-node + ->e-node]
  */
-fun `ns-flow-map-explicit-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-map-explicit-entry") { `ns-flow-map-implicit-entry`(n,c) or (`e-node` + `e-node`) }
+fun `ns-flow-map-explicit-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-map-explicit-entry") { `ns-flow-map-implicit-entry`(n, c) or (`e-node` + `e-node`) }
 
 /**
  * `144` : ns-flow-map-implicit-entry(n,c):
@@ -1130,48 +1130,48 @@ fun `ns-flow-map-explicit-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow
  *    ->c-ns-flow-map-empty-key-entry(n,c) |
  *    ->c-ns-flow-map-json-key-entry(n,c)]
  */
-fun `ns-flow-map-implicit-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-map-implicit-entry") { `ns-flow-map-yaml-key-entry`(n,c) or `c-ns-flow-map-empty-key-entry`(n,c) or `c-ns-flow-map-json-key-entry`(n,c) }
+fun `ns-flow-map-implicit-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-map-implicit-entry") { `ns-flow-map-yaml-key-entry`(n, c) or `c-ns-flow-map-empty-key-entry`(n, c) or `c-ns-flow-map-json-key-entry`(n, c) }
 
 /**
  * `145` : ns-flow-map-yaml-key-entry(n,c):
  * ->ns-flow-yaml-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-separate-value(n,c) |
  *    ->e-node]
  */
-fun `ns-flow-map-yaml-key-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-map-yaml-key-entry") { `ns-flow-yaml-node`(n,c) + (`s-separate`(n,c) * zero_or_once + `c-ns-flow-map-separate-value`(n,c)) or `e-node` }
+fun `ns-flow-map-yaml-key-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-map-yaml-key-entry") { `ns-flow-yaml-node`(n, c) + (`s-separate`(n, c) * zero_or_once + `c-ns-flow-map-separate-value`(n, c)) or `e-node` }
 
 /**
  * `146` : c-ns-flow-map-empty-key-entry(n,c):
  * ->e-node + ->c-ns-flow-map-separate-value(n,c)
  */
-fun `c-ns-flow-map-empty-key-entry`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-map-empty-key-entry") { `e-node` + `c-ns-flow-map-separate-value`(n,c) }
+fun `c-ns-flow-map-empty-key-entry`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-map-empty-key-entry") { `e-node` + `c-ns-flow-map-separate-value`(n, c) }
 
 /**
  * `147` : c-ns-flow-map-separate-value(n,c):
  * ->c-mapping-value + [->s-separate(n,c) + ->ns-flow-node(n,c) |
  *    ->e-node]
  */
-fun `c-ns-flow-map-separate-value`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-map-separate-value") { `c-mapping-value` + (`s-separate`(n,c) + `ns-flow-node`(n,c)) or `e-node` }
+fun `c-ns-flow-map-separate-value`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-map-separate-value") { `c-mapping-value` + (`s-separate`(n, c) + `ns-flow-node`(n, c)) or `e-node` }
 
 /**
  * `148` : c-ns-flow-map-json-key-entry(n,c):
  * ->c-flow-json-node(n,c) + [(->s-separate(n,c) × ?) + ->c-ns-flow-map-adjacent-value(n,c) |
  *    ->e-node]
  */
-fun `c-ns-flow-map-json-key-entry`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-map-json-key-entry") { `c-flow-json-node`(n,c) + (`s-separate`(n,c) * zero_or_once + `c-ns-flow-map-adjacent-value`(n,c)) or `e-node` }
+fun `c-ns-flow-map-json-key-entry`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-map-json-key-entry") { `c-flow-json-node`(n, c) + (`s-separate`(n, c) * zero_or_once + `c-ns-flow-map-adjacent-value`(n, c)) or `e-node` }
 
 /**
  * `149` : c-ns-flow-map-adjacent-value(n,c):
  * ->c-mapping-value + [(->s-separate(n,c) × ?) + ->ns-flow-node(n,c) |
  *    ->e-node]
  */
-fun `c-ns-flow-map-adjacent-value`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-map-adjacent-value") { `c-mapping-value` + (`s-separate`(n,c) * zero_or_once + `ns-flow-node`(n,c)) or `e-node` }
+fun `c-ns-flow-map-adjacent-value`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-map-adjacent-value") { `c-mapping-value` + (`s-separate`(n, c) * zero_or_once + `ns-flow-node`(n, c)) or `e-node` }
 
 /**
  * `150` : ns-flow-pair(n,c):
  * [->c-mapping-key + ->s-separate(n,c) + ->ns-flow-map-explicit-entry(n,c) |
  *    ->ns-flow-pair-entry(n,c)]
  */
-fun `ns-flow-pair`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-pair") { (`c-mapping-key` + `s-separate`(n,c) + `ns-flow-map-explicit-entry`(n,c)) or `ns-flow-pair-entry`(n,c) }
+fun `ns-flow-pair`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-pair") { (`c-mapping-key` + `s-separate`(n, c) + `ns-flow-map-explicit-entry`(n, c)) or `ns-flow-pair-entry`(n, c) }
 
 /**
  * `151` : ns-flow-pair-entry(n,c):
@@ -1179,19 +1179,19 @@ fun `ns-flow-pair`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-pair") { (`c-
  *    ->c-ns-flow-map-empty-key-entry(n,c) |
  *    ->c-ns-flow-pair-json-key-entry(n,c)]
  */
-fun `ns-flow-pair-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-pair-entry") { `ns-flow-pair-yaml-key-entry`(n,c) or `c-ns-flow-map-empty-key-entry`(n,c) or `c-ns-flow-pair-json-key-entry`(n,c) }
+fun `ns-flow-pair-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-pair-entry") { `ns-flow-pair-yaml-key-entry`(n, c) or `c-ns-flow-map-empty-key-entry`(n, c) or `c-ns-flow-pair-json-key-entry`(n, c) }
 
 /**
  * `152` : ns-flow-pair-yaml-key-entry(n,c):
  * ->ns-s-implicit-yaml-key(c = <flow-key>) + ->c-ns-flow-map-separate-value(n,c)
  */
-fun `ns-flow-pair-yaml-key-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-pair-yaml-key-entry") { `ns-s-implicit-yaml-key`(`flow-key`) + `c-ns-flow-map-separate-value`(n,c) }
+fun `ns-flow-pair-yaml-key-entry`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-pair-yaml-key-entry") { `ns-s-implicit-yaml-key`(`flow-key`) + `c-ns-flow-map-separate-value`(n, c) }
 
 /**
  * `153` : c-ns-flow-pair-json-key-entry(n,c):
  * ->c-s-implicit-json-key(c = <flow-key>) + ->c-ns-flow-map-adjacent-value(n,c)
  */
-fun `c-ns-flow-pair-json-key-entry`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-pair-json-key-entry") { `c-s-implicit-json-key`(`flow-key`) + `c-ns-flow-map-adjacent-value`(n,c) }
+fun `c-ns-flow-pair-json-key-entry`(n: Int, c: InOutMode) = tokenGenerator("c-ns-flow-pair-json-key-entry") { `c-s-implicit-json-key`(`flow-key`) + `c-ns-flow-map-adjacent-value`(n, c) }
 
 /**
  * `154` : ns-s-implicit-yaml-key(c):
@@ -1209,7 +1209,7 @@ fun `c-s-implicit-json-key`(c: InOutMode) = tokenGenerator("c-s-implicit-json-ke
  * `156` : ns-flow-yaml-content(n,c):
  * ->ns-plain(n,c)
  */
-fun `ns-flow-yaml-content`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-yaml-content") { `ns-plain`(n,c) }
+fun `ns-flow-yaml-content`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-yaml-content") { `ns-plain`(n, c) }
 
 /**
  * `157` : c-flow-json-content(n,c):
@@ -1218,14 +1218,14 @@ fun `ns-flow-yaml-content`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-yaml-
  *    ->c-single-quoted(n,c) |
  *    ->c-double-quoted(n,c)]
  */
-fun `c-flow-json-content`(n: Int, c: InOutMode) = tokenGenerator("c-flow-json-content") { `c-flow-sequence`(n,c) or `c-flow-mapping`(n,c) or `c-single-quoted`(n,c) or `c-double-quoted`(n,c) }
+fun `c-flow-json-content`(n: Int, c: InOutMode) = tokenGenerator("c-flow-json-content") { `c-flow-sequence`(n, c) or `c-flow-mapping`(n, c) or `c-single-quoted`(n, c) or `c-double-quoted`(n, c) }
 
 /**
  * `158` : ns-flow-content(n,c):
  * [->ns-flow-yaml-content(n,c) |
  *    ->c-flow-json-content(n,c)]
  */
-fun `ns-flow-content`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-content") { `ns-flow-yaml-content`(n,c) or `c-flow-json-content`(n,c) }
+fun `ns-flow-content`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-content") { `ns-flow-yaml-content`(n, c) or `c-flow-json-content`(n, c) }
 
 /**
  * `159` : ns-flow-yaml-node(n,c):
@@ -1234,13 +1234,13 @@ fun `ns-flow-content`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-content") 
  *    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-yaml-content(n,c) |
  *    ->e-scalar]]
  */
-fun `ns-flow-yaml-node`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-yaml-node") { `c-ns-alias-node` or `ns-flow-yaml-content`(n,c) or (`c-ns-properties`(n,c) + (`s-separate`(n,c) + `ns-flow-yaml-content`(n,c)) or `e-scalar`) }
+fun `ns-flow-yaml-node`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-yaml-node") { `c-ns-alias-node` or `ns-flow-yaml-content`(n, c) or (`c-ns-properties`(n, c) + (`s-separate`(n, c) + `ns-flow-yaml-content`(n, c)) or `e-scalar`) }
 
 /**
  * `160` : c-flow-json-node(n,c):
  * (->c-ns-properties(n,c) + ->s-separate(n,c) × ?) + ->c-flow-json-content(n,c)
  */
-fun `c-flow-json-node`(n: Int, c: InOutMode) = tokenGenerator("c-flow-json-node") { (`c-ns-properties`(n,c) + `s-separate`(n,c)) * zero_or_once + `c-flow-json-content`(n,c) }
+fun `c-flow-json-node`(n: Int, c: InOutMode) = tokenGenerator("c-flow-json-node") { (`c-ns-properties`(n, c) + `s-separate`(n, c)) * zero_or_once + `c-flow-json-content`(n, c) }
 
 /**
  * `161` : ns-flow-node(n,c):
@@ -1249,7 +1249,7 @@ fun `c-flow-json-node`(n: Int, c: InOutMode) = tokenGenerator("c-flow-json-node"
  *    ->c-ns-properties(n,c) + [->s-separate(n,c) + ->ns-flow-content(n,c) |
  *    ->e-scalar]]
  */
-fun `ns-flow-node`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-node") { `c-ns-alias-node` or `ns-flow-content`(n,c) or (`c-ns-properties`(n,c) + (`s-separate`(n,c) + `ns-flow-content`(n,c)) or `e-scalar`) }
+fun `ns-flow-node`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-node") { `c-ns-alias-node` or `ns-flow-content`(n, c) or (`c-ns-properties`(n, c) + (`s-separate`(n, c) + `ns-flow-content`(n, c)) or `e-scalar`) }
 
 /**
  * `162` : c-b-block-header(m,t):
@@ -1302,7 +1302,7 @@ fun `l-strip-empty`(n: Int) = tokenGenerator("l-strip-empty") { (`s-indent≤`(n
  * `168` : l-keep-empty(n):
  * (->l-empty(n,c = <block-in>) × *) + (->l-trail-comments(n) × ?)
  */
-fun `l-keep-empty`(n: Int) = tokenGenerator("l-keep-empty") { `l-empty`(n,`block-in`) * zero_or_more + `l-trail-comments`(n) * zero_or_once }
+fun `l-keep-empty`(n: Int) = tokenGenerator("l-keep-empty") { `l-empty`(n, `block-in`) * zero_or_more + `l-trail-comments`(n) * zero_or_once }
 
 /**
  * `169` : l-trail-comments(n):
@@ -1320,7 +1320,7 @@ fun `c-l+literal`(n: Int) = tokenGenerator("c-l+literal") { undefined /* TODO gl
  * `171` : l-nb-literal-text(n):
  * (->l-empty(n,c = <block-in>) × *) + ->s-indent(n) + (->nb-char × +)
  */
-fun `l-nb-literal-text`(n: Int) = tokenGenerator("l-nb-literal-text") { `l-empty`(n,`block-in`) * zero_or_more + `s-indent`(n) + `nb-char` * once_or_more }
+fun `l-nb-literal-text`(n: Int) = tokenGenerator("l-nb-literal-text") { `l-empty`(n, `block-in`) * zero_or_more + `s-indent`(n) + `nb-char` * once_or_more }
 
 /**
  * `172` : b-nb-literal-next(n):
@@ -1332,7 +1332,7 @@ fun `b-nb-literal-next`(n: Int) = tokenGenerator("b-nb-literal-next") { `b-as-li
  * `173` : l-literal-content(n,t):
  * (->l-nb-literal-text(n) + (->b-nb-literal-next(n) × *) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
  */
-fun `l-literal-content`(n: Int, t: String) = tokenGenerator("l-literal-content") { (`l-nb-literal-text`(n) + `b-nb-literal-next`(n) * zero_or_more + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n,t) }
+fun `l-literal-content`(n: Int, t: String) = tokenGenerator("l-literal-content") { (`l-nb-literal-text`(n) + `b-nb-literal-next`(n) * zero_or_more + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n, t) }
 
 /**
  * `174` : c-l+folded(n):
@@ -1350,7 +1350,7 @@ fun `s-nb-folded-text`(n: Int) = tokenGenerator("s-nb-folded-text") { `s-indent`
  * `176` : l-nb-folded-lines(n):
  * ->s-nb-folded-text(n) + (->b-l-folded(n,c = <block-in>) + ->s-nb-folded-text(n) × *)
  */
-fun `l-nb-folded-lines`(n: Int) = tokenGenerator("l-nb-folded-lines") { `s-nb-folded-text`(n) + (`b-l-folded`(n,`block-in`) + `s-nb-folded-text`(n)) * zero_or_more }
+fun `l-nb-folded-lines`(n: Int) = tokenGenerator("l-nb-folded-lines") { `s-nb-folded-text`(n) + (`b-l-folded`(n, `block-in`) + `s-nb-folded-text`(n)) * zero_or_more }
 
 /**
  * `177` : s-nb-spaced-text(n):
@@ -1362,7 +1362,7 @@ fun `s-nb-spaced-text`(n: Int) = tokenGenerator("s-nb-spaced-text") { `s-indent`
  * `178` : b-l-spaced(n):
  * ->b-as-line-feed + (->l-empty(n,c = <block-in>) × *)
  */
-fun `b-l-spaced`(n: Int) = tokenGenerator("b-l-spaced") { `b-as-line-feed` + `l-empty`(n,`block-in`) * zero_or_more }
+fun `b-l-spaced`(n: Int) = tokenGenerator("b-l-spaced") { `b-as-line-feed` + `l-empty`(n, `block-in`) * zero_or_more }
 
 /**
  * `179` : l-nb-spaced-lines(n):
@@ -1375,7 +1375,7 @@ fun `l-nb-spaced-lines`(n: Int) = tokenGenerator("l-nb-spaced-lines") { `s-nb-sp
  * (->l-empty(n,c = <block-in>) × *) + [->l-nb-folded-lines(n) |
  *    ->l-nb-spaced-lines(n)]
  */
-fun `l-nb-same-lines`(n: Int) = tokenGenerator("l-nb-same-lines") { `l-empty`(n,`block-in`) * zero_or_more + `l-nb-folded-lines`(n) or `l-nb-spaced-lines`(n) }
+fun `l-nb-same-lines`(n: Int) = tokenGenerator("l-nb-same-lines") { `l-empty`(n, `block-in`) * zero_or_more + `l-nb-folded-lines`(n) or `l-nb-spaced-lines`(n) }
 
 /**
  * `181` : l-nb-diff-lines(n):
@@ -1387,7 +1387,7 @@ fun `l-nb-diff-lines`(n: Int) = tokenGenerator("l-nb-diff-lines") { `l-nb-same-l
  * `182` : l-folded-content(n,t):
  * (->l-nb-diff-lines(n) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
  */
-fun `l-folded-content`(n: Int, t: String) = tokenGenerator("l-folded-content") { (`l-nb-diff-lines`(n) + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n,t) }
+fun `l-folded-content`(n: Int, t: String) = tokenGenerator("l-folded-content") { (`l-nb-diff-lines`(n) + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n, t) }
 
 /**
  * `183` : l+block-sequence(n):
@@ -1399,7 +1399,7 @@ fun `l+block-sequence`(n: Int) = tokenGenerator("l+block-sequence") { undefined 
  * `184` : c-l-block-seq-entry(n):
  * ->c-sequence-entry + ->s-l+block-indented(n,c = <block-in>)
  */
-fun `c-l-block-seq-entry`(n: Int) = tokenGenerator("c-l-block-seq-entry") { `c-sequence-entry` + `s-l+block-indented`(n,`block-in`) }
+fun `c-l-block-seq-entry`(n: Int) = tokenGenerator("c-l-block-seq-entry") { `c-sequence-entry` + `s-l+block-indented`(n, `block-in`) }
 
 /**
  * `185` : s-l+block-indented(n,c):
@@ -1440,13 +1440,13 @@ fun `c-l-block-map-explicit-entry`(n: Int) = tokenGenerator("c-l-block-map-expli
  * `190` : c-l-block-map-explicit-key(n):
  * ->c-mapping-key + ->s-l+block-indented(n,c = <block-out>)
  */
-fun `c-l-block-map-explicit-key`(n: Int) = tokenGenerator("c-l-block-map-explicit-key") { `c-mapping-key` + `s-l+block-indented`(n,`block-out`) }
+fun `c-l-block-map-explicit-key`(n: Int) = tokenGenerator("c-l-block-map-explicit-key") { `c-mapping-key` + `s-l+block-indented`(n, `block-out`) }
 
 /**
  * `191` : l-block-map-explicit-value(n):
  * ->s-indent(n) + ->c-mapping-value + ->s-l+block-indented(n,c = <block-out>)
  */
-fun `l-block-map-explicit-value`(n: Int) = tokenGenerator("l-block-map-explicit-value") { `s-indent`(n) + `c-mapping-value` + `s-l+block-indented`(n,`block-out`) }
+fun `l-block-map-explicit-value`(n: Int) = tokenGenerator("l-block-map-explicit-value") { `s-indent`(n) + `c-mapping-value` + `s-l+block-indented`(n, `block-out`) }
 
 /**
  * `192` : ns-l-block-map-implicit-entry(n):
@@ -1467,7 +1467,7 @@ val `ns-s-block-map-implicit-key` = token("ns-s-block-map-implicit-key", `c-s-im
  * ->c-mapping-value + [->s-l+block-node(n,c = <block-out>) |
  *    ->e-node + ->s-l-comments]
  */
-fun `c-l-block-map-implicit-value`(n: Int) = tokenGenerator("c-l-block-map-implicit-value") { `c-mapping-value` + `s-l+block-node`(n,`block-out`) or (`e-node` + `s-l-comments`) }
+fun `c-l-block-map-implicit-value`(n: Int) = tokenGenerator("c-l-block-map-implicit-value") { `c-mapping-value` + `s-l+block-node`(n, `block-out`) or (`e-node` + `s-l-comments`) }
 
 /**
  * `195` : ns-l-compact-mapping(n):
@@ -1480,34 +1480,34 @@ fun `ns-l-compact-mapping`(n: Int) = tokenGenerator("ns-l-compact-mapping") { `n
  * [->s-l+block-in-block(n,c) |
  *    ->s-l+flow-in-block(n)]
  */
-fun `s-l+block-node`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-node") { `s-l+block-in-block`(n,c) or `s-l+flow-in-block`(n) }
+fun `s-l+block-node`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-node") { `s-l+block-in-block`(n, c) or `s-l+flow-in-block`(n) }
 
 /**
  * `197` : s-l+flow-in-block(n):
  * ->s-separate(n = <n+1>,c = <flow-out>) + ->ns-flow-node(n = <n+1>,c = <flow-out>) + ->s-l-comments
  */
-fun `s-l+flow-in-block`(n: Int) = tokenGenerator("s-l+flow-in-block") { `s-separate`(n+1,`flow-out`) + `ns-flow-node`(n+1,`flow-out`) + `s-l-comments` }
+fun `s-l+flow-in-block`(n: Int) = tokenGenerator("s-l+flow-in-block") { `s-separate`(n+1, `flow-out`) + `ns-flow-node`(n+1, `flow-out`) + `s-l-comments` }
 
 /**
  * `198` : s-l+block-in-block(n,c):
  * [->s-l+block-scalar(n,c) |
  *    ->s-l+block-collection(n,c)]
  */
-fun `s-l+block-in-block`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-in-block") { `s-l+block-scalar`(n,c) or `s-l+block-collection`(n,c) }
+fun `s-l+block-in-block`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-in-block") { `s-l+block-scalar`(n, c) or `s-l+block-collection`(n, c) }
 
 /**
  * `199` : s-l+block-scalar(n,c):
  * ->s-separate(n = <n+1>,c) + (->c-ns-properties(n = <n+1>,c) + ->s-separate(n = <n+1>,c) × ?) + [->c-l+literal(n) |
  *    ->c-l+folded(n)]
  */
-fun `s-l+block-scalar`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-scalar") { `s-separate`(n+1,c) + (`c-ns-properties`(n+1,c) + `s-separate`(n+1,c)) * zero_or_once + `c-l+literal`(n) or `c-l+folded`(n) }
+fun `s-l+block-scalar`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-scalar") { `s-separate`(n+1, c) + (`c-ns-properties`(n+1, c) + `s-separate`(n+1, c)) * zero_or_once + `c-l+literal`(n) or `c-l+folded`(n) }
 
 /**
  * `200` : s-l+block-collection(n,c):
  * (->s-separate(n = <n+1>,c) + ->c-ns-properties(n = <n+1>,c) × ?) + ->s-l-comments + [->l+block-sequence(n = ->seq-spaces(n,c)) |
  *    ->l+block-mapping(n)]
  */
-fun `s-l+block-collection`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-collection") { (`s-separate`(n+1,c) + `c-ns-properties`(n+1,c)) * zero_or_once + `s-l-comments` + `l+block-sequence`(`seq-spaces`(n,c)) or `l+block-mapping`(n) }
+fun `s-l+block-collection`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-collection") { (`s-separate`(n+1, c) + `c-ns-properties`(n+1, c)) * zero_or_once + `s-l-comments` + `l+block-sequence`(`seq-spaces`(n,c)) or `l+block-mapping`(n) }
 
 /**
  * `201` : seq-spaces(n,c):
@@ -1557,7 +1557,7 @@ val `c-forbidden` = token("c-forbidden", startOfLine + `c-directives-end` or `c-
  * `207` : l-bare-document:
  * ->s-l+block-node(n = <-1>,c = <block-in>) + ->Excluding c-forbidden content
  */
-val `l-bare-document` = token("l-bare-document", `s-l+block-node`(-1,`block-in`) + excludingCForbiddenContent)
+val `l-bare-document` = token("l-bare-document", `s-l+block-node`(-1, `block-in`) + excludingCForbiddenContent)
 
 /**
  * `208` : l-explicit-document:

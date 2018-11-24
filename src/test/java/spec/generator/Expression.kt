@@ -131,8 +131,9 @@ abstract class Expression {
             if (with(it.second) { this is VariableExpression && this.name == it.first }) it.first else "${it.first} = ${it.second}"
         }
 
+        val hasNoArgs: Boolean get() = args.isEmpty()
+        val hasArgs: Boolean get() = args.isNotEmpty()
         val key get() = name + argsKey
-
         val argsKey get() = inParentheses { it.first }
 
         private fun inParentheses(transform: (Pair<String, Expression>) -> String) =

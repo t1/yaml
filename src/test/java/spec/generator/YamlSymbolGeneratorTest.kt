@@ -108,7 +108,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->foo(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `foo`(n) }\n"))
+            "fun `foo`(n: Int) : Token = tokenGenerator(\"foo\") { `foo`(n) }\n"))
     }
 
     @Test fun `ref calling ref`() {
@@ -341,6 +341,54 @@ class YamlSymbolGeneratorTest {
             "    val token = 'x' * m\n" +
             "    return token(\"bis(\$n)\") { token.match(it) }\n" +
             "}\n"))
+    }
+
+    @Test fun `alternative with fun ref`() {
+        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "n"))
+        val foo = Production(0, "foo", listOf("n"), alt(codePoint('x'), ref(bar)))
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("" +
+            "\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * [<[x][LATIN SMALL LETTER X][0x78]> |\n" +
+            " *    ->bar(n)]\n" +
+            " */\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { 'x' or `bar`(n) }\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
+            " */\n" +
+            "fun `bar`(n: Int) {\n" +
+            "    val token = 'x' * n\n" +
+            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
+            "}\n"))
+    }
+
+    @Test fun `non-fun ref`() {
+        val bar = Production(1, "bar", listOf(), codePoint('x'))
+        val foo = Production(0, "foo", listOf("n"), RepeatedExpression(ref(bar), "n"))
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * (->bar × n)\n" +
+            " */\n" +
+            "fun `foo`(n: Int) {\n" +
+            "    val token = `bar` * n\n" +
+            "    return token(\"foo(\$n)\") { token.match(it) }\n" +
+            "}\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar:\n" +
+            " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
+            " */\n" +
+            "val `bar` = token(\"bar\", 'x')\n"))
     }
 
     @Test fun `with minus in name`() {

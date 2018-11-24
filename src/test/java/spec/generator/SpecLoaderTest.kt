@@ -23,16 +23,22 @@ import test.softly
             assertThat(spec["s-indent<(n)"]).isEqualTo(spec.productions[63])
             assertThat(spec["ns-flow-node(n,c)"]).isEqualTo(spec.productions[160])
 
-            assertThat(spec["c-printable"].references).isEmpty()
-            val bCharRefs = spec["b-char"].references
-            assertThat(bCharRefs.keys).containsOnly("b-line-feed", "b-carriage-return")
-            assertThat(bCharRefs.values).containsOnly(
-                spec["b-line-feed"],
-                spec["b-carriage-return"]
-            )
-            val lEmptyRefs = spec["l-empty(n,c)"].references
-            assertThat(lEmptyRefs.keys).containsOnly("s-line-prefix(n,c)", "s-indent<(n)", "b-as-line-feed")
-            assertThat(lEmptyRefs.values).containsOnly(spec["s-line-prefix(n,c)"], spec["s-indent<(n)"], spec["b-as-line-feed"])
+            with(spec["c-printable"]) {
+                assertThat(referencedExpressions).isEmpty()
+                assertThat(referencedProductions).isEmpty()
+            }
+
+            with(spec["b-char"]) {
+                assertThat(referencedExpressions.map { it.key }).containsOnly("b-line-feed", "b-carriage-return")
+                assertThat(referencedProductions.keys).containsOnly("b-line-feed", "b-carriage-return")
+                assertThat(referencedProductions.values).containsOnly(spec["b-line-feed"], spec["b-carriage-return"])
+            }
+
+            with(spec["l-empty(n,c)"]) {
+                assertThat(referencedExpressions.map { it.key }).containsOnly("s-line-prefix(n,c)", "s-indent<(n)", "b-as-line-feed")
+                assertThat(referencedProductions.keys).containsOnly("s-line-prefix(n,c)", "s-indent<(n)", "b-as-line-feed")
+                assertThat(referencedProductions.values).containsOnly(spec["s-line-prefix(n,c)"], spec["s-indent<(n)"], spec["b-as-line-feed"])
+            }
         }
     }
 
@@ -305,7 +311,6 @@ import test.softly
             "</td></tr></table>" +
             "</body></html>")
 
-        val spec = SpecLoader().load(document)
-        return spec
+        return SpecLoader().load(document)
     }
 }

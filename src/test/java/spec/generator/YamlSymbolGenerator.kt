@@ -151,7 +151,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             fun firstWithoutForwardReferences(): Int {
                 for ((index, production) in remaining.withIndex()) {
                     if (production.args.isNotEmpty()) return index // `fun` can reference forward, only `val` can not
-                    val forwardRefs = production.references.values
+                    val forwardRefs = production.referencedProductions.values
                         .map { it.counter }
                         .filter { !written.contains(it) && production.counter != it }
                     if (forwardRefs.isEmpty()) return index
@@ -172,7 +172,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
         private inner class ProductionWriter(private val production: Production) {
             private val visitor = ProductionVisitor()
 
-            fun write() = if (production.args.isEmpty()) writeToken() else writeTokenFactory()
+            fun write() = if (production.hasArgs) writeTokenFactory() else writeToken()
 
             private fun writeToken() {
                 write(comment())
@@ -187,27 +187,35 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 write("fun `$name`(")
                 writeArgs()
                 write(")")
-                if (production.hasInternalFunRefs) write(" = tokenGenerator(\"$name\") { ")
+                if (isRecursive) write(" : Token")
+                if (hasInternalFunRefs) write(" = tokenGenerator(\"$name\") { ")
                 when {
                     production.counter in setOf(170, 174, 185) -> write("undefined /* TODO global variable */")
                     production.counter in setOf(162, 163, 164, 165, 166, 183, 187) -> write("undefined /* TODO other */")
                     name.endsWith("≪") || name.endsWith("≤") -> writeLessFun()
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
                     production.expression is RepeatedExpression -> visitor.writeFun(production.expression)
-                    production.expression is SequenceExpression -> visitor.writeFun(production.expression)
-                    production.expression is AlternativesExpression -> visitor.writeFun(production.expression)
+                    production.expression is SequenceExpression -> {
+                        if (!hasInternalFunRefs) write(" = ") // ugly
+                        visitor.writeFun(production.expression)
+                    }
+                    production.expression is AlternativesExpression -> {
+                        if (!hasInternalFunRefs) write(" = ") // ugly
+                        visitor.writeFun(production.expression)
+                    }
                     production.expression is SwitchExpression -> {
-                        if (!production.hasInternalFunRefs) write(" = ")
+                        if (!hasInternalFunRefs) write(" = ") // ugly
                         visitor.writeFun(production.expression)
                     }
                     else -> throw UnsupportedOperationException("factory function for ${production.expression::class.simpleName}")
                 }
-                if (production.hasInternalFunRefs) write(" }")
+                if (hasInternalFunRefs) write(" }")
                 write("\n")
             }
 
+            private val isRecursive get() = production.referencedProductions.any { it.value == production }
             /** Productions that reference other local functions need to be protected from recursion */
-            private val Production.hasInternalFunRefs: Boolean get() = references.any { name !in spec.externalRefs }
+            private val hasInternalFunRefs get() = production.referencedExpressions.any { it.name !in spec.externalRefs && it.hasArgs }
 
             private fun comment(): String {
                 return "\n" +
@@ -268,7 +276,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 override fun visit(reference: ReferenceExpression) = write(externalRefMap[reference.name] ?: refCall(reference))
 
                 private fun refCall(ref: ReferenceExpression): String = "`${ref.name.replace('<', '≪')}`" +
-                    if (ref.args.isEmpty()) "" else ref.args.joinToString(",", "(", ")") {
+                    if (ref.hasNoArgs) "" else ref.args.joinToString(", ", "(", ")") {
                         when (val value = it.second) {
                             is VariableExpression -> externalRefMap[value.name] ?: value.name
                             is ReferenceExpression -> "`${value.name}`${value.argsKey}"
@@ -306,7 +314,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
                 // ------------------------------ sequence
                 fun writeFun(sequence: SequenceExpression) {
-                    write(" = ")
                     sequence.guide(this)
                 }
 
@@ -323,7 +330,6 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
                 // ------------------------------ alternatives
                 fun writeFun(alternatives: AlternativesExpression) {
-                    write(" = ")
                     alternatives.guide(this)
                 }
 
