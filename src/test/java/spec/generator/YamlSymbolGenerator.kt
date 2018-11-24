@@ -116,14 +116,12 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "block-key" to "`block-key`",
             "block-out" to "`block-out`",
             "block-in" to "`block-in`",
-            "m" to "m",
-            "n" to "n",
+            "n/a" to "-1",
             "auto-detect()" to "autoDetect",
             "strip" to "strip",
             "keep" to "keep",
             "clip" to "clip",
             "For some fixed auto-detected m > 0" to "forSomeFixedAutoDetectedMgt0",
-            "n-1" to "n1",
             "Excluding c-forbidden content" to "excludingCForbiddenContent"
         )
 

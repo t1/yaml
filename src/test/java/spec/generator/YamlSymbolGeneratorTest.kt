@@ -298,7 +298,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `ref arg with fun result`() {
-        val baz = Production(2, "baz", listOf("n"), RepeatedExpression(codePoint('x'), "m", "Where m < n"))
+        val baz = Production(2, "baz", listOf("n"), codePoint('x') * 'n')
         val bar = Production(1, "bar", listOf("n"), ref(baz))
         val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to ref(baz))))
 
@@ -320,9 +320,9 @@ class YamlSymbolGeneratorTest {
             "\n" +
             "/**\n" +
             " * `2` : baz(n):\n" +
-            " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `baz`(n: Int) = 'x' * m\n"))
+            "fun `baz`(n: Int) = 'x' * n\n"))
     }
 
     @Test fun `repeated ref`() {
@@ -695,7 +695,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `reference with n+1 arg`() {
-        val bar = Production(1, "bar", listOf("n"), RepeatedExpression(codePoint('x'), "?"))
+        val bar = Production(1, "bar", listOf("n"), codePoint('x') * '?')
         val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to VariableExpression("n+1"))))
 
         val written = generate(foo, bar)
@@ -706,6 +706,46 @@ class YamlSymbolGeneratorTest {
             " * ->bar(n = <n+1>)\n" +
             " */\n" +
             "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n+1) }\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × ?)\n" +
+            " */\n" +
+            "fun `bar`(n: Int) = 'x' * zero_or_once\n"))
+    }
+
+    @Test fun `reference with n-a arg`() {
+        val bar = Production(1, "bar", listOf("n"), codePoint('x') * '?')
+        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to VariableExpression("n/a"))))
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * ->bar(n = <n/a>)\n" +
+            " */\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(-1) }\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × ?)\n" +
+            " */\n" +
+            "fun `bar`(n: Int) = 'x' * zero_or_once\n"))
+    }
+
+    @Test fun `reference with n-1 arg`() {
+        val bar = Production(1, "bar", listOf("n"), codePoint('x') * '?')
+        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to VariableExpression("n-1"))))
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * ->bar(n = <n-1>)\n" +
+            " */\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n-1) }\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar(n):\n" +
