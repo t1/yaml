@@ -1,8 +1,11 @@
-package spec.generator
+package spec.generator.specparser
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import spec.generator.Expression
+import spec.generator.Production
+import spec.generator.Spec
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.ArrayList

@@ -15,6 +15,7 @@ import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
 import spec.generator.Expression.VariableExpression
+import spec.generator.specparser.SpecLoader
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -151,7 +152,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
             fun firstWithoutForwardReferences(): Int {
                 for ((index, production) in remaining.withIndex()) {
                     if (production.args.isNotEmpty()) return index // `fun` can reference forward, only `val` can not
-                    val forwardRefs = production.referencedProductions.values
+                    val forwardRefs = production.references.values
                         .map { it.counter }
                         .filter { !written.contains(it) && production.counter != it }
                     if (forwardRefs.isEmpty()) return index
@@ -213,9 +214,9 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 write("\n")
             }
 
-            private val isRecursive get() = production.referencedProductions.any { it.value == production }
+            private val isRecursive get() = production.references.values.any { it == production }
             /** Productions that reference other local functions need to be protected from recursion */
-            private val hasInternalFunRefs get() = production.referencedExpressions.any { it.name !in spec.externalRefs && it.hasArgs }
+            private val hasInternalFunRefs get() = production.references.keys.any { it.name !in spec.externalRefs && it.hasArgs }
 
             private fun comment(): String {
                 return "\n" +

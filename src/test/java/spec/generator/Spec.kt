@@ -25,7 +25,7 @@ class Spec(val productions: List<Production>) {
                 override fun visit(reference: ReferenceExpression) {
                     val target = index[reference.key]
                     if (target == null) externalRefs += reference.key
-                    else production.addReference(reference, target)
+                    else production.references[reference] = target
                 }
             })
         }
@@ -41,13 +41,7 @@ data class Production(
     val args: List<String>,
     val expression: Expression) {
 
-    val referencedProductions = mutableMapOf<String, Production>()
-    val referencedExpressions = mutableSetOf<ReferenceExpression>()
-
-    fun addReference(reference: ReferenceExpression, target: Production) {
-        referencedExpressions += reference
-        referencedProductions[reference.key] = target
-    }
+    val references = mutableMapOf<ReferenceExpression, Production>()
 
     val hasArgs: Boolean get() = args.isNotEmpty()
     val key: String get() = name + argsKey

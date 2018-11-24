@@ -755,9 +755,9 @@ class YamlSymbolGeneratorTest {
     }
 
     private fun switch(vararg pairs: Pair<Expression, Expression>): SwitchExpression {
-        val out = SwitchExpression()
-        for (pair in pairs)
-            out.addCase(pair.first).merge(pair.second)
+        val out = SwitchExpression.of(pairs[0].first, pairs[0].second)
+        for (i in 1 until pairs.size)
+            with(pairs[i]) { out.addCase(first).merge(second) }
         return out
     }
 

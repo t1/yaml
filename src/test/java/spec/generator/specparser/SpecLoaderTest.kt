@@ -1,9 +1,11 @@
-package spec.generator
+package spec.generator.specparser
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.contentOf
 import org.jsoup.Jsoup
 import org.junit.jupiter.api.Test
+import spec.generator.Production
+import spec.generator.Spec
 import test.softly
 
 @Suppress("NonAsciiCharacters") class SpecLoaderTest {
@@ -23,21 +25,16 @@ import test.softly
             assertThat(spec["s-indent<(n)"]).isEqualTo(spec.productions[63])
             assertThat(spec["ns-flow-node(n,c)"]).isEqualTo(spec.productions[160])
 
-            with(spec["c-printable"]) {
-                assertThat(referencedExpressions).isEmpty()
-                assertThat(referencedProductions).isEmpty()
-            }
+            assertThat(spec["c-printable"].references).isEmpty()
 
             with(spec["b-char"]) {
-                assertThat(referencedExpressions.map { it.key }).containsOnly("b-line-feed", "b-carriage-return")
-                assertThat(referencedProductions.keys).containsOnly("b-line-feed", "b-carriage-return")
-                assertThat(referencedProductions.values).containsOnly(spec["b-line-feed"], spec["b-carriage-return"])
+                assertThat(references.map { it.key.name }).containsOnly("b-line-feed", "b-carriage-return")
+                assertThat(references.values).containsOnly(spec["b-line-feed"], spec["b-carriage-return"])
             }
 
             with(spec["l-empty(n,c)"]) {
-                assertThat(referencedExpressions.map { it.key }).containsOnly("s-line-prefix(n,c)", "s-indent<(n)", "b-as-line-feed")
-                assertThat(referencedProductions.keys).containsOnly("s-line-prefix(n,c)", "s-indent<(n)", "b-as-line-feed")
-                assertThat(referencedProductions.values).containsOnly(spec["s-line-prefix(n,c)"], spec["s-indent<(n)"], spec["b-as-line-feed"])
+                assertThat(references.map { it.key.key }).containsOnly("s-line-prefix(n,c)", "s-indent<(n)", "b-as-line-feed")
+                assertThat(references.values).containsOnly(spec["s-line-prefix(n,c)"], spec["s-indent<(n)"], spec["b-as-line-feed"])
             }
         }
     }

@@ -1,4 +1,4 @@
-package spec.generator
+package spec.generator.specparser
 
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePoint.Companion.EOF

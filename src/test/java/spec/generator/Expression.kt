@@ -17,12 +17,12 @@ abstract class Expression {
     protected open fun replaceLastWith(expression: Expression): Unit = throw UnsupportedOperationException()
 
     abstract class ContainerExpression : Expression() {
-        val expressions: MutableList<Expression> = ArrayList()
+        abstract val expressions: MutableList<Expression>
 
-        override fun last(): Expression = lastOf(expressions).last()
+        override fun last(): Expression = expressions.last()
         override fun replaceLastWith(expression: Expression) {
-            if (lastOf(expressions) is ContainerExpression) lastOf(expressions).replaceLastWith(expression)
-            else setLastOf(expressions, expression)
+            if (expressions.last() is ContainerExpression) expressions.last().replaceLastWith(expression)
+            else expressions.setLast(expression)
         }
 
         open fun add(expression: Expression): ContainerExpression {
@@ -38,27 +38,23 @@ abstract class Expression {
 
         companion object {
             fun <T : ContainerExpression> of(left: Expression, right: Expression, type: KClass<T>): T {
-                val result: ContainerExpression
-                try {
-                    result = if (type.isInstance(left))
+                val result: ContainerExpression =
+                    if (type.isInstance(left))
                         left as ContainerExpression
                     else
-                        type.primaryConstructor!!.call().add(left)
-                } catch (e: InstantiationException) {
-                    throw RuntimeException(e)
-                } catch (e: IllegalAccessException) {
-                    throw RuntimeException(e)
-                }
+                        type.primaryConstructor!!.call(mutableListOf(left))
 
                 if (type.isInstance(right))
                     result.expressions.addAll((right as ContainerExpression).expressions)
-                else result.add(right)
+                else
+                    result.add(right)
+
                 return type.cast(result)
             }
         }
     }
 
-    open class AlternativesExpression : ContainerExpression() {
+    data class AlternativesExpression(override val expressions: MutableList<Expression>) : ContainerExpression() {
         override fun toString(): String =
             expressions.stream().map { it.toString() }.collect(joining(" |\n   ", "[", "]"))
 
@@ -81,7 +77,7 @@ abstract class Expression {
         }
     }
 
-    open class SequenceExpression : ContainerExpression() {
+    data class SequenceExpression(override val expressions: MutableList<Expression>) : ContainerExpression() {
         override fun toString() =
             if (expressions.isEmpty()) "<empty sequence>"
             else expressions.stream().map { it.toString() }.collect(joining(" + "))!!
@@ -105,17 +101,17 @@ abstract class Expression {
         }
     }
 
-    open class CodePointExpression(val codePoint: CodePoint) : Expression() {
+    data class CodePointExpression(val codePoint: CodePoint) : Expression() {
         override fun toString(): String = "<${codePoint.info}>"
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class VariableExpression(val name: String) : Expression() {
+    data class VariableExpression(val name: String) : Expression() {
         override fun toString(): String = "<$name>"
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class RangeExpression(val left: Expression, val right: Expression) : Expression() {
+    data class RangeExpression(val left: Expression, val right: Expression) : Expression() {
         override fun toString(): String = "[$left-$right]"
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
@@ -126,7 +122,7 @@ abstract class Expression {
         }
     }
 
-    open class ReferenceExpression(val name: String, val args: List<Pair<String, Expression>> = listOf()) : Expression() {
+    data class ReferenceExpression(val name: String, val args: List<Pair<String, Expression>> = listOf()) : Expression() {
         override fun toString() = "->$name" + inParentheses {
             if (with(it.second) { this is VariableExpression && this.name == it.first }) it.first else "${it.first} = ${it.second}"
         }
@@ -142,7 +138,7 @@ abstract class Expression {
         override fun guide(visitor: Visitor) = visitor.visit(this)
     }
 
-    open class MinusExpression(val minuend: Expression) : Expression() {
+    class MinusExpression(val minuend: Expression) : Expression() {
         private val subtrahends = ArrayList<Expression>()
 
         operator fun minus(subtrahend: Expression): MinusExpression {
@@ -176,7 +172,7 @@ abstract class Expression {
         }
     }
 
-    open class RepeatedExpression(val expression: Expression, val repetitions: String, val comment: String? = null) : Expression() {
+    data class RepeatedExpression(val expression: Expression, val repetitions: String, val comment: String? = null) : Expression() {
         override fun toString(): String = "($expression × $repetitions${if (comment == null) "" else " /* $comment */"})"
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
@@ -185,7 +181,7 @@ abstract class Expression {
         }
     }
 
-    open class EqualsExpression(val left: Expression, val right: Expression) : Expression() {
+    data class EqualsExpression(val left: Expression, val right: Expression) : Expression() {
         override fun toString(): String = "$left = $right"
         override fun guide(visitor: Visitor) {
             val sub = visitor.visit(this)
@@ -195,10 +191,11 @@ abstract class Expression {
         }
     }
 
-    open class SwitchExpression : ContainerExpression() {
-        val cases: MutableList<Expression> = ArrayList()
+    data class SwitchExpression(val cases: MutableList<Expression>) : ContainerExpression() {
+        override val expressions = cases
+        val values: MutableList<Expression> = ArrayList()
 
-        val balanced: Boolean get() = cases.size == expressions.size
+        val balanced: Boolean get() = cases.size == values.size
 
         override fun add(expression: Expression): SwitchExpression =
             if (balanced) addCase(expression)
@@ -206,15 +203,15 @@ abstract class Expression {
 
         fun addCase(expression: Expression): SwitchExpression {
             if (balanced) cases.add(expression)
-            else setLastOf(cases, expression)
+            else cases.setLast(expression)
             return this
         }
 
         override fun merge(expression: Expression): SwitchExpression {
             if (balanced) replaceLastWith(expression)
             else {
-                assert(cases.size == expressions.size + 1)
-                expressions.add(expression)
+                assert(cases.size == values.size + 1) { "expected one case more than values to merge $expression, but found $cases and $values" }
+                values.add(expression)
             }
             return this
         }
@@ -228,7 +225,7 @@ abstract class Expression {
             return out.toString()
         }
 
-        private fun expressionOrNull(i: Int): Expression? = if (i < expressions.size) expressions[i] else null
+        private fun expressionOrNull(i: Int): Expression? = if (i < values.size) values[i] else null
 
         override fun guide(visitor: Visitor) {
             visitor.beforeCollection(this)
@@ -237,9 +234,9 @@ abstract class Expression {
                 sub.beforeSwitchItem()
                 cases[i].guide(sub)
                 sub.betweenSwitchCaseAndValue()
-                if (expressions.size > i) {
-                    expressions[i].guide(sub)
-                    sub.afterSwitchItem(cases[i], expressions[i])
+                if (values.size > i) {
+                    values[i].guide(sub)
+                    sub.afterSwitchItem(cases[i], values[i])
                 }
             }
             visitor.leave(this)
@@ -252,9 +249,8 @@ abstract class Expression {
     }
 
     companion object {
-        private fun lastOf(expressions: List<Expression>): Expression = expressions[expressions.size - 1]
-        private fun setLastOf(expressions: MutableList<Expression>, expression: Expression) {
-            expressions[expressions.size - 1] = expression
+        private fun MutableList<Expression>.setLast(expression: Expression) {
+            this[this.size - 1] = expression
         }
     }
 }
