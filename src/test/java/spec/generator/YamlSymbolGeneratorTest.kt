@@ -705,7 +705,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->bar(n = <n+1>)\n" +
             " */\n" +
-            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n+1) }\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n + 1) }\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar(n):\n" +
@@ -745,7 +745,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->bar(n = <n-1>)\n" +
             " */\n" +
-            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n-1) }\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n - 1) }\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar(n):\n" +
