@@ -514,10 +514,7 @@ val `c-ns-esc-char` = token("c-ns-esc-char", `c-escape` + `ns-esc-null` or `ns-e
  * `63` : s-indent(n):
  * (->s-space × n)
  */
-fun `s-indent`(n: Int) : Token {
-    val token = `s-space` * n
-    return token("s-indent($n)") { token.match(it) }
-}
+fun `s-indent`(n: Int) = `s-space` * n
 
 /**
  * `64` : s-indent<(n):
@@ -1041,10 +1038,7 @@ fun `ns-plain`(n: Int, c: InOutMode) = tokenGenerator("ns-plain") { when (c) {
  * `132` : nb-ns-plain-in-line(c):
  * ((->s-white × *) + ->ns-plain-char(c) × *)
  */
-fun `nb-ns-plain-in-line`(c: InOutMode) = tokenGenerator("nb-ns-plain-in-line") {
-    val token = `s-white` * zero_or_more + `ns-plain-char`(c) * zero_or_more
-    token("nb-ns-plain-in-line($c)") { token.match(it) }
-}
+fun `nb-ns-plain-in-line`(c: InOutMode) = tokenGenerator("nb-ns-plain-in-line") { `s-white` * zero_or_more + `ns-plain-char`(c) * zero_or_more }
 
 /**
  * `133` : ns-plain-one-line(c):

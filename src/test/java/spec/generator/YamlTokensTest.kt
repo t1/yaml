@@ -7,6 +7,7 @@ import com.github.t1.yaml.parser.`ns-directive-name`
 import com.github.t1.yaml.parser.`ns-esc-16-bit`
 import com.github.t1.yaml.parser.`ns-esc-32-bit`
 import com.github.t1.yaml.parser.`ns-esc-8-bit`
+import com.github.t1.yaml.parser.`s-block-line-prefix`
 import com.github.t1.yaml.parser.`s-double-next-line`
 import com.github.t1.yaml.parser.`s-indent`
 import com.github.t1.yaml.parser.`s-indent≤`
@@ -222,6 +223,38 @@ import org.junit.jupiter.api.Test
         "\n" doesnt match
         "\r" doesnt match
         "\uFEFF" doesnt match
+    }
+
+    @Test fun `s-block-line-prefix`() {
+        token = `s-block-line-prefix`(0) // `s-indent`(n)
+        "" doesnt match
+        " " matches " "
+        "  " matches " "
+        "   " matches " "
+
+        token = `s-block-line-prefix`(1) // `s-indent`(n)
+        "" doesnt match
+        " " matches " "
+        "  " matches " "
+        "   " matches " "
+
+        token = `s-block-line-prefix`(2) // `s-indent`(n)
+        "" doesnt match
+        " " doesnt match
+        "  " matches "  "
+        "   " matches "  "
+
+        token = `s-block-line-prefix`(3) // `s-indent`(n)
+        "" doesnt match
+        " " doesnt match
+        "  " doesnt match
+        "   " matches "   "
+
+        token = `s-block-line-prefix`(4) // `s-indent`(n)
+        "" doesnt match
+        " " doesnt match
+        "  " doesnt match
+        "   " doesnt match
     }
 
     @Disabled @Test fun `s-double-next-line(3)`() {

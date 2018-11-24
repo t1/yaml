@@ -128,10 +128,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) : Token {\n" +
-            "    val token = 'x' * n\n" +
-            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `bar`(n: Int) = 'x' * n\n"))
     }
 
     @Test fun `switch constants to code points`() {
@@ -188,10 +185,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) : Token {\n" +
-            "    val token = 'x' * n\n" +
-            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `bar`(n: Int) = 'x' * n\n"))
     }
 
     @Test fun `with one arg`() {
@@ -204,10 +198,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) : Token {\n" +
-            "    val token = 'x' * n\n" +
-            "    return token(\"foo(\$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `foo`(n: Int) = 'x' * n\n"))
     }
 
     @Test fun `with less-then arg`() {
@@ -256,10 +247,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(c,n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `foo`(c: InOutMode, n: Int) : Token {\n" +
-            "    val token = 'x' * n\n" +
-            "    return token(\"foo(\$c, \$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `foo`(c: InOutMode, n: Int) = 'x' * n\n"))
     }
 
     @Test fun `ref with args`() {
@@ -280,10 +268,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) : Token {\n" +
-            "    val token = 'x' * n\n" +
-            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `bar`(n: Int) = 'x' * n\n"))
     }
 
     @Test fun `ref to production with less-than arg`() {
@@ -337,40 +322,47 @@ class YamlSymbolGeneratorTest {
             " * `2` : baz(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × m /* Where m < n */)\n" +
             " */\n" +
-            "fun `baz`(n: Int) : Token {\n" +
-            "    val token = 'x' * m\n" +
-            "    return token(\"baz(\$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `baz`(n: Int) = 'x' * m\n"))
     }
 
-    @Test fun `with one argx`() {
-        val baz = Production(2, "baz", listOf("n"), codePoint('y') * 'n')
+    @Test fun `repeated ref`() {
         val bar = Production(1, "bar", listOf(), codePoint('x'))
-        val foo = Production(0, "foo", listOf("n"), seq(ref(bar) * '*', ref(baz) * '*'))
+        val foo = Production(0, "foo", listOf("n"), ref(bar) * 'n')
 
-        val written = generate(foo, bar, baz)
+        val written = generate(foo, bar)
 
         assertThat(written).isEqualTo(source("\n" +
             "/**\n" +
             " * `0` : foo(n):\n" +
-            " * (->bar × *) + (->baz(n) × *)\n" +
+            " * (->bar × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar` * zero_or_more + `baz`(n) * zero_or_more }\n" +
+            "fun `foo`(n: Int) = `bar` * n\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar:\n" +
             " * <[x][LATIN SMALL LETTER X][0x78]>\n" +
             " */\n" +
-            "val `bar` = token(\"bar\", 'x')\n" +
+            "val `bar` = token(\"bar\", 'x')\n"))
+    }
+
+    @Test fun `repeated fun ref`() {
+        val bar = Production(1, "bar", listOf("n"), codePoint('x') * 'n')
+        val foo = Production(0, "foo", listOf("n"), ref(bar) * '2')
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(n):\n" +
+            " * (->bar(n) × 2)\n" +
+            " */\n" +
+            "fun `foo`(n: Int) = tokenGenerator(\"foo\") { `bar`(n) * 2 }\n" +
             "\n" +
             "/**\n" +
-            " * `2` : baz(n):\n" +
-            " * (<[y][LATIN SMALL LETTER Y][0x79]> × n)\n" +
+            " * `1` : bar(n):\n" +
+            " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `baz`(n: Int) : Token {\n" +
-            "    val token = 'y' * n\n" +
-            "    return token(\"baz(\$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `bar`(n: Int) = 'x' * n\n"))
     }
 
     @Test fun `alternative with fun ref`() {
@@ -392,10 +384,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × n)\n" +
             " */\n" +
-            "fun `bar`(n: Int) : Token {\n" +
-            "    val token = 'x' * n\n" +
-            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `bar`(n: Int) = 'x' * n\n"))
     }
 
     @Test fun `non-fun ref`() {
@@ -409,10 +398,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * (->bar × n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) : Token {\n" +
-            "    val token = `bar` * n\n" +
-            "    return token(\"foo(\$n)\") { token.match(it) }\n" +
-            "}\n" +
+            "fun `foo`(n: Int) = `bar` * n\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar:\n" +
@@ -725,10 +711,7 @@ class YamlSymbolGeneratorTest {
             " * `1` : bar(n):\n" +
             " * (<[x][LATIN SMALL LETTER X][0x78]> × ?)\n" +
             " */\n" +
-            "fun `bar`(n: Int) : Token {\n" +
-            "    val token = 'x' * zero_or_once\n" +
-            "    return token(\"bar(\$n)\") { token.match(it) }\n" +
-            "}\n"))
+            "fun `bar`(n: Int) = 'x' * zero_or_once\n"))
     }
 
     @Test fun `reference with flow-in arg`() {

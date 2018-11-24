@@ -195,7 +195,10 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     production.counter in setOf(162, 163, 164, 165, 166, 183, 187) -> write("undefined /* TODO other */")
                     name.endsWith("≪") || name.endsWith("≤") -> writeLessFun()
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
-                    production.expression is RepeatedExpression -> visitor.writeFun(production.expression)
+                    production.expression is RepeatedExpression -> {
+                        if (!hasInternalFunRefs) write(" = ") // ugly
+                        visitor.writeFun(production.expression)
+                    }
                     production.expression is SequenceExpression -> {
                         if (!hasInternalFunRefs) write(" = ") // ugly
                         visitor.writeFun(production.expression)
@@ -287,22 +290,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
 
                 // ------------------------------ repeated
-                fun writeFun(repeat: RepeatedExpression) {
-                    write(" : Token {\n" +
-                        "    val token = ")
-                    repeat.guide(this)
-                    write("\n")
-                    with(production) {
-                        /** the arg as Kotlin string template variable */
-                        fun argVar(arg: String) = when {
-                            arg.startsWith("<") -> "<\$${arg.substring(1)}"
-                            else -> "\$$arg"
-                        }
-
-                        write("    return token(\"$name(${args.joinToString(", ", transform = ::argVar)})\") { token.match(it) }\n")
-                    }
-                    write("}")
-                }
+                fun writeFun(repeat: RepeatedExpression) = repeat.guide(this)
 
                 override fun visit(repeated: RepeatedExpression) = this
                 override fun leave(repeated: RepeatedExpression) = write(" * ${when (val repetitions = repeated.repetitions) {
