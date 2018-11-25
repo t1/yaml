@@ -158,10 +158,10 @@ class YamlSymbolGeneratorTest {
 
     @Test fun `switch constants to ref with args`() {
         val bar = Production(1, "bar", listOf("n"), codePoint('x') * 'n')
-        val foo = Production(0, "foo", listOf("n", "c"), switch(
-            eq(variable("d"), ReferenceExpression("flow-in")) to ref(bar),
-            eq(variable("d"), ReferenceExpression("flow-key")) to ref(bar),
-            eq(variable("d"), ReferenceExpression("flow-out")) to ref(bar)
+        val foo = Production(0, "foo", listOf("n", "t"), switch(
+            eq(variable("t"), ReferenceExpression("strip")) to ref(bar),
+            eq(variable("t"), ReferenceExpression("clip")) to ref(bar),
+            eq(variable("t"), ReferenceExpression("keep")) to ref(bar)
         ))
 
         val written = generate(foo, bar)
@@ -169,16 +169,16 @@ class YamlSymbolGeneratorTest {
         assertThat(written).isEqualTo(source("" +
             "\n" +
             "/**\n" +
-            " * `0` : foo(n,c):\n" +
-            " * <d> = ->flow-in ⇒ ->bar(n)\n" +
-            " * <d> = ->flow-key ⇒ ->bar(n)\n" +
-            " * <d> = ->flow-out ⇒ ->bar(n)\n" +
+            " * `0` : foo(n,t):\n" +
+            " * <t> = ->strip ⇒ ->bar(n)\n" +
+            " * <t> = ->clip ⇒ ->bar(n)\n" +
+            " * <t> = ->keep ⇒ ->bar(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int, c: InOutMode) = tokenGenerator(\"foo\") { when (d) {\n" +
-            "    `flow-in` -> `bar`(n) named \"foo(\$d)\"\n" +
-            "    `flow-key` -> `bar`(n) named \"foo(\$d)\"\n" +
-            "    `flow-out` -> `bar`(n) named \"foo(\$d)\"\n" +
-            "    else -> error(\"unexpected `d` value `\$d`\")\n" +
+            "fun `foo`(n: Int, t: ChompMode) = tokenGenerator(\"foo\") { when (t) {\n" +
+            "    strip -> `bar`(n) named \"foo(\$t)\"\n" +
+            "    clip -> `bar`(n) named \"foo(\$t)\"\n" +
+            "    keep -> `bar`(n) named \"foo(\$t)\"\n" +
+            "    else -> error(\"unexpected `t` value `\$t`\")\n" +
             "} }\n" +
             "\n" +
             "/**\n" +

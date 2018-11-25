@@ -17,6 +17,9 @@ package com.github.t1.yaml.parser
  * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.
  */
 
+import com.github.t1.yaml.parser.ChompMode.clip
+import com.github.t1.yaml.parser.ChompMode.keep
+import com.github.t1.yaml.parser.ChompMode.strip
 import com.github.t1.yaml.parser.InOutMode.`block-in`
 import com.github.t1.yaml.parser.InOutMode.`block-key`
 import com.github.t1.yaml.parser.InOutMode.`block-out`
@@ -1250,14 +1253,14 @@ fun `ns-flow-node`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-node") { `c-n
  * [->c-indentation-indicator(m) + ->c-chomping-indicator(t) |
  *    ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment
  */
-fun `c-b-block-header`(m: Int, t: String) = tokenGenerator("c-b-block-header") { undefined /* TODO other */ }
+fun `c-b-block-header`(m: Int, t: ChompMode) = tokenGenerator("c-b-block-header") { (`c-indentation-indicator`(m) + `c-chomping-indicator`(t)) or (`c-chomping-indicator`(t) + `c-indentation-indicator`(m)) + `s-b-comment` }
 
 /**
  * `163` : c-indentation-indicator(m):
  * ->ns-dec-digit ⇒ ->m = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)
  * ->Empty ⇒ ->m = ->auto-detect()
  */
-fun `c-indentation-indicator`(m: Int) = tokenGenerator("c-indentation-indicator") { undefined /* TODO other */ }
+fun `c-indentation-indicator`(m: Int) = undefined /* TODO other */
 
 /**
  * `164` : c-chomping-indicator(t):
@@ -1265,7 +1268,7 @@ fun `c-indentation-indicator`(m: Int) = tokenGenerator("c-indentation-indicator"
  * <[+][PLUS SIGN][0x2b]> ⇒ <t> = ->keep
  * ->Empty ⇒ <t> = ->clip
  */
-fun `c-chomping-indicator`(t: String) = undefined /* TODO other */
+fun `c-chomping-indicator`(t: ChompMode) = undefined /* TODO other */
 
 /**
  * `165` : b-chomped-last(t):
@@ -1276,7 +1279,12 @@ fun `c-chomping-indicator`(t: String) = undefined /* TODO other */
  * <t> = ->keep ⇒ [->b-as-line-feed |
  *    ->End of file]
  */
-fun `b-chomped-last`(t: String) = tokenGenerator("b-chomped-last") { undefined /* TODO other */ }
+fun `b-chomped-last`(t: ChompMode) = when (t) {
+    strip -> `b-non-content` or endOfFile named "b-chomped-last($t)"
+    clip -> `b-as-line-feed` or endOfFile named "b-chomped-last($t)"
+    keep -> `b-as-line-feed` or endOfFile named "b-chomped-last($t)"
+    else -> error("unexpected `t` value `$t`")
+}
 
 /**
  * `166` : l-chomped-empty(n,t):
@@ -1284,7 +1292,12 @@ fun `b-chomped-last`(t: String) = tokenGenerator("b-chomped-last") { undefined /
  * <t> = ->clip ⇒ ->l-strip-empty(n)
  * <t> = ->keep ⇒ ->l-keep-empty(n)
  */
-fun `l-chomped-empty`(n: Int, t: String) = tokenGenerator("l-chomped-empty") { undefined /* TODO other */ }
+fun `l-chomped-empty`(n: Int, t: ChompMode) = tokenGenerator("l-chomped-empty") { when (t) {
+    strip -> `l-strip-empty`(n) named "l-chomped-empty($t)"
+    clip -> `l-strip-empty`(n) named "l-chomped-empty($t)"
+    keep -> `l-keep-empty`(n) named "l-chomped-empty($t)"
+    else -> error("unexpected `t` value `$t`")
+} }
 
 /**
  * `167` : l-strip-empty(n):
@@ -1326,7 +1339,7 @@ fun `b-nb-literal-next`(n: Int) = tokenGenerator("b-nb-literal-next") { `b-as-li
  * `173` : l-literal-content(n,t):
  * (->l-nb-literal-text(n) + (->b-nb-literal-next(n) × *) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
  */
-fun `l-literal-content`(n: Int, t: String) = tokenGenerator("l-literal-content") { (`l-nb-literal-text`(n) + `b-nb-literal-next`(n) * zero_or_more + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n, t) }
+fun `l-literal-content`(n: Int, t: ChompMode) = tokenGenerator("l-literal-content") { (`l-nb-literal-text`(n) + `b-nb-literal-next`(n) * zero_or_more + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n, t) }
 
 /**
  * `174` : c-l+folded(n):
@@ -1381,7 +1394,7 @@ fun `l-nb-diff-lines`(n: Int) = tokenGenerator("l-nb-diff-lines") { `l-nb-same-l
  * `182` : l-folded-content(n,t):
  * (->l-nb-diff-lines(n) + ->b-chomped-last(t) × ?) + ->l-chomped-empty(n,t)
  */
-fun `l-folded-content`(n: Int, t: String) = tokenGenerator("l-folded-content") { (`l-nb-diff-lines`(n) + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n, t) }
+fun `l-folded-content`(n: Int, t: ChompMode) = tokenGenerator("l-folded-content") { (`l-nb-diff-lines`(n) + `b-chomped-last`(t)) * zero_or_once + `l-chomped-empty`(n, t) }
 
 /**
  * `183` : l+block-sequence(n):

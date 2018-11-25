@@ -49,6 +49,9 @@ class YamlSymbolGenerator(private val spec: Spec) {
             " * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.\n" +
             " */\n" +
             "\n" +
+            "import com.github.t1.yaml.parser.ChompMode.clip\n" +
+            "import com.github.t1.yaml.parser.ChompMode.keep\n" +
+            "import com.github.t1.yaml.parser.ChompMode.strip\n" +
             "import com.github.t1.yaml.parser.InOutMode.`block-in`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`block-key`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`block-out`\n" +
@@ -191,28 +194,16 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 writeArgs()
                 write(")")
                 if (isRecursive) write(" : Token")
-                if (hasInternalFunRefs) write(" = tokenGenerator(\"$name\") { ")
+                if (hasInternalFunRefs) write(" = tokenGenerator(\"$name\") { ") else write(" = ")
                 when {
                     production.counter in setOf(170, 174, 185) -> write("undefined /* TODO global variable */")
-                    production.counter in setOf(162, 163, 164, 165, 166, 183, 187) -> write("undefined /* TODO other */")
+                    production.counter in setOf(163, 164, 183, 187) -> write("undefined /* TODO other */")
                     name.endsWith("≪") || name.endsWith("≤") -> writeLessFun()
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
-                    production.expression is RepeatedExpression -> {
-                        if (!hasInternalFunRefs) write(" = ") // ugly
-                        visitor.writeFun(production.expression)
-                    }
-                    production.expression is SequenceExpression -> {
-                        if (!hasInternalFunRefs) write(" = ") // ugly
-                        visitor.writeFun(production.expression)
-                    }
-                    production.expression is AlternativesExpression -> {
-                        if (!hasInternalFunRefs) write(" = ") // ugly
-                        visitor.writeFun(production.expression)
-                    }
-                    production.expression is SwitchExpression -> {
-                        if (!hasInternalFunRefs) write(" = ") // ugly
-                        visitor.writeFun(production.expression)
-                    }
+                    production.expression is RepeatedExpression -> visitor.writeFun(production.expression)
+                    production.expression is SequenceExpression -> visitor.writeFun(production.expression)
+                    production.expression is AlternativesExpression -> visitor.writeFun(production.expression)
+                    production.expression is SwitchExpression -> visitor.writeFun(production.expression)
                     else -> throw UnsupportedOperationException("factory function for ${production.expression::class.simpleName}")
                 }
                 if (hasInternalFunRefs) write(" }")
@@ -237,7 +228,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 write(when (pureVariableName) {
                     "n" -> "n: Int"
                     "m" -> "m: Int"
-                    "t" -> "t: String"
+                    "t" -> "t: ChompMode"
                     "c" -> "c: InOutMode"
                     else -> "/* TODO arg $it */"
                 })
@@ -249,7 +240,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 assertThat(repeatedExpression.repetitions).isEqualTo("m")
                 assertThat(repeatedExpression.comment).isEqualTo("Where m $comparison n")
                 write("" +
-                    " = token(\"${production.key}\") { reader ->\n" +
+                    "token(\"${production.key}\") { reader ->\n" +
                     "    val match = reader.mark { reader.readWhile { reader -> ")
                 repeatedExpression.expression.guide(visitor)
                 val negatedComparison = when (comparison) {
