@@ -1,5 +1,11 @@
 package spec.generator
 
+import com.github.t1.yaml.parser.ChompMode.clip
+import com.github.t1.yaml.parser.ChompMode.keep
+import com.github.t1.yaml.parser.ChompMode.strip
+import com.github.t1.yaml.parser.`c-b-block-header`
+import com.github.t1.yaml.parser.`c-chomping-indicator`
+import com.github.t1.yaml.parser.`c-indentation-indicator`
 import com.github.t1.yaml.parser.`c-nb-comment-text`
 import com.github.t1.yaml.parser.`l-document-prefix`
 import com.github.t1.yaml.parser.`nb-char`
@@ -13,7 +19,6 @@ import com.github.t1.yaml.parser.`s-indent`
 import com.github.t1.yaml.parser.`s-indent≤`
 import com.github.t1.yaml.parser.`s-indent≪`
 import com.github.t1.yaml.parser.`s-separate-in-line`
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 @Suppress("NonAsciiCharacters") class YamlTokensTest : TokenTestTools() {
@@ -257,7 +262,59 @@ import org.junit.jupiter.api.Test
         "   " doesnt match
     }
 
-    @Disabled @Test fun `s-double-next-line(3)`() {
+    @Test fun `s-double-next-line(3)`() {
         token = `s-double-next-line`(3) // `s-double-break`(n) + (`ns-double-char` + `nb-ns-double-in-line` + `s-double-next-line`(n) or `s-white` * zero_or_more) * zero_or_once
+
+        // primarily check that the direct recursion is callable
+        "" doesnt match
+    }
+
+    @Test fun `c-b-block-header()`() {
+        func = ::`c-b-block-header` // [->c-indentation-indicator(m) + ->c-chomping-indicator(t) | ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment
+
+        "" matches (0 to clip) leaving ""
+        "1" matches (1 to clip) leaving ""
+        "x" matches (0 to clip) leaving "x"
+        "-" matches (0 to strip) leaving ""
+        "-x" matches (0 to strip) leaving "x"
+        "1-" matches (1 to strip) leaving ""
+        "1--" matches (1 to strip) leaving "-"
+        "+" matches (0 to keep) leaving ""
+        "1+" matches (1 to keep) leaving ""
+        "1++" matches (1 to keep) leaving "+"
+        "1+-" matches (1 to keep) leaving "-"
+        "-0" matches (0 to strip) leaving ""
+        "-0x" matches (0 to strip) leaving "x"
+        "-1" matches (1 to strip) leaving ""
+        "-1-" matches (1 to strip) leaving "-"
+        "+1" matches (1 to keep) leaving ""
+        "+1+" matches (1 to keep) leaving "+"
+        "+1-" matches (1 to keep) leaving "-"
+    }
+
+    @Test fun `c-indentation-indicator()`() {
+        func = ::`c-indentation-indicator`
+
+        "" matches 0 leaving ""
+        "x" matches 0 leaving "x"
+        "0" matches 0 leaving ""
+        "1" matches 1 leaving ""
+        "9" matches 9 leaving ""
+        "10" matches 1 leaving "0"
+        "23" matches 2 leaving "3"
+    }
+
+    @Test fun `c-chomping-indicator()`() {
+        func = ::`c-chomping-indicator`
+
+        "" matches clip leaving ""
+        "x" matches clip leaving "x"
+        "xx" matches clip leaving "xx"
+        "-" matches strip leaving ""
+        "--" matches strip leaving "-"
+        "-x" matches strip leaving "x"
+        "+" matches keep leaving ""
+        "++" matches keep leaving "+"
+        "+x" matches keep leaving "x"
     }
 }

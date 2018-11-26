@@ -67,10 +67,10 @@ open class Scanner(private val reader: CodePointReader) {
     fun readUntil(end: String): String = readUntil(token(end))
 
     fun readUntil(end: Token): String {
-        val builder = StringBuilder()
+        val out = StringBuilder()
         while (more() && !peek(end))
-            builder.appendCodePoint(read().value)
-        return builder.toString()
+            read().appendTo(out)
+        return out.toString()
     }
 
     fun readUntilAndSkip(end: Token): String {
@@ -87,7 +87,7 @@ open class Scanner(private val reader: CodePointReader) {
     private fun readWhile(token: Token): String {
         val out = StringBuilder()
         while (peek(token))
-            out.appendCodePoint(read().value)
+            read().appendTo(out)
         return out.toString()
     }
 }

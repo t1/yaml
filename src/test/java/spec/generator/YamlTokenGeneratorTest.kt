@@ -13,11 +13,11 @@ import spec.generator.Expression.RepeatedExpression
 import spec.generator.Expression.SequenceExpression
 import spec.generator.Expression.SwitchExpression
 import spec.generator.Expression.VariableExpression
-import spec.generator.YamlSymbolGenerator.Companion.HEADER
+import spec.generator.YamlTokenGenerator.Companion.HEADER
 import java.io.StringWriter
 import java.util.Arrays.asList
 
-class YamlSymbolGeneratorTest {
+class YamlTokenGeneratorTest {
     @Test fun `empty source`() {
         val written = generate()
 
@@ -38,7 +38,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `big code point`() {
-        val production = production(CodePointExpression(CodePoint.of(0x10428)))
+        val production = production(codePoint(CodePoint.of(0x10428)))
 
         val written = generate(production)
 
@@ -99,7 +99,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `recursive ref`() {
-        val production = Production(0, "foo", listOf("n"), ReferenceExpression("foo", listOf("n" to VariableExpression("n"))))
+        val production = Production(0, "foo", listOf("n"), ref("foo", listOf("n" to variable("n"))))
 
         val written = generate(production)
 
@@ -108,7 +108,7 @@ class YamlSymbolGeneratorTest {
             " * `0` : foo(n):\n" +
             " * ->foo(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int) : Token = tokenGenerator(\"foo\") { `foo`(n) }\n"))
+            "fun `foo`(n: Int): Token = tokenGenerator(\"foo\") { `foo`(n) }\n"))
     }
 
     @Test fun `ref calling ref`() {
@@ -133,9 +133,9 @@ class YamlSymbolGeneratorTest {
 
     @Test fun `switch constants to code points`() {
         val foo = Production(0, "foo", listOf("c"), switch(
-            eq(variable("c"), ReferenceExpression("flow-in")) to codePoint('1'),
-            eq(variable("c"), ReferenceExpression("flow-key")) to codePoint('2'),
-            eq(variable("c"), ReferenceExpression("flow-out")) to codePoint('3')
+            eq(variable("c"), ref("flow-in")) to codePoint('1'),
+            eq(variable("c"), ref("flow-key")) to codePoint('2'),
+            eq(variable("c"), ref("flow-out")) to codePoint('3')
         ))
 
         val written = generate(foo)
@@ -159,9 +159,9 @@ class YamlSymbolGeneratorTest {
     @Test fun `switch constants to ref with args`() {
         val bar = Production(1, "bar", listOf("n"), codePoint('x') * 'n')
         val foo = Production(0, "foo", listOf("n", "t"), switch(
-            eq(variable("t"), ReferenceExpression("strip")) to ref(bar),
-            eq(variable("t"), ReferenceExpression("clip")) to ref(bar),
-            eq(variable("t"), ReferenceExpression("keep")) to ref(bar)
+            eq(variable("t"), ref("strip")) to ref(bar),
+            eq(variable("t"), ref("clip")) to ref(bar),
+            eq(variable("t"), ref("keep")) to ref(bar)
         ))
 
         val written = generate(foo, bar)
@@ -174,12 +174,14 @@ class YamlSymbolGeneratorTest {
             " * <t> = ->clip ⇒ ->bar(n)\n" +
             " * <t> = ->keep ⇒ ->bar(n)\n" +
             " */\n" +
-            "fun `foo`(n: Int, t: ChompMode) = tokenGenerator(\"foo\") { when (t) {\n" +
-            "    strip -> `bar`(n) named \"foo(\$t)\"\n" +
-            "    clip -> `bar`(n) named \"foo(\$t)\"\n" +
-            "    keep -> `bar`(n) named \"foo(\$t)\"\n" +
-            "    else -> error(\"unexpected `t` value `\$t`\")\n" +
-            "} }\n" +
+            "fun `foo`(n: Int, t: ChompMode) = tokenGenerator(\"foo\") { \n" +
+            "    when (t) {\n" +
+            "        strip -> `bar`(n) named \"foo(\$t)\"\n" +
+            "        clip -> `bar`(n) named \"foo(\$t)\"\n" +
+            "        keep -> `bar`(n) named \"foo(\$t)\"\n" +
+            "        else -> error(\"unexpected `t` value `\$t`\")\n" +
+            "    }\n" +
+            " }\n" +
             "\n" +
             "/**\n" +
             " * `1` : bar(n):\n" +
@@ -300,7 +302,7 @@ class YamlSymbolGeneratorTest {
     @Test fun `ref arg with fun result`() {
         val baz = Production(2, "baz", listOf("n"), codePoint('x') * 'n')
         val bar = Production(1, "bar", listOf("n"), ref(baz))
-        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to ref(baz))))
+        val foo = Production(0, "foo", listOf("n"), ref(bar.name, listOf("n" to ref(baz))))
 
         val written = generate(foo, bar, baz)
 
@@ -591,7 +593,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `end of file ref`() {
-        val production = production(ReferenceExpression("End of file"))
+        val production = production(ref("End of file"))
 
         val written = generate(production)
 
@@ -604,7 +606,7 @@ class YamlSymbolGeneratorTest {
     }
 
     @Test fun `empty ref`() {
-        val production = production(ReferenceExpression("Empty"))
+        val production = production(ref("Empty"))
 
         val written = generate(production)
 
@@ -696,7 +698,7 @@ class YamlSymbolGeneratorTest {
 
     @Test fun `reference with n+1 arg`() {
         val bar = Production(1, "bar", listOf("n"), codePoint('x') * '?')
-        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to VariableExpression("n+1"))))
+        val foo = Production(0, "foo", listOf("n"), ref(bar.name, listOf("n" to variable("n+1"))))
 
         val written = generate(foo, bar)
 
@@ -716,7 +718,7 @@ class YamlSymbolGeneratorTest {
 
     @Test fun `reference with n-a arg`() {
         val bar = Production(1, "bar", listOf("n"), codePoint('x') * '?')
-        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to VariableExpression("n/a"))))
+        val foo = Production(0, "foo", listOf("n"), ref(bar.name, listOf("n" to variable("n/a"))))
 
         val written = generate(foo, bar)
 
@@ -736,7 +738,7 @@ class YamlSymbolGeneratorTest {
 
     @Test fun `reference with n-1 arg`() {
         val bar = Production(1, "bar", listOf("n"), codePoint('x') * '?')
-        val foo = Production(0, "foo", listOf("n"), ReferenceExpression(bar.name, listOf("n" to VariableExpression("n-1"))))
+        val foo = Production(0, "foo", listOf("n"), ref(bar.name, listOf("n" to variable("n-1"))))
 
         val written = generate(foo, bar)
 
@@ -756,9 +758,9 @@ class YamlSymbolGeneratorTest {
 
     @Test fun `reference with flow-in arg`() {
         val bar = Production(1, "bar", listOf("c"), switch(
-            eq(variable("c"), ReferenceExpression("flow-in")) to ReferenceExpression("flow-out"),
-            eq(variable("c"), ReferenceExpression("flow-out")) to ReferenceExpression("flow-in")))
-        val foo = Production(0, "foo", listOf(), ReferenceExpression(bar.name, listOf("c" to ReferenceExpression("flow-in"))))
+            eq(variable("c"), ref("flow-in")) to ref("flow-out"),
+            eq(variable("c"), ref("flow-out")) to ref("flow-in")))
+        val foo = Production(0, "foo", listOf(), ref(bar.name, listOf("c" to ref("flow-in"))))
 
         val written = generate(foo, bar)
 
@@ -783,6 +785,29 @@ class YamlSymbolGeneratorTest {
             "val `foo` = token(\"foo\", `bar`(`flow-in`))\n"))
     }
 
+    @Test fun `switch with out arg`() {
+        val foo = Production(0, "foo", listOf("t"), switch(
+            codePoint('-') to eq(variable("t"), ref("strip")),
+            codePoint('+') to eq(variable("t"), ref("keep")),
+            ref("Empty") to eq(variable("t"), ref("clip"))
+        ))
+
+        val written = generate(foo)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(t):\n" +
+            " * <[-][HYPHEN-MINUS][0x2d]> ⇒ <t> = ->strip\n" +
+            " * <[+][PLUS SIGN][0x2b]> ⇒ <t> = ->keep\n" +
+            " * ->Empty ⇒ <t> = ->clip\n" +
+            " */\n" +
+            "fun `foo`(): ChompMode = when (t) {\n" +
+            "    '-' -> return strip\n" +
+            "    '+' -> return keep\n" +
+            "    else -> return clip\n" +
+            "}\n"))
+    }
+
 
     private fun production(expression: Expression) = Production(0, "foo", listOf(), expression)
 
@@ -794,6 +819,7 @@ class YamlSymbolGeneratorTest {
     private fun range(min: Char, max: Char) = range(CodePoint.of(min), CodePoint.of(max))
     private fun range(min: CodePoint, max: CodePoint) = RangeExpression(codePoint(min), codePoint(max))
     private fun ref(ref: Production) = ReferenceExpression(ref.name, ref.args.map { it to VariableExpression(it) })
+    private fun ref(name: String, args: List<Pair<String, Expression>> = listOf()) = ReferenceExpression(name, args)
 
     private fun seq(e1: Expression, e2: Expression, vararg more: Expression): SequenceExpression {
         var out = SequenceExpression.of(e1, e2)
@@ -824,7 +850,7 @@ class YamlSymbolGeneratorTest {
         val writer = StringWriter()
 
         val spec = Spec(asList(*productions))
-        val generator = YamlSymbolGenerator(spec)
+        val generator = YamlTokenGenerator(spec)
         generator.generateCode(writer)
 
         return writer.toString()

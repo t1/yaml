@@ -11,6 +11,7 @@ import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
 import com.github.t1.yaml.parser.ScalarParser.Mode.NORMAL
 import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
 import com.github.t1.yaml.tools.CodePoint.Companion.EOF
+import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.spaces
 
 internal class ScalarParser private constructor(
@@ -34,6 +35,10 @@ internal class ScalarParser private constructor(
             scanner.accept(`c-double-quote`) -> DOUBLE_QUOTED
             else -> PLAIN
         }
+
+        fun autoDetectIndentation(reader: CodePointReader) : Int {
+            return 0 // TODO
+        }
     }
 
     private val scalar: Scalar = Scalar().style(style)
@@ -53,20 +58,20 @@ internal class ScalarParser private constructor(
     }
 
     private fun plain(): String {
-        val builder = StringBuilder()
+        val out = StringBuilder()
         while (next.more() && !next.peek(`b-break`)) {
             // spaces before a comment or a block mapping value are not part of string scalar
             val spaces = spaces(next.peekWhile(`s-space`).size)
             if (next.matchesAfter(spaces.length, `c-comment`)) break
             next.expect(spaces)
             if (next.peek(`c-comment`) || next.peek(BLOCK_MAPPING_VALUE)) break
-            builder.append(spaces)
+            out.append(spaces)
             if (next.peek() == EOF) break
             if (mode == KEY && next.peek(`c-mapping-value`)) break
             if (mode == VALUE && (next.peek(`c-collect-entry`) || next.peek(`c-mapping-end`))) break
-            builder.appendCodePoint(next.read().value)
+            next.read().appendTo(out)
         }
-        return builder.toString()
+        return out.toString()
     }
 
     private fun morePlainLines() {
@@ -93,7 +98,7 @@ internal class ScalarParser private constructor(
                 else
                     return out.toString()
             else
-                out.appendCodePoint(next.read().value)
+                next.read().appendTo(out)
         throw YamlParseException("Expected a single quoted scalar to be closed at ${next.positionInfo}")
     }
 
@@ -104,7 +109,7 @@ internal class ScalarParser private constructor(
                 return out.toString()
             if (next.accept("\\"))
                 out.append("\\")
-            out.appendCodePoint(next.read().value)
+            next.read().appendTo(out)
         }
         throw YamlParseException("Expected a double quoted scalar to be closed at ${next.positionInfo}")
     }

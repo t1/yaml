@@ -38,8 +38,8 @@ class TokenTest : TokenTestTools() {
         token = symbol(codePoint)
 
         "😀" matches "😀"
-        "😀x" matches "😀"
-        "x" doesnt match
+        "😀x" matches "😀" leaving "x"
+        "x" doesnt match leaving "x"
         "🤪" doesnt match // goofy face
         "\uD83D\uDE00" matches "\uD83D\uDE00"
         "\uD83D\uDE00x" matches "\uD83D\uDE00"
@@ -51,9 +51,9 @@ class TokenTest : TokenTestTools() {
         token = token("😀")
 
         "🤪" doesnt match
-        "😀" matches "😀"
-        "😀x" matches "😀"
-        "x" doesnt match
+        "😀" matches "😀" leaving ""
+        "😀x" matches "😀" leaving "x"
+        "x" doesnt match leaving "x"
         "\uD83D\uDE00" matches "\uD83D\uDE00"
         "\uD83D\uDE00x" matches "\uD83D\uDE00"
         "\uD83D\uDE00" matches "😀"
@@ -64,19 +64,19 @@ class TokenTest : TokenTestTools() {
         token = token("")
         assertThat(token).isEqualTo(empty)
 
-        "" matches ""
-        "x" matches ""
-        "xy" matches ""
+        "" matches "" leaving ""
+        "x" matches "" leaving "x"
+        "xy" matches "" leaving "xy"
         "😀" matches ""
     }
 
     @Test fun startOfLine() {
         token = startOfLine
 
-        "xy".afterRead('x') doesnt match
-        "x".afterRead('x') doesnt match
-        "" matches ""
-        "x" matches ""
+        "xy".afterRead('x') doesnt match leaving "y"
+        "x".afterRead('x') doesnt match leaving ""
+        "" matches "" leaving ""
+        "x" matches "" leaving "x"
     }
 
     @Test fun whitespace() {
@@ -84,9 +84,9 @@ class TokenTest : TokenTestTools() {
 
         "" doesnt match
         "x " doesnt match
-        " " matches " "
-        " x" matches " "
-        "  " matches " "
+        " " matches " " leaving ""
+        " x" matches " " leaving "x"
+        "  " matches " " leaving " "
         "\t" matches "\t"
         "\tx" matches "\t"
         "\t\t" matches "\t"
@@ -101,13 +101,13 @@ class TokenTest : TokenTestTools() {
     @Test fun `three code points token`() {
         token = token("xyz")
 
-        "" doesnt match
-        "x" doesnt match
-        "xy" doesnt match
+        "" doesnt match leaving ""
+        "x" doesnt match leaving "x"
+        "xy" doesnt match leaving "xy"
         "xzy" doesnt match
         "zxy" doesnt match
-        "xyz" matches "xyz"
-        "xyzx" matches "xyz"
+        "xyz" matches "xyz" leaving ""
+        "xyzx" matches "xyz" leaving "x"
         "xxyz" doesnt match
     }
 
@@ -118,10 +118,10 @@ class TokenTest : TokenTestTools() {
         "x" matches "x"
         "y" matches "y"
         "z" matches "z"
-        "xa" matches "x"
+        "xa" matches "x" leaving "a"
         "ya" matches "y"
         "za" matches "z"
-        "ax" doesnt match
+        "ax" doesnt match leaving "ax"
         "ay" doesnt match
         "az" doesnt match
     }
@@ -129,12 +129,12 @@ class TokenTest : TokenTestTools() {
     @Test fun `code point until range token`() {
         token = symbol(CodePoint.of('x') until CodePoint.of('z'))
 
-        "w" doesnt match
+        "w" doesnt match leaving "w"
         "x" matches "x"
         "y" matches "y"
         "z" doesnt match
-        "xa" matches "x"
-        "ya" matches "y"
+        "xa" matches "x" leaving "a"
+        "ya" matches "y" leaving "a"
         "za" doesnt match
         "ax" doesnt match
         "ay" doesnt match
@@ -144,11 +144,12 @@ class TokenTest : TokenTestTools() {
     @Test fun `token or token`() {
         token = symbol('x') or symbol('y')
 
-        "x" matches "x"
-        "y" matches "y"
-        "z" doesnt match
-        "xa" matches "x"
+        "x" matches "x" leaving ""
+        "y" matches "y" leaving ""
+        "z" doesnt match leaving "z"
+        "xa" matches "x" leaving "a"
         "ya" matches "y"
+        "xy" matches "x" leaving "y"
         "za" doesnt match
         "ax" doesnt match
         "ay" doesnt match
@@ -158,10 +159,10 @@ class TokenTest : TokenTestTools() {
     @Test fun `token and token`() {
         token = whitespace and symbol(' ')
 
-        " " matches " "
+        " " matches " " leaving ""
         "\t" doesnt match
         "x" doesnt match
-        " x" matches " "
+        " x" matches " " leaving "x"
         "\tx" doesnt match
         "xy" doesnt match
         " xy" matches " "
@@ -171,8 +172,8 @@ class TokenTest : TokenTestTools() {
     @Test fun `not token`() {
         token = !whitespace
 
-        "x" matches "x"
-        "x " matches "x"
+        "x" matches "x" leaving ""
+        "x " matches "x" leaving " "
         " " doesnt match
         "\n" doesnt match
         "\r" doesnt match
@@ -184,11 +185,11 @@ class TokenTest : TokenTestTools() {
     @Test fun `token minus token`() {
         token = whitespace - symbol(' ')
 
-        "\t" matches "\t"
+        "\t" matches "\t" leaving ""
         "\n" matches "\n"
         " " doesnt match
         "x" doesnt match
-        "\tx" matches "\t"
+        "\tx" matches "\t" leaving "x"
         "\nx" matches "\n"
         " x" doesnt match
         "xy" doesnt match
@@ -200,13 +201,13 @@ class TokenTest : TokenTestTools() {
     @Test fun `token minus token minus token`() {
         token = whitespace - symbol(' ') - symbol('\n')
 
-        "\t" matches "\t"
+        "\t" matches "\t" leaving ""
         "\n" doesnt match
         " " doesnt match
         "x" doesnt match
         " \t" doesnt match
         "\n\t" doesnt match
-        "\t\n" matches "\t"
+        "\t\n" matches "\t" leaving "\n"
         "\tx" matches "\t"
         "\nx" doesnt match
         " x" doesnt match
@@ -222,8 +223,8 @@ class TokenTest : TokenTestTools() {
         "" doesnt match
         "x" doesnt match
         "y" doesnt match
-        "xy" matches "xy"
-        "xyz" matches "xy"
+        "xy" matches "xy" leaving ""
+        "xyz" matches "xy" leaving "z"
     }
 
     @Test fun `token plus token plus token`() {
@@ -236,56 +237,56 @@ class TokenTest : TokenTestTools() {
         " x" doesnt match
         " y" doesnt match
         " yx" doesnt match
-        " xy" matches " xy"
-        "\txy" matches "\txy"
-        " xyz" matches " xy"
+        " xy" matches " xy" leaving ""
+        "\txy" matches "\txy" leaving ""
+        " xyz" matches " xy" leaving "z"
     }
 
     @Test fun `times 2`() {
         token = symbol('x') * 2
 
-        "xx" matches "xx"
-        "xxx" matches "xx"
-        "xxy" matches "xx"
+        "xx" matches "xx" leaving ""
+        "xxx" matches "xx" leaving "x"
+        "xxy" matches "xx" leaving "y"
         "yxx" doesnt match
         "x" doesnt match
-        "y" doesnt match
+        "y" doesnt match leaving "y"
     }
 
     @Test fun `times zero_or_once`() {
         token = symbol('x') * zero_or_once
 
-        "" matches ""
-        "x" matches "x"
-        "xx" matches "x"
-        "xxx" matches "x"
-        "xy" matches "x"
-        "yx" matches ""
-        "y" matches ""
+        "" matches "" leaving ""
+        "x" matches "x" leaving ""
+        "xx" matches "x" leaving "x"
+        "xxx" matches "x" leaving "xx"
+        "xy" matches "x" leaving "y"
+        "yx" matches "" leaving "yx"
+        "y" matches "" leaving "y"
     }
 
     @Test fun `times zero_or_more`() {
         token = symbol('x') * zero_or_more
 
-        "" matches ""
-        "x" matches "x"
-        "xx" matches "xx"
-        "xxx" matches "xxx"
-        "xy" matches "x"
-        "yx" matches ""
-        "y" matches ""
+        "" matches "" leaving ""
+        "x" matches "x" leaving ""
+        "xx" matches "xx" leaving ""
+        "xxx" matches "xxx" leaving ""
+        "xy" matches "x" leaving "y"
+        "yx" matches "" leaving "yx"
+        "y" matches "" leaving "y"
     }
 
     @Test fun `times once_or_more`() {
         token = symbol('x') * once_or_more
 
-        "" doesnt match
-        "x" matches "x"
-        "xx" matches "xx"
-        "xxx" matches "xxx"
-        "xy" matches "x"
-        "yx" doesnt match
-        "y" doesnt match
+        "" doesnt match leaving ""
+        "x" matches "x" leaving ""
+        "xx" matches "xx" leaving ""
+        "xxx" matches "xxx" leaving ""
+        "xy" matches "x" leaving "y"
+        "yx" doesnt match leaving "yx"
+        "y" doesnt match leaving "y"
     }
 
     @Test fun `symbol name is info`() {
@@ -303,8 +304,8 @@ class TokenTest : TokenTestTools() {
     @Test fun `EOF should match empty`() {
         token = endOfFile
 
-        "x" doesnt match
-        "" matches ""
+        "x" doesnt match leaving "x"
+        "" matches "" leaving ""
     }
 
     @Disabled @Test fun `recursive factory`() {

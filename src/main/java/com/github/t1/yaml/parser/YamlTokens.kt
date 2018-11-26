@@ -26,7 +26,9 @@ import com.github.t1.yaml.parser.InOutMode.`block-out`
 import com.github.t1.yaml.parser.InOutMode.`flow-in`
 import com.github.t1.yaml.parser.InOutMode.`flow-key`
 import com.github.t1.yaml.parser.InOutMode.`flow-out`
+import com.github.t1.yaml.parser.ScalarParser.Companion.autoDetectIndentation
 import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
@@ -555,13 +557,15 @@ val `s-separate-in-line` = token("s-separate-in-line", `s-white` * once_or_more 
  * <c> = ->flow-out ⇒ ->s-flow-line-prefix(n)
  * <c> = ->flow-in ⇒ ->s-flow-line-prefix(n)
  */
-fun `s-line-prefix`(n: Int, c: InOutMode) = tokenGenerator("s-line-prefix") { when (c) {
-    `block-out` -> `s-block-line-prefix`(n) named "s-line-prefix($c)"
-    `block-in` -> `s-block-line-prefix`(n) named "s-line-prefix($c)"
-    `flow-out` -> `s-flow-line-prefix`(n) named "s-line-prefix($c)"
-    `flow-in` -> `s-flow-line-prefix`(n) named "s-line-prefix($c)"
-    else -> error("unexpected `c` value `$c`")
-} }
+fun `s-line-prefix`(n: Int, c: InOutMode) = tokenGenerator("s-line-prefix") {
+    when (c) {
+        `block-out` -> `s-block-line-prefix`(n) named "s-line-prefix($c)"
+        `block-in` -> `s-block-line-prefix`(n) named "s-line-prefix($c)"
+        `flow-out` -> `s-flow-line-prefix`(n) named "s-line-prefix($c)"
+        `flow-in` -> `s-flow-line-prefix`(n) named "s-line-prefix($c)"
+        else -> error("unexpected `c` value `$c`")
+    }
+}
 
 /**
  * `68` : s-block-line-prefix(n):
@@ -648,15 +652,17 @@ val `s-l-comments` = token("s-l-comments", `s-b-comment` or startOfLine + `l-com
  * <c> = ->block-key ⇒ ->s-separate-in-line
  * <c> = ->flow-key ⇒ ->s-separate-in-line
  */
-fun `s-separate`(n: Int, c: InOutMode) = tokenGenerator("s-separate") { when (c) {
-    `block-out` -> `s-separate-lines`(n) named "s-separate($c)"
-    `block-in` -> `s-separate-lines`(n) named "s-separate($c)"
-    `flow-out` -> `s-separate-lines`(n) named "s-separate($c)"
-    `flow-in` -> `s-separate-lines`(n) named "s-separate($c)"
-    `block-key` -> `s-separate-in-line` named "s-separate($c)"
-    `flow-key` -> `s-separate-in-line` named "s-separate($c)"
-    else -> error("unexpected `c` value `$c`")
-} }
+fun `s-separate`(n: Int, c: InOutMode) = tokenGenerator("s-separate") {
+    when (c) {
+        `block-out` -> `s-separate-lines`(n) named "s-separate($c)"
+        `block-in` -> `s-separate-lines`(n) named "s-separate($c)"
+        `flow-out` -> `s-separate-lines`(n) named "s-separate($c)"
+        `flow-in` -> `s-separate-lines`(n) named "s-separate($c)"
+        `block-key` -> `s-separate-in-line` named "s-separate($c)"
+        `flow-key` -> `s-separate-in-line` named "s-separate($c)"
+        else -> error("unexpected `c` value `$c`")
+    }
+}
 
 /**
  * `81` : s-separate-lines(n):
@@ -865,13 +871,15 @@ fun `c-double-quoted`(n: Int, c: InOutMode) = tokenGenerator("c-double-quoted") 
  * <c> = ->block-key ⇒ ->nb-double-one-line
  * <c> = ->flow-key ⇒ ->nb-double-one-line
  */
-fun `nb-double-text`(n: Int, c: InOutMode) = tokenGenerator("nb-double-text") { when (c) {
-    `flow-out` -> `nb-double-multi-line`(n) named "nb-double-text($c)"
-    `flow-in` -> `nb-double-multi-line`(n) named "nb-double-text($c)"
-    `block-key` -> `nb-double-one-line` named "nb-double-text($c)"
-    `flow-key` -> `nb-double-one-line` named "nb-double-text($c)"
-    else -> error("unexpected `c` value `$c`")
-} }
+fun `nb-double-text`(n: Int, c: InOutMode) = tokenGenerator("nb-double-text") {
+    when (c) {
+        `flow-out` -> `nb-double-multi-line`(n) named "nb-double-text($c)"
+        `flow-in` -> `nb-double-multi-line`(n) named "nb-double-text($c)"
+        `block-key` -> `nb-double-one-line` named "nb-double-text($c)"
+        `flow-key` -> `nb-double-one-line` named "nb-double-text($c)"
+        else -> error("unexpected `c` value `$c`")
+    }
+}
 
 /**
  * `111` : nb-double-one-line:
@@ -903,7 +911,7 @@ val `nb-ns-double-in-line` = token("nb-ns-double-in-line", `s-white` * zero_or_m
  * ->s-double-break(n) + (->ns-double-char + ->nb-ns-double-in-line + [->s-double-next-line(n) |
  *    (->s-white × *)] × ?)
  */
-fun `s-double-next-line`(n: Int) : Token = tokenGenerator("s-double-next-line") { `s-double-break`(n) + (`ns-double-char` + `nb-ns-double-in-line` + `s-double-next-line`(n) or `s-white` * zero_or_more) * zero_or_once }
+fun `s-double-next-line`(n: Int): Token = tokenGenerator("s-double-next-line") { `s-double-break`(n) + (`ns-double-char` + `nb-ns-double-in-line` + `s-double-next-line`(n) or `s-white` * zero_or_more) * zero_or_once }
 
 /**
  * `116` : nb-double-multi-line(n):
@@ -944,13 +952,15 @@ fun `c-single-quoted`(n: Int, c: InOutMode) = tokenGenerator("c-single-quoted") 
  * <c> = ->block-key ⇒ ->nb-single-one-line
  * <c> = ->flow-key ⇒ ->nb-single-one-line
  */
-fun `nb-single-text`(n: Int, c: InOutMode) = tokenGenerator("nb-single-text") { when (c) {
-    `flow-out` -> `nb-single-multi-line`(n) named "nb-single-text($c)"
-    `flow-in` -> `nb-single-multi-line`(n) named "nb-single-text($c)"
-    `block-key` -> `nb-single-one-line` named "nb-single-text($c)"
-    `flow-key` -> `nb-single-one-line` named "nb-single-text($c)"
-    else -> error("unexpected `c` value `$c`")
-} }
+fun `nb-single-text`(n: Int, c: InOutMode) = tokenGenerator("nb-single-text") {
+    when (c) {
+        `flow-out` -> `nb-single-multi-line`(n) named "nb-single-text($c)"
+        `flow-in` -> `nb-single-multi-line`(n) named "nb-single-text($c)"
+        `block-key` -> `nb-single-one-line` named "nb-single-text($c)"
+        `flow-key` -> `nb-single-one-line` named "nb-single-text($c)"
+        else -> error("unexpected `c` value `$c`")
+    }
+}
 
 /**
  * `122` : nb-single-one-line:
@@ -969,7 +979,7 @@ val `nb-ns-single-in-line` = token("nb-ns-single-in-line", `s-white` * zero_or_m
  * ->s-flow-folded(n) + (->ns-single-char + ->nb-ns-single-in-line + [->s-single-next-line(n) |
  *    (->s-white × *)] × ?)
  */
-fun `s-single-next-line`(n: Int) : Token = tokenGenerator("s-single-next-line") { `s-flow-folded`(n) + (`ns-single-char` + `nb-ns-single-in-line` + `s-single-next-line`(n) or `s-white` * zero_or_more) * zero_or_once }
+fun `s-single-next-line`(n: Int): Token = tokenGenerator("s-single-next-line") { `s-flow-folded`(n) + (`ns-single-char` + `nb-ns-single-in-line` + `s-single-next-line`(n) or `s-white` * zero_or_more) * zero_or_once }
 
 /**
  * `125` : nb-single-multi-line(n):
@@ -1029,13 +1039,15 @@ fun `ns-plain-char`(c: InOutMode) = tokenGenerator("ns-plain-char") { `ns-plain-
  * <c> = ->block-key ⇒ ->ns-plain-one-line(c)
  * <c> = ->flow-key ⇒ ->ns-plain-one-line(c)
  */
-fun `ns-plain`(n: Int, c: InOutMode) = tokenGenerator("ns-plain") { when (c) {
-    `flow-out` -> `ns-plain-multi-line`(n, c) named "ns-plain($c)"
-    `flow-in` -> `ns-plain-multi-line`(n, c) named "ns-plain($c)"
-    `block-key` -> `ns-plain-one-line`(c) named "ns-plain($c)"
-    `flow-key` -> `ns-plain-one-line`(c) named "ns-plain($c)"
-    else -> error("unexpected `c` value `$c`")
-} }
+fun `ns-plain`(n: Int, c: InOutMode) = tokenGenerator("ns-plain") {
+    when (c) {
+        `flow-out` -> `ns-plain-multi-line`(n, c) named "ns-plain($c)"
+        `flow-in` -> `ns-plain-multi-line`(n, c) named "ns-plain($c)"
+        `block-key` -> `ns-plain-one-line`(c) named "ns-plain($c)"
+        `flow-key` -> `ns-plain-one-line`(c) named "ns-plain($c)"
+        else -> error("unexpected `c` value `$c`")
+    }
+}
 
 /**
  * `132` : nb-ns-plain-in-line(c):
@@ -1086,7 +1098,7 @@ fun `c-flow-sequence`(n: Int, c: InOutMode) = tokenGenerator("c-flow-sequence") 
  * `138` : ns-s-flow-seq-entries(n,c):
  * ->ns-flow-seq-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-seq-entries(n,c) × ?) × ?)
  */
-fun `ns-s-flow-seq-entries`(n: Int, c: InOutMode) : Token = tokenGenerator("ns-s-flow-seq-entries") { `ns-flow-seq-entry`(n, c) + `s-separate`(n, c) * zero_or_once + (`c-collect-entry` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-seq-entries`(n, c) * zero_or_once) * zero_or_once }
+fun `ns-s-flow-seq-entries`(n: Int, c: InOutMode): Token = tokenGenerator("ns-s-flow-seq-entries") { `ns-flow-seq-entry`(n, c) + `s-separate`(n, c) * zero_or_once + (`c-collect-entry` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-seq-entries`(n, c) * zero_or_once) * zero_or_once }
 
 /**
  * `139` : ns-flow-seq-entry(n,c):
@@ -1105,7 +1117,7 @@ fun `c-flow-mapping`(n: Int, c: InOutMode) = tokenGenerator("c-flow-mapping") { 
  * `141` : ns-s-flow-map-entries(n,c):
  * ->ns-flow-map-entry(n,c) + (->s-separate(n,c) × ?) + (->c-collect-entry + (->s-separate(n,c) × ?) + (->ns-s-flow-map-entries(n,c) × ?) × ?)
  */
-fun `ns-s-flow-map-entries`(n: Int, c: InOutMode) : Token = tokenGenerator("ns-s-flow-map-entries") { `ns-flow-map-entry`(n, c) + `s-separate`(n, c) * zero_or_once + (`c-collect-entry` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-map-entries`(n, c) * zero_or_once) * zero_or_once }
+fun `ns-s-flow-map-entries`(n: Int, c: InOutMode): Token = tokenGenerator("ns-s-flow-map-entries") { `ns-flow-map-entry`(n, c) + `s-separate`(n, c) * zero_or_once + (`c-collect-entry` + `s-separate`(n, c) * zero_or_once + `ns-s-flow-map-entries`(n, c) * zero_or_once) * zero_or_once }
 
 /**
  * `142` : ns-flow-map-entry(n,c):
@@ -1253,14 +1265,23 @@ fun `ns-flow-node`(n: Int, c: InOutMode) = tokenGenerator("ns-flow-node") { `c-n
  * [->c-indentation-indicator(m) + ->c-chomping-indicator(t) |
  *    ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment
  */
-fun `c-b-block-header`(m: Int, t: ChompMode) = tokenGenerator("c-b-block-header") { (`c-indentation-indicator`(m) + `c-chomping-indicator`(t)) or (`c-chomping-indicator`(t) + `c-indentation-indicator`(m)) + `s-b-comment` }
+fun `c-b-block-header`(reader: CodePointReader): Pair<Int, ChompMode> {
+    var t = `c-chomping-indicator`(reader)
+    val m = `c-indentation-indicator`(reader)
+    if (t == clip) t = `c-chomping-indicator`(reader)
+    // TODO `s-b-comment`
+    return m to t
+}
 
 /**
  * `163` : c-indentation-indicator(m):
  * ->ns-dec-digit ⇒ ->m = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)
  * ->Empty ⇒ ->m = ->auto-detect()
  */
-fun `c-indentation-indicator`(m: Int) = undefined /* TODO other */
+fun `c-indentation-indicator`(reader: CodePointReader): Int {
+    with(`ns-dec-digit`.match(reader)) { if (matches) return codePoints[0].toInt() - 0x30 }
+    return autoDetectIndentation(reader)
+}
 
 /**
  * `164` : c-chomping-indicator(t):
@@ -1268,7 +1289,11 @@ fun `c-indentation-indicator`(m: Int) = undefined /* TODO other */
  * <[+][PLUS SIGN][0x2b]> ⇒ <t> = ->keep
  * ->Empty ⇒ <t> = ->clip
  */
-fun `c-chomping-indicator`(t: ChompMode) = undefined /* TODO other */
+fun `c-chomping-indicator`(reader: CodePointReader): ChompMode = when {
+    symbol('-').match(reader).matches -> strip
+    symbol('+').match(reader).matches -> keep
+    else -> clip
+}
 
 /**
  * `165` : b-chomped-last(t):
@@ -1292,12 +1317,14 @@ fun `b-chomped-last`(t: ChompMode) = when (t) {
  * <t> = ->clip ⇒ ->l-strip-empty(n)
  * <t> = ->keep ⇒ ->l-keep-empty(n)
  */
-fun `l-chomped-empty`(n: Int, t: ChompMode) = tokenGenerator("l-chomped-empty") { when (t) {
-    strip -> `l-strip-empty`(n) named "l-chomped-empty($t)"
-    clip -> `l-strip-empty`(n) named "l-chomped-empty($t)"
-    keep -> `l-keep-empty`(n) named "l-chomped-empty($t)"
-    else -> error("unexpected `t` value `$t`")
-} }
+fun `l-chomped-empty`(n: Int, t: ChompMode) = tokenGenerator("l-chomped-empty") {
+    when (t) {
+        strip -> `l-strip-empty`(n) named "l-chomped-empty($t)"
+        clip -> `l-strip-empty`(n) named "l-chomped-empty($t)"
+        keep -> `l-keep-empty`(n) named "l-chomped-empty($t)"
+        else -> error("unexpected `t` value `$t`")
+    }
+}
 
 /**
  * `167` : l-strip-empty(n):
@@ -1514,7 +1541,7 @@ fun `s-l+block-scalar`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-scalar"
  * (->s-separate(n = <n+1>,c) + ->c-ns-properties(n = <n+1>,c) × ?) + ->s-l-comments + [->l+block-sequence(n = ->seq-spaces(n,c)) |
  *    ->l+block-mapping(n)]
  */
-fun `s-l+block-collection`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-collection") { (`s-separate`(n + 1, c) + `c-ns-properties`(n + 1, c)) * zero_or_once + `s-l-comments` + `l+block-sequence`(`seq-spaces`(n,c)) or `l+block-mapping`(n) }
+fun `s-l+block-collection`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-collection") { (`s-separate`(n + 1, c) + `c-ns-properties`(n + 1, c)) * zero_or_once + `s-l-comments` + `l+block-sequence`(`seq-spaces`(n, c)) or `l+block-mapping`(n) }
 
 /**
  * `201` : seq-spaces(n,c):

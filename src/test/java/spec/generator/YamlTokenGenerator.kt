@@ -20,17 +20,17 @@ import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Paths
 
-class YamlSymbolGenerator(private val spec: Spec) {
+class YamlTokenGenerator(private val spec: Spec) {
     companion object {
         @JvmStatic fun main(args: Array<String>) {
             val spec = SpecLoader().load()
-            YamlSymbolGenerator(spec).generateCode()
+            YamlTokenGenerator(spec).generateCode()
         }
 
         private val SOURCE_FILE = Paths.get("src/main/java/com/github/t1/yaml/parser/YamlTokens.kt")
 
         val HEADER = "" +
-            "@file:Generated(\"${YamlSymbolGenerator::class.qualifiedName}\")\n" +
+            "@file:Generated(\"${YamlTokenGenerator::class.qualifiedName}\")\n" +
             "@file:Suppress(\"unused\", \"ObjectPropertyName\", \"FunctionName\", \"NonAsciiCharacters\", \"REDUNDANT_ELSE_IN_WHEN\")\n" +
             "\n" +
             "package com.github.t1.yaml.parser\n" +
@@ -58,7 +58,9 @@ class YamlSymbolGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.parser.InOutMode.`flow-in`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`flow-key`\n" +
             "import com.github.t1.yaml.parser.InOutMode.`flow-out`\n" +
+            "import com.github.t1.yaml.parser.ScalarParser.Companion.autoDetectIndentation\n" +
             "import com.github.t1.yaml.tools.CodePoint\n" +
+            "import com.github.t1.yaml.tools.CodePointReader\n" +
             "import com.github.t1.yaml.tools.Match\n" +
             "import com.github.t1.yaml.tools.Token\n" +
             "import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more\n" +
@@ -177,23 +179,35 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
         private inner class ProductionWriter(private val production: Production) {
             private val visitor = ProductionVisitor()
+            private val isRecursive = production.references.values.any { it == production }
+            /** Productions that reference other local functions need to be protected from recursion */
+            private val hasInternalFunRefs = production.references.keys.any { it.name !in spec.externalRefs && it.hasArgs }
+            private val hasOutArg = with(production.expression) { this is SwitchExpression && this.values[0] is EqualsExpression }
 
-            fun write() = if (production.hasArgs) writeTokenFactory() else writeToken()
+
+            fun write() {
+                writeComment()
+                if (production.hasArgs) writeTokenFactory()
+                else writeToken()
+            }
+
+            private fun writeComment() = write("\n" +
+                "/**\n" +
+                " * ${with(production) { "`$counter` : $key:\n$expression" }.replace("\n", "\n * ")}\n" +
+                " */\n")
 
             private fun writeToken() {
-                write(comment())
                 write("val `${production.name}` = token(\"${production.name}\", ")
                 production.expression.guide(visitor)
                 write(")\n")
             }
 
             private fun writeTokenFactory() {
-                write(comment())
                 val name = production.name.replace('<', '≪') // '<' is not allowed in method names
                 write("fun `$name`(")
                 writeArgs()
                 write(")")
-                if (isRecursive) write(" : Token")
+                writeReturnType()
                 if (hasInternalFunRefs) write(" = tokenGenerator(\"$name\") { ") else write(" = ")
                 when {
                     production.counter in setOf(170, 174, 185) -> write("undefined /* TODO global variable */")
@@ -203,35 +217,34 @@ class YamlSymbolGenerator(private val spec: Spec) {
                     production.expression is RepeatedExpression -> visitor.writeFun(production.expression)
                     production.expression is SequenceExpression -> visitor.writeFun(production.expression)
                     production.expression is AlternativesExpression -> visitor.writeFun(production.expression)
-                    production.expression is SwitchExpression -> visitor.writeFun(production.expression)
-                    else -> throw UnsupportedOperationException("factory function for ${production.expression::class.simpleName}")
+                    production.expression is SwitchExpression -> visitor.writeFun(production.expression, indented = hasInternalFunRefs)
+                    else -> error("factory function for ${production.expression::class.simpleName}")
                 }
                 if (hasInternalFunRefs) write(" }")
                 write("\n")
             }
 
-            private val isRecursive get() = production.references.values.any { it == production }
-            /** Productions that reference other local functions need to be protected from recursion */
-            private val hasInternalFunRefs get() = production.references.keys.any { it.name !in spec.externalRefs && it.hasArgs }
-
-            private fun comment(): String {
-                return "\n" +
-                    "/**\n" +
-                    " * ${with(production) { "`$counter` : $key:\n$expression" }.replace("\n", "\n * ")}\n" +
-                    " */\n"
+            private fun writeArgs() {
+                if (hasOutArg) return
+                production.args.forEach {
+                    if (it != production.args[0])
+                        write(", ")
+                    write("$it: ${argType(it)}")
+                }
             }
 
-            private fun writeArgs() = production.args.forEach {
-                if (it != production.args[0])
-                    write(", ")
-                val pureVariableName = if (it.startsWith("<") || it.startsWith("≤")) it.substring(1) else it
-                write(when (pureVariableName) {
-                    "n" -> "n: Int"
-                    "m" -> "m: Int"
-                    "t" -> "t: ChompMode"
-                    "c" -> "c: InOutMode"
-                    else -> "/* TODO arg $it */"
-                })
+            private fun writeReturnType() {
+                if (hasOutArg) {
+                    write(": ${argType(production.args[0])}")
+                } else if (isRecursive) write(": Token")
+            }
+
+            private fun argType(argName: String): String = when (argName) {
+                "n" -> "Int"
+                "m" -> "Int"
+                "t" -> "ChompMode"
+                "c" -> "InOutMode"
+                else -> error("unsupported variable name '$argName' (i.e. unknown type)")
             }
 
             private fun writeLessFun() {
@@ -246,7 +259,7 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 val negatedComparison = when (comparison) {
                     '<' -> ">="
                     '≤' -> ">"
-                    else -> throw UnsupportedOperationException("unsupported comparison: '$comparison'")
+                    else -> error("unsupported comparison: '$comparison'")
                 }
                 write(".match(reader).codePoints } }\n" +
                     "    if (match.size $negatedComparison n) return@token Match(matches = false)\n" +
@@ -334,21 +347,28 @@ class YamlSymbolGenerator(private val spec: Spec) {
                 override fun betweenRange(rangeExpression: RangeExpression) = write("..")
 
 
-                fun writeFun(switch: SwitchExpression) = switch.guide(SwitchVisitor(switch))
+                fun writeFun(switch: SwitchExpression, indented: Boolean) = switch.guide(SwitchVisitor(switch, indented))
             }
 
-            private inner class SwitchVisitor(switch: SwitchExpression) : ProductionVisitor() {
-                val variableName: String = checkedVariableName(switch)
+            private inner class SwitchVisitor(
+                private val switch: SwitchExpression,
+                private val indented: Boolean
+            ) : ProductionVisitor() {
+                private val variableName: String = checkedVariableName(switch)
+                private val indent = if (indented) "    " else ""
+                private var hasElse = false
 
                 init {
+                    if (indented) write("\n    ")
                     write("when ($variableName) {\n")
                 }
 
                 private fun checkedVariableName(switch: SwitchExpression): String {
                     assertThat(switch.balanced).isTrue()
-                    val name = ((switch.cases[0] as EqualsExpression).left as VariableExpression).name
-                    for (i in 0 until switch.cases.size) {
-                        val case = switch.cases[i] as EqualsExpression
+                    val equalsExpressions = if (hasOutArg) switch.values else switch.cases
+                    val name = ((equalsExpressions[0] as EqualsExpression).left as VariableExpression).name
+                    for (i in 0 until equalsExpressions.size) {
+                        val case = equalsExpressions[i] as EqualsExpression
                         val left = case.left as VariableExpression
                         assertThat(left.name).isEqualTo(name)
                     }
@@ -357,19 +377,27 @@ class YamlSymbolGenerator(private val spec: Spec) {
 
                 override fun visit(switch: SwitchExpression) = this
 
-                override fun beforeSwitchItem() = write("    ")
-                override fun betweenSwitchCaseAndValue() = write(" -> ")
+                override fun beforeSwitchItem() = write("    $indent")
+                override fun visit(reference: ReferenceExpression) {
+                    if (reference == switch.cases.last() && reference.key == "Empty") {
+                        hasElse = true
+                        write("else")
+                    } else super.visit(reference)
+                }
+
+                override fun betweenSwitchCaseAndValue() = write(" -> ${if (hasOutArg) "return " else ""}")
                 override fun afterSwitchItem(case: Expression, value: Expression) {
-                    if (value is ReferenceExpression && externalRefMap.containsKey(value.name)) write("\n")
+                    if (hasOutArg || value is ReferenceExpression && externalRefMap.containsKey(value.name)) write("\n")
                     else write(" named \"${production.name}(\$$variableName)\"\n")
                 }
 
                 override fun visit(equals: EqualsExpression) = this
                 override fun visit(variable: VariableExpression) {}
 
-                override fun leave(switch: SwitchExpression) = write("" +
-                    "    else -> error(\"unexpected `$variableName` value `$$variableName`\")\n" +
-                    "}")
+                override fun leave(switch: SwitchExpression) {
+                    if (!hasElse) write("$indent    else -> error(\"unexpected `$variableName` value `$$variableName`\")\n")
+                    write("$indent}${if (indented) "\n" else ""}")
+                }
             }
         }
     }

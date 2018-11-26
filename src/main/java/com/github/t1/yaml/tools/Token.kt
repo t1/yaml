@@ -11,28 +11,24 @@ import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_once
  * A token can match zero characters
  */
 interface Token {
+    /** Check if this token comes next in the reader and, if so, advance the reader to after the match */
     fun match(reader: CodePointReader): Match
 
+    /** Check if this token comes next in the reader without moving the reader */
+    fun wouldMatch(reader: CodePointReader): Match = reader.mark { this.match(reader) }
+
     infix fun or(that: Token) = token("${this@Token} or $that") { reader ->
-        reader.read { this.match(reader) } or { reader.read { that.match(reader) } }
+        reader.read { this.match(reader) or { that.match(reader) } }
     }
 
     infix fun and(that: Token) = token("${this@Token} and $that") { reader ->
-        val thisMatch = reader.mark { this.match(reader) }
-        if (!thisMatch.matches) return@token thisMatch
-        val thatMatch = reader.mark { that.match(reader) }
-        if (!thatMatch.matches) return@token thatMatch
-        val totalMatch = thisMatch and thatMatch
-        reader.expect(totalMatch.codePoints)
-        return@token totalMatch
+        reader.read { this.wouldMatch(reader) and { that.wouldMatch(reader) } }
     }
 
     operator fun not() = token("!${this@Token}") { reader ->
         val thisMatch = reader.mark { this@Token.match(reader) }
-        when {
-            thisMatch.matches -> Match(matches = false)
-            else -> Match(matches = true, codePoints = listOf(reader.read()))
-        }
+        if (thisMatch.matches) Match(matches = false)
+        else Match(matches = true, codePoints = listOf(reader.read()))
     }
 
     operator fun minus(that: Token) = this and !that named "$this minus $that"
@@ -41,7 +37,7 @@ interface Token {
         reader.read {
             val thisMatch = this.match(reader)
             if (!thisMatch.matches) return@read thisMatch
-            val thatMatch = reader.mark { that.match(reader) }
+            val thatMatch = that.match(reader)
             if (!thatMatch.matches) return@read thatMatch
             return@read Match(matches = true, codePoints = thisMatch.codePoints + thatMatch.codePoints)
         }
@@ -91,31 +87,23 @@ data class Match(
     val codePoints: List<CodePoint> = listOf()
 ) {
     init {
-        if (!matches) require(codePoints.isEmpty()) { "unexpected code points for non-match: $codePoints" }
-        require(codePoints.none { it == EOF }) { "unexpected EOF in: $codePoints" }
+        if (!matches) assert(codePoints.isEmpty()) { "unexpected code points for non-match: $codePoints" }
+        assert(codePoints.none { it == EOF }) { "unexpected EOF in: $codePoints" }
     }
 
     val size: Int get() = codePoints.size
 
-    /** short-circuit variant of `or(that: Match)` */
+    /** short-circuit `or` */
     infix fun or(that: () -> Match): Match = if (this.matches) this else that()
 
-    /** careful: doesn't short-circuit */
-    infix fun or(that: Match) = when {
-        this.matches -> this
-        that.matches -> that
-        else -> Match(false)
+    /** short-circuit `and` */
+    infix fun and(thatBlock: () -> Match): Match {
+        if (!this.matches) return this
+        val that = thatBlock()
+        if (!that.matches) return that
+        assert(this.codePoints == that.codePoints) { "expected $this and $that to have match the same code point" }
+        return this
     }
-
-    /** short-circuit variant of `and(that: Match)` */
-    infix fun and(that: () -> Match): Match = if (this.matches) this and that() else Match(false)
-
-    /** careful: doesn't short-circuit */
-    infix fun and(that: Match) =
-        if (this.matches && that.matches) {
-            require(this.codePoints == that.codePoints) { "expected $this and $that to have match the same code point" }
-            Match(matches = true, codePoints = this.codePoints)
-        } else Match(false)
 }
 
 fun token(name: String, char: Char) = symbol(char) named name
@@ -134,8 +122,7 @@ fun token(codePoints: List<CodePoint>) =
 
 private fun CodePointReader.read(body: (Mark) -> Match): Match {
     val match = mark(body)
-    if (match.matches && match.size > 0)
-        expect(match.codePoints)
+    if (match.matches) expect(match.codePoints)
     return match
 }
 
@@ -146,8 +133,10 @@ val endOfFile = token("EOF") { Match(matches = it.isEndOfFile) }
 
 /** Return a token that lazily generates a token when called. This is important to break recursions between tokens. */
 fun tokenGenerator(description: String, body: () -> Token) = token(description) { reader -> body().match(reader) }
+
 /** Renames a token */
 fun token(description: String, token: Token) = token(description) { token.match(it) }
+
 fun token(description: String, match: (CodePointReader) -> Match) = object : Token {
     override fun toString() = description
     override fun match(reader: CodePointReader): Match = match(reader)
@@ -165,7 +154,11 @@ fun symbol(range: CodePointRange) = Symbol("between ${range.start} and ${range.e
 /** A [Token] matching a single [CodePoint] */
 data class Symbol(val description: String, val predicate: (CodePoint) -> Boolean) : Token {
     override fun toString() = description
-    override fun match(reader: CodePointReader) = reader.read().run {
-        if (predicate(this)) Match(matches = true, codePoints = listOf(this)) else Match(matches = false)
+    override fun match(reader: CodePointReader): Match {
+        val codePoint = reader.mark { reader.read() }
+        if (!predicate(codePoint)) return Match(matches = false)
+        val codePoints = listOf(codePoint)
+        reader.expect(codePoints)
+        return Match(matches = true, codePoints = codePoints)
     }
 }

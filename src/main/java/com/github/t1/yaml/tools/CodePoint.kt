@@ -2,10 +2,11 @@ package com.github.t1.yaml.tools
 
 import kotlin.streams.asSequence
 
-data class CodePoint(val value: Int) : Comparable<CodePoint> {
+data class CodePoint(private val value: Int) : Comparable<CodePoint> {
     override fun compareTo(other: CodePoint) = this.value.compareTo(other.value)
 
     override fun toString(): String = if (value < 0) "" else String(Character.toChars(value))
+    fun toInt() = value
 
     val info get() = "[$escaped][$name][0x$hex]"
 
