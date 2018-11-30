@@ -100,7 +100,7 @@ class YamlTokenGenerator(private val spec: Spec) {
             "private val acceptedCodePoint: CodePoint\n" +
             "    get() = with(acceptedCodePoints) {\n" +
             "        require(this != null) { \"require a successful call to `CodePointReader.accept(token: Token)`\" }\n" +
-            "        require(this.size == 1) { \"require acceptedCodePoints to match one CodePoint but found $this\" }\n" +
+            "        require(this.size == 1) { \"require acceptedCodePoints to match one CodePoint but found \$this\" }\n" +
             "        return this[0]\n" +
             "    }\n" +
             "\n" +
@@ -150,6 +150,17 @@ class YamlTokenGenerator(private val spec: Spec) {
             "Excluding c-forbidden content" to "excludingCForbiddenContent"
         )
 
+        private val specials = mapOf(
+            162 to "" +
+                "fun `c-b-block-header`(reader: CodePointReader): Pair<Int, ChompMode> {\n" +
+                "    var t = `c-chomping-indicator`(reader)\n" +
+                "    val m = `c-indentation-indicator`(reader)\n" +
+                "    if (t == clip) t = `c-chomping-indicator`(reader)\n" +
+                "    // TODO `s-b-comment`\n" +
+                "    return m to t\n" +
+                "}\n"
+        )
+
         private fun write(string: String) {
             out.append(string)
         }
@@ -194,18 +205,23 @@ class YamlTokenGenerator(private val spec: Spec) {
         }
 
         private inner class ProductionWriter(private val production: Production) {
+            private val isSpecial = production.counter in specials.keys
             private val visitor = ProductionVisitor()
             private val isRecursive = production.references.values.any { it == production }
             /** Productions that reference other local functions need to be protected from recursion */
             private val hasInternalFunRefs = production.references.keys.any { it.name !in spec.externalRefs && it.hasArgs }
             private val hasOutArg = with(production.expression) { this is SwitchExpression && this.values[0] is EqualsExpression }
 
-
             fun write() {
                 writeComment()
-                if (production.hasArgs) writeTokenFactory()
-                else writeToken()
+                when {
+                    isSpecial -> writeSpecial()
+                    production.hasArgs -> writeTokenFactory()
+                    else -> writeToken()
+                }
             }
+
+            private fun writeSpecial() = write(specials[production.counter]!!)
 
             private fun writeComment() = write("\n" +
                 "/**\n" +

@@ -1291,8 +1291,8 @@ fun `c-b-block-header`(reader: CodePointReader): Pair<Int, ChompMode> {
 
 /**
  * `163` : c-indentation-indicator(m):
- * ->ns-dec-digit ⇒ ->m = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)
- * ->Empty ⇒ ->m = ->auto-detect()
+ * ->ns-dec-digit ⇒ <m> = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)
+ * ->Empty ⇒ <m> = ->auto-detect()
  */
 fun `c-indentation-indicator`(reader: CodePointReader): Int = when {
     reader.accept(`ns-dec-digit`) -> acceptedCodePoint.toInt() - 0x30

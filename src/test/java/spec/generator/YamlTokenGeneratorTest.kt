@@ -835,6 +835,69 @@ class YamlTokenGeneratorTest {
             "val `bar` = token(\"bar\", '0'..'9')\n"))
     }
 
+    @Test fun `switch with Int and ChompMode out args`() {
+        val bar = Production(1, "bar", listOf(), range('0', '9'))
+        val indent = Production(3, "indent", listOf("m"), switch(
+            ref(bar) to eq(variable("m"), ref(bar) - codePoint('0')),
+            ref("Empty") to eq(variable("m"), ref("auto-detect()"))
+        ))
+        val chomp = Production(2, "chomp", listOf("t"), switch(
+            codePoint('-') to eq(variable("t"), ref("strip")),
+            codePoint('+') to eq(variable("t"), ref("keep")),
+            ref("Empty") to eq(variable("t"), ref("clip"))
+        ))
+        val foo = Production(162, "foo", listOf("m", "t"),
+            seq(
+                alt(
+                    seq(ref(indent), ref(chomp)),
+                    seq(ref(chomp), ref(indent))),
+                ref(bar)))
+
+        val written = generate(foo, bar, chomp, indent)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `162` : foo(m,t):\n" +
+            " * [->indent(m) + ->chomp(t) |\n" +
+            " *    ->chomp(t) + ->indent(m)] + ->bar\n" +
+            " */\n" +
+            "fun `c-b-block-header`(reader: CodePointReader): Pair<Int, ChompMode> {\n" +
+            "    var t = `c-chomping-indicator`(reader)\n" +
+            "    val m = `c-indentation-indicator`(reader)\n" +
+            "    if (t == clip) t = `c-chomping-indicator`(reader)\n" +
+            "    // TODO `s-b-comment`\n" +
+            "    return m to t\n" +
+            "}\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar:\n" +
+            " * [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]\n" +
+            " */\n" +
+            "val `bar` = token(\"bar\", '0'..'9')\n" +
+            "\n" +
+            "/**\n" +
+            " * `2` : chomp(t):\n" +
+            " * <[-][HYPHEN-MINUS][0x2d]> ⇒ <t> = ->strip\n" +
+            " * <[+][PLUS SIGN][0x2b]> ⇒ <t> = ->keep\n" +
+            " * ->Empty ⇒ <t> = ->clip\n" +
+            " */\n" +
+            "fun `chomp`(reader: CodePointReader): ChompMode = when {\n" +
+            "    reader.accept('-') -> strip\n" +
+            "    reader.accept('+') -> keep\n" +
+            "    else -> clip\n" +
+            "}\n" +
+            "\n" +
+            "/**\n" +
+            " * `3` : indent(m):\n" +
+            " * ->bar ⇒ <m> = (->bar - <[0][DIGIT ZERO][0x30]>)\n" +
+            " * ->Empty ⇒ <m> = ->auto-detect()\n" +
+            " */\n" +
+            "fun `indent`(reader: CodePointReader): Int = when {\n" +
+            "    reader.accept(`bar`) -> acceptedCodePoint.toInt() - 0x30\n" +
+            "    else -> autoDetectIndentation(reader)\n" +
+            "}\n"))
+    }
+
 
     private fun production(expression: Expression) = Production(0, "foo", listOf(), expression)
 
