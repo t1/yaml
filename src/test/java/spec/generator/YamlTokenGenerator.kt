@@ -62,6 +62,7 @@ class YamlTokenGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.tools.CodePoint\n" +
             "import com.github.t1.yaml.tools.CodePointReader\n" +
             "import com.github.t1.yaml.tools.Match\n" +
+            "import com.github.t1.yaml.tools.Symbol\n" +
             "import com.github.t1.yaml.tools.Token\n" +
             "import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more\n" +
             "import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more\n" +
@@ -88,6 +89,8 @@ class YamlTokenGenerator(private val spec: Spec) {
             "private infix operator fun Char.plus(token: Token) = symbol(this) + token\n" +
             "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
             "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n" +
+            "private fun CodePointReader.accept(char: Char): Boolean = accept(symbol(char))\n" +
+            "private fun CodePointReader.accept(symbol: Symbol): Boolean = symbol.match(this).matches\n" +
             "private val anNsCharPreceding = undefined\n" +
             "private val atMost1024CharactersAltogether = undefined\n" +
             "private val excludingCForbiddenContent = undefined\n" +
@@ -211,7 +214,7 @@ class YamlTokenGenerator(private val spec: Spec) {
                 if (hasInternalFunRefs) write(" = tokenGenerator(\"$name\") { ") else write(" = ")
                 when {
                     production.counter in setOf(170, 174, 185) -> write("undefined /* TODO global variable */")
-                    production.counter in setOf(163, 164, 183, 187) -> write("undefined /* TODO other */")
+                    production.counter in setOf(163, 183, 187) -> write("undefined /* TODO other */")
                     name.endsWith("≪") || name.endsWith("≤") -> writeLessFun()
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
                     production.expression is RepeatedExpression -> visitor.writeFun(production.expression)
@@ -225,9 +228,9 @@ class YamlTokenGenerator(private val spec: Spec) {
             }
 
             private fun writeArgs() {
-                if (hasOutArg) return
-                production.args.forEach {
-                    if (it != production.args[0])
+                if (hasOutArg) write("reader: CodePointReader")
+                else production.args.forEach {
+                    if (it != production.args.first())
                         write(", ")
                     write("$it: ${argType(it)}")
                 }
@@ -360,7 +363,7 @@ class YamlTokenGenerator(private val spec: Spec) {
 
                 init {
                     if (indented) write("\n    ")
-                    write("when ($variableName) {\n")
+                    write("when ${if (hasOutArg) "" else "($variableName) "}{\n")
                 }
 
                 private fun checkedVariableName(switch: SwitchExpression): String {
@@ -378,6 +381,12 @@ class YamlTokenGenerator(private val spec: Spec) {
                 override fun visit(switch: SwitchExpression) = this
 
                 override fun beforeSwitchItem() = write("    $indent")
+                override fun visit(codePoint: CodePointExpression) {
+                    if (hasOutArg && codePoint in switch.cases) write("reader.accept(")
+                    super.visit(codePoint)
+                    if (hasOutArg && codePoint in switch.cases) write(")")
+                }
+
                 override fun visit(reference: ReferenceExpression) {
                     if (reference == switch.cases.last() && reference.key == "Empty") {
                         hasElse = true
@@ -385,7 +394,7 @@ class YamlTokenGenerator(private val spec: Spec) {
                     } else super.visit(reference)
                 }
 
-                override fun betweenSwitchCaseAndValue() = write(" -> ${if (hasOutArg) "return " else ""}")
+                override fun betweenSwitchCaseAndValue() = write(" -> ")
                 override fun afterSwitchItem(case: Expression, value: Expression) {
                     if (hasOutArg || value is ReferenceExpression && externalRefMap.containsKey(value.name)) write("\n")
                     else write(" named \"${production.name}(\$$variableName)\"\n")

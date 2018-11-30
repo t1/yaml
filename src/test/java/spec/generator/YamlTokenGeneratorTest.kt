@@ -785,7 +785,7 @@ class YamlTokenGeneratorTest {
             "val `foo` = token(\"foo\", `bar`(`flow-in`))\n"))
     }
 
-    @Test fun `switch with out arg`() {
+    @Test fun `switch with ChompingIndicator out arg`() {
         val foo = Production(0, "foo", listOf("t"), switch(
             codePoint('-') to eq(variable("t"), ref("strip")),
             codePoint('+') to eq(variable("t"), ref("keep")),
@@ -801,10 +801,10 @@ class YamlTokenGeneratorTest {
             " * <[+][PLUS SIGN][0x2b]> ⇒ <t> = ->keep\n" +
             " * ->Empty ⇒ <t> = ->clip\n" +
             " */\n" +
-            "fun `foo`(): ChompMode = when (t) {\n" +
-            "    '-' -> return strip\n" +
-            "    '+' -> return keep\n" +
-            "    else -> return clip\n" +
+            "fun `foo`(reader: CodePointReader): ChompMode = when {\n" +
+            "    reader.accept('-') -> strip\n" +
+            "    reader.accept('+') -> keep\n" +
+            "    else -> clip\n" +
             "}\n"))
     }
 

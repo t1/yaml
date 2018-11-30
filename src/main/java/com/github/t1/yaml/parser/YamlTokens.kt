@@ -30,6 +30,7 @@ import com.github.t1.yaml.parser.ScalarParser.Companion.autoDetectIndentation
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
+import com.github.t1.yaml.tools.Symbol
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
@@ -56,6 +57,8 @@ private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
 private infix operator fun Char.plus(token: Token) = symbol(this) + token
 private infix operator fun Token.plus(that: Char) = this + symbol(that)
 private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
+private fun CodePointReader.accept(char: Char): Boolean = accept(symbol(char))
+private fun CodePointReader.accept(symbol: Symbol): Boolean = symbol.match(this).matches
 private val anNsCharPreceding = undefined
 private val atMost1024CharactersAltogether = undefined
 private val excludingCForbiddenContent = undefined
@@ -1290,8 +1293,8 @@ fun `c-indentation-indicator`(reader: CodePointReader): Int {
  * ->Empty ⇒ <t> = ->clip
  */
 fun `c-chomping-indicator`(reader: CodePointReader): ChompMode = when {
-    symbol('-').match(reader).matches -> strip
-    symbol('+').match(reader).matches -> keep
+    reader.accept('-') -> strip
+    reader.accept('+') -> keep
     else -> clip
 }
 
