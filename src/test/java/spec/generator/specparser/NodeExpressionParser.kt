@@ -103,7 +103,7 @@ class NodeExpressionParser(nodes: List<Node>) {
 
         if (next.accept("|")) {
             skipSpaces()
-            assert(!isEnd)
+            assert(!isEnd) { "expected no end after '|'" }
             expression = AlternativesExpression.of(expression, expression())
         }
         return if (isEnd) expression

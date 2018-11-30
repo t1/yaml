@@ -39,11 +39,6 @@ class NodeExpressionScanner(private val nodes: List<Node>) {
         return i < nodes.size || nextText != null && nextText!!.more()
     }
 
-    fun count(text: String): Int {
-        return if (isText) withText { nextText!!.count(text) } else 0
-    }
-
-
     fun accept(text: String): Boolean {
         return if (!more() || !isText) false else withText { nextText!!.accept(text) }
     }

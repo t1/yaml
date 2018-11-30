@@ -5,8 +5,8 @@ import org.jsoup.nodes.Element
 import spec.generator.Expression
 
 data class ReferenceParser(
-    var name: String,
-    val args: MutableList<Pair<String, Expression>>,
+    private var name: String,
+    private val args: MutableList<Pair<String, Expression>>,
     private var closed: Boolean
 ) {
     private constructor(element: Element) : this(element.href) {

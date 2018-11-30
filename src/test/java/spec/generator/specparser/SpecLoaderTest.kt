@@ -1,6 +1,7 @@
 package spec.generator.specparser
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.catchThrowable
 import org.assertj.core.api.Assertions.contentOf
 import org.jsoup.Jsoup
 import org.junit.jupiter.api.Test
@@ -49,6 +50,28 @@ import test.softly
         val production = parse(0, "foo", "<a href=\"#bar\">bar</a> | ( <a href=\"#baz\">baz</a></a> )")
 
         assertThat(production.toString()).isEqualTo("`0` : foo:\n[->bar |\n   ->baz]")
+    }
+
+    @Test fun `should fail`() {
+        val document = Jsoup.parse("<html><head></head><body>" +
+            "<table class=\"productionset\"><tr><td>\n" +
+            "  <table class=\"productionset\">\n" +
+            "    <tr>\n" +
+            "      <td class=\"productioncounter\">[0]</td> \n" +
+            "      <td class=\"productionlhs\"><a id=\"foo\"></a>foo</td> \n" +
+            "      <td class=\"productionrhs\">xxx | </td> \n" +
+            "    </tr>\n" +
+            "  </table>" +
+            "</td></tr></table>" +
+            "</body></html>")
+        val thrown = catchThrowable { SpecLoader().load(document) }
+
+        assertThat(thrown).hasMessage("can't parse [0][foo]:\n" +
+            "\n" +
+            "<td class=\"productionrhs\">xxx | </td>\n" +
+            "\n" +
+            "  0: xxx | \n")
+        assertThat(thrown.cause).isInstanceOf(AssertionError::class.java).hasMessage("expected no end after '|'").hasNoCause()
     }
 
     @Test fun alternatives() {

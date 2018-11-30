@@ -2,6 +2,7 @@ package spec.generator
 
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
+import com.github.t1.yaml.tools.Match
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
@@ -29,7 +30,32 @@ class TokenTest : TokenTestTools() {
             .hasMessage("undefined token")
     }
 
+    @Test fun `simple symbol`() {
+        token = symbol("x")
+
+        "x" matches "x" leaving ""
+        "xx" matches "x" leaving "x"
+        "y" doesnt match leaving "y"
+
+        val match = token.match(CodePointReader("xx"))
+        assertThat(match).isEqualTo(Match(matches = true, codePoints = CodePoint.allOf(("x"))))
+        assertThat(match.size).isEqualTo(1)
+    }
+
     @Test fun `two chars symbol`() {
+        token = symbol("😀")
+
+        "😀" matches "😀"
+        "😀x" matches "😀" leaving "x"
+        "x" doesnt match leaving "x"
+        "🤪" doesnt match // goofy face
+        "\uD83D\uDE00" matches "\uD83D\uDE00"
+        "\uD83D\uDE00x" matches "\uD83D\uDE00"
+        "\uD83D\uDE00" matches "😀"
+        "\uD83D\uDE00x" matches "😀"
+    }
+
+    @Test fun `two chars codePoint symbol`() {
         val codePoint = CodePoint.of("😀")
         assertThat("😀").isEqualTo("\uD83D\uDE00")
         assertThat(codePoint.info).isEqualTo("[\\uD83D\\uDE00][GRINNING FACE][0x1f600]")

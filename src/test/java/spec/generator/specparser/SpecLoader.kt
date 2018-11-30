@@ -43,20 +43,12 @@ class SpecLoader {
         try {
             val parser = NodeExpressionParser(rhs.childNodes())
             return parser.expression()
-        } catch (e: RuntimeException) {
-            val info = StringBuilder()
-            info.append("can't parse [").append(counter).append("][").append(name).append("]:\n\n").append(rhs).append("\n\n")
+        } catch (e: Throwable) {
+            var info = "can't parse [$counter][$name]:\n\n$rhs\n\n"
             for (i in 0 until rhs.childNodeSize())
-                info.append("  ").append(i).append(": ").append(rhs.childNode(i)).append("\n")
-            throw RuntimeException(info.toString(), e)
-        } catch (e: AssertionError) {
-            val info = StringBuilder()
-            info.append("can't parse [").append(counter).append("][").append(name).append("]:\n\n").append(rhs).append("\n\n")
-            for (i in 0 until rhs.childNodeSize())
-                info.append("  ").append(i).append(": ").append(rhs.childNode(i)).append("\n")
-            throw RuntimeException(info.toString(), e)
+                info += "  $i: ${rhs.childNode(i)}\n"
+            throw RuntimeException(info, e)
         }
-
     }
 
     private fun parseCounter(set: Element): Int {
