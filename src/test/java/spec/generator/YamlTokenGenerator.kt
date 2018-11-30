@@ -107,7 +107,6 @@ class YamlTokenGenerator(private val spec: Spec) {
             "private val anNsCharPreceding = undefined\n" +
             "private val atMost1024CharactersAltogether = undefined\n" +
             "private val excludingCForbiddenContent = undefined\n" +
-            "private val followedByAnNsPlainSafe = undefined\n" +
             "\n"
     }
 
@@ -128,7 +127,7 @@ class YamlTokenGenerator(private val spec: Spec) {
             "End of file" to "endOfFile",
             "Empty" to "empty",
             "Start of line" to "startOfLine",
-            "Followed by an ns-plain-safe(c)" to "followedByAnNsPlainSafe",
+            "Followed by an ns-plain-safe(c)" to "/** TODO Followed by an */ `ns-plain-safe`(c)",
             "An ns-char preceding" to "anNsCharPreceding",
             "At most 1024 characters altogether" to "atMost1024CharactersAltogether",
             "flow-key" to "`flow-key`",
@@ -242,8 +241,7 @@ class YamlTokenGenerator(private val spec: Spec) {
                 writeReturnType()
                 if (hasInternalFunRefs) write(" = tokenGenerator(\"$name\") { ") else write(" = ")
                 when {
-                    production.counter in setOf(170, 174, 185) -> write("undefined /* TODO global variable */")
-                    production.counter in setOf(183, 187) -> write("undefined /* TODO other */")
+                    production.counter in setOf(170, 174, 183, 185, 187) -> write("undefined /* TODO not yet supported */")
                     name.endsWith("≪") || name.endsWith("≤") -> writeLessFun()
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
                     production.expression is RepeatedExpression -> visitor.writeFun(production.expression)

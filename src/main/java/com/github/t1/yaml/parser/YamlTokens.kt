@@ -75,7 +75,6 @@ private val acceptedCodePoint: CodePoint
 private val anNsCharPreceding = undefined
 private val atMost1024CharactersAltogether = undefined
 private val excludingCForbiddenContent = undefined
-private val followedByAnNsPlainSafe = undefined
 
 
 /**
@@ -1011,7 +1010,7 @@ fun `nb-single-multi-line`(n: Int) = tokenGenerator("nb-single-multi-line") { `n
  *    ->c-mapping-value |
  *    ->c-sequence-entry] + ->Followed by an ns-plain-safe(c)]
  */
-fun `ns-plain-first`(c: InOutMode) = `ns-char` - `c-indicator` or (`c-mapping-key` or `c-mapping-value` or `c-sequence-entry` + followedByAnNsPlainSafe)
+fun `ns-plain-first`(c: InOutMode) = `ns-char` - `c-indicator` or (`c-mapping-key` or `c-mapping-value` or `c-sequence-entry` + /** TODO Followed by an */ `ns-plain-safe`(c))
 
 /**
  * `127` : ns-plain-safe(c):
@@ -1364,7 +1363,7 @@ fun `l-trail-comments`(n: Int) = tokenGenerator("l-trail-comments") { `s-indent�
  * `170` : c-l+literal(n):
  * ->c-literal + ->c-b-block-header(m,t) + ->l-literal-content(n = <n+m>,t)
  */
-fun `c-l+literal`(n: Int) = tokenGenerator("c-l+literal") { undefined /* TODO global variable */ }
+fun `c-l+literal`(n: Int) = tokenGenerator("c-l+literal") { undefined /* TODO not yet supported */ }
 
 /**
  * `171` : l-nb-literal-text(n):
@@ -1388,7 +1387,7 @@ fun `l-literal-content`(n: Int, t: ChompMode) = tokenGenerator("l-literal-conten
  * `174` : c-l+folded(n):
  * ->c-folded + ->c-b-block-header(m,t) + ->l-folded-content(n = <n+m>,t)
  */
-fun `c-l+folded`(n: Int) = tokenGenerator("c-l+folded") { undefined /* TODO global variable */ }
+fun `c-l+folded`(n: Int) = tokenGenerator("c-l+folded") { undefined /* TODO not yet supported */ }
 
 /**
  * `175` : s-nb-folded-text(n):
@@ -1443,7 +1442,7 @@ fun `l-folded-content`(n: Int, t: ChompMode) = tokenGenerator("l-folded-content"
  * `183` : l+block-sequence(n):
  * (->s-indent(n = <n+m>) + ->c-l-block-seq-entry(n = <n+m>) × +) + ->For some fixed auto-detected m > 0
  */
-fun `l+block-sequence`(n: Int) = tokenGenerator("l+block-sequence") { undefined /* TODO other */ }
+fun `l+block-sequence`(n: Int) = tokenGenerator("l+block-sequence") { undefined /* TODO not yet supported */ }
 
 /**
  * `184` : c-l-block-seq-entry(n):
@@ -1458,7 +1457,7 @@ fun `c-l-block-seq-entry`(n: Int) = tokenGenerator("c-l-block-seq-entry") { `c-s
  *    ->s-l+block-node(n,c) |
  *    ->e-node + ->s-l-comments]
  */
-fun `s-l+block-indented`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-indented") { undefined /* TODO global variable */ }
+fun `s-l+block-indented`(n: Int, c: InOutMode) = tokenGenerator("s-l+block-indented") { undefined /* TODO not yet supported */ }
 
 /**
  * `186` : ns-l-compact-sequence(n):
@@ -1470,7 +1469,7 @@ fun `ns-l-compact-sequence`(n: Int) = tokenGenerator("ns-l-compact-sequence") { 
  * `187` : l+block-mapping(n):
  * (->s-indent(n = <n+m>) + ->ns-l-block-map-entry(n = <n+m>) × +) + ->For some fixed auto-detected m > 0
  */
-fun `l+block-mapping`(n: Int) = tokenGenerator("l+block-mapping") { undefined /* TODO other */ }
+fun `l+block-mapping`(n: Int) = tokenGenerator("l+block-mapping") { undefined /* TODO not yet supported */ }
 
 /**
  * `188` : ns-l-block-map-entry(n):
