@@ -580,7 +580,7 @@ class YamlTokenGeneratorTest {
     }
 
     @Test fun `code point minus minus`() {
-        val production = production(MinusExpression(codePoint('a')).minus(codePoint('b')).minus(codePoint('c')))
+        val production = production(codePoint('a') - codePoint('b') - codePoint('c'))
 
         val written = generate(production)
 
@@ -808,6 +808,33 @@ class YamlTokenGeneratorTest {
             "}\n"))
     }
 
+    @Test fun `switch with Int out arg`() {
+        val bar = Production(1, "bar", listOf(), range('0', '9'))
+        val foo = Production(0, "foo", listOf("m"), switch(
+            ref(bar) to eq(variable("m"), ref(bar) - codePoint('0')),
+            ref("Empty") to eq(variable("m"), ref("auto-detect()"))
+        ))
+
+        val written = generate(foo, bar)
+
+        assertThat(written).isEqualTo(source("\n" +
+            "/**\n" +
+            " * `0` : foo(m):\n" +
+            " * ->bar ⇒ <m> = (->bar - <[0][DIGIT ZERO][0x30]>)\n" +
+            " * ->Empty ⇒ <m> = ->auto-detect()\n" +
+            " */\n" +
+            "fun `foo`(reader: CodePointReader): Int = when {\n" +
+            "    reader.accept(`bar`) -> acceptedCodePoint.toInt() - 0x30\n" +
+            "    else -> autoDetectIndentation(reader)\n" +
+            "}\n" +
+            "\n" +
+            "/**\n" +
+            " * `1` : bar:\n" +
+            " * [<[0][DIGIT ZERO][0x30]>-<[9][DIGIT NINE][0x39]>]\n" +
+            " */\n" +
+            "val `bar` = token(\"bar\", '0'..'9')\n"))
+    }
+
 
     private fun production(expression: Expression) = Production(0, "foo", listOf(), expression)
 
@@ -815,6 +842,7 @@ class YamlTokenGeneratorTest {
     private fun codePoint(codePoint: CodePoint) = CodePointExpression(codePoint)
 
     private operator fun Expression.times(repetitions: Char) = RepeatedExpression(this, repetitions.toString())
+    private operator fun Expression.minus(subtrahend: Expression) = MinusExpression(this).minus(subtrahend)
 
     private fun range(min: Char, max: Char) = range(CodePoint.of(min), CodePoint.of(max))
     private fun range(min: CodePoint, max: CodePoint) = RangeExpression(codePoint(min), codePoint(max))

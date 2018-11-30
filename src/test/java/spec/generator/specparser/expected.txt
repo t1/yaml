@@ -638,8 +638,8 @@
    ->c-chomping-indicator(t) + ->c-indentation-indicator(m)] + ->s-b-comment
 
 `163` : c-indentation-indicator(m):
-->ns-dec-digit ⇒ ->m = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)
-->Empty ⇒ ->m = ->auto-detect()
+->ns-dec-digit ⇒ <m> = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)
+->Empty ⇒ <m> = ->auto-detect()
 
 `164` : c-chomping-indicator(t):
 <[-][HYPHEN-MINUS][0x2d]> ⇒ <t> = ->strip

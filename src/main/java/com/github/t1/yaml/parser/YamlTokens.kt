@@ -30,7 +30,6 @@ import com.github.t1.yaml.parser.ScalarParser.Companion.autoDetectIndentation
 import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
-import com.github.t1.yaml.tools.Symbol
 import com.github.t1.yaml.tools.Token
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more
@@ -57,8 +56,22 @@ private infix operator fun Char.plus(that: Char) = symbol(this) + symbol(that)
 private infix operator fun Char.plus(token: Token) = symbol(this) + token
 private infix operator fun Token.plus(that: Char) = this + symbol(that)
 private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))
+
 private fun CodePointReader.accept(char: Char): Boolean = accept(symbol(char))
-private fun CodePointReader.accept(symbol: Symbol): Boolean = symbol.match(this).matches
+private fun CodePointReader.accept(token: Token): Boolean {
+    val (matches, codePoints) = token.match(this)
+    acceptedCodePoints = codePoints
+    return matches
+}
+
+private var acceptedCodePoints: List<CodePoint>? = null
+private val acceptedCodePoint: CodePoint
+    get() = with(acceptedCodePoints) {
+        require(this != null) { "require a successful call to `CodePointReader.accept(token: Token)`" }
+        require(this.size == 1) { "require acceptedCodePoints to match one CodePoint but found $this" }
+        return this[0]
+    }
+
 private val anNsCharPreceding = undefined
 private val atMost1024CharactersAltogether = undefined
 private val excludingCForbiddenContent = undefined
@@ -1281,9 +1294,9 @@ fun `c-b-block-header`(reader: CodePointReader): Pair<Int, ChompMode> {
  * ->ns-dec-digit ⇒ ->m = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)
  * ->Empty ⇒ ->m = ->auto-detect()
  */
-fun `c-indentation-indicator`(reader: CodePointReader): Int {
-    with(`ns-dec-digit`.match(reader)) { if (matches) return codePoints[0].toInt() - 0x30 }
-    return autoDetectIndentation(reader)
+fun `c-indentation-indicator`(reader: CodePointReader): Int = when {
+    reader.accept(`ns-dec-digit`) -> acceptedCodePoint.toInt() - 0x30
+    else -> autoDetectIndentation(reader)
 }
 
 /**

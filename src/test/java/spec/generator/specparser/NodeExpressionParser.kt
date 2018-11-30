@@ -72,6 +72,8 @@ class NodeExpressionParser(nodes: List<Node>) {
             return quote()
         if (isHref)
             return ref()
+        if (productioncounter == 163 && next.accept("m")) // BUG-IN-SPEC
+            return VariableExpression("m")
         if (isVar)
             return variable()
         if (isAlpha)

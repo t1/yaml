@@ -36,10 +36,9 @@ data class CodePoint(private val value: Int) : Comparable<CodePoint> {
             else -> Character.getName(value) ?: "?"
         }
 
-    @Suppress("PrivatePropertyName")
-    private val HEX: String
-        get() = hex.toUpperCase()
-    private val hex: String get() = hex(value)
+    @Suppress("PropertyName")
+    val HEX: String get() = hex.toUpperCase()
+    val hex: String get() = hex(value)
 
     private fun pad(string: String) = "0000".substring(string.length) + string
 

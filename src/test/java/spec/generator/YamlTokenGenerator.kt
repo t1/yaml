@@ -62,7 +62,6 @@ class YamlTokenGenerator(private val spec: Spec) {
             "import com.github.t1.yaml.tools.CodePoint\n" +
             "import com.github.t1.yaml.tools.CodePointReader\n" +
             "import com.github.t1.yaml.tools.Match\n" +
-            "import com.github.t1.yaml.tools.Symbol\n" +
             "import com.github.t1.yaml.tools.Token\n" +
             "import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more\n" +
             "import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more\n" +
@@ -89,8 +88,22 @@ class YamlTokenGenerator(private val spec: Spec) {
             "private infix operator fun Char.plus(token: Token) = symbol(this) + token\n" +
             "private infix operator fun Token.plus(that: Char) = this + symbol(that)\n" +
             "private infix fun Token.or(range: CharRange) = this.or(symbol(range.toCodePointRange()))\n" +
+            "\n" +
             "private fun CodePointReader.accept(char: Char): Boolean = accept(symbol(char))\n" +
-            "private fun CodePointReader.accept(symbol: Symbol): Boolean = symbol.match(this).matches\n" +
+            "private fun CodePointReader.accept(token: Token): Boolean {\n" +
+            "    val (matches, codePoints) = token.match(this)\n" +
+            "    acceptedCodePoints = codePoints\n" +
+            "    return matches\n" +
+            "}\n" +
+            "\n" +
+            "private var acceptedCodePoints: List<CodePoint>? = null\n" +
+            "private val acceptedCodePoint: CodePoint\n" +
+            "    get() = with(acceptedCodePoints) {\n" +
+            "        require(this != null) { \"require a successful call to `CodePointReader.accept(token: Token)`\" }\n" +
+            "        require(this.size == 1) { \"require acceptedCodePoints to match one CodePoint but found $this\" }\n" +
+            "        return this[0]\n" +
+            "    }\n" +
+            "\n" +
             "private val anNsCharPreceding = undefined\n" +
             "private val atMost1024CharactersAltogether = undefined\n" +
             "private val excludingCForbiddenContent = undefined\n" +
@@ -129,7 +142,7 @@ class YamlTokenGenerator(private val spec: Spec) {
             "n/a" to "-1",
             "n-1" to "n - 1",
             "n+1" to "n + 1",
-            "auto-detect()" to "autoDetect",
+            "auto-detect()" to "autoDetectIndentation(reader)",
             "strip" to "strip",
             "keep" to "keep",
             "clip" to "clip",
@@ -214,7 +227,7 @@ class YamlTokenGenerator(private val spec: Spec) {
                 if (hasInternalFunRefs) write(" = tokenGenerator(\"$name\") { ") else write(" = ")
                 when {
                     production.counter in setOf(170, 174, 185) -> write("undefined /* TODO global variable */")
-                    production.counter in setOf(163, 183, 187) -> write("undefined /* TODO other */")
+                    production.counter in setOf(183, 187) -> write("undefined /* TODO other */")
                     name.endsWith("≪") || name.endsWith("≤") -> writeLessFun()
                     production.expression is ReferenceExpression -> visitor.writeFun(production.expression)
                     production.expression is RepeatedExpression -> visitor.writeFun(production.expression)
@@ -301,7 +314,7 @@ class YamlTokenGenerator(private val spec: Spec) {
                 // ------------------------------ repeated
                 fun writeFun(repeat: RepeatedExpression) = repeat.guide(this)
 
-                override fun visit(repeated: RepeatedExpression) = this
+                override fun visit(repeated: RepeatedExpression): Visitor = this
                 override fun leave(repeated: RepeatedExpression) = write(" * ${when (val repetitions = repeated.repetitions) {
                     "?" -> "$zero_or_once"
                     "*" -> "$zero_or_more"
@@ -331,7 +344,7 @@ class YamlTokenGenerator(private val spec: Spec) {
                     alternatives.guide(this)
                 }
 
-                override fun visit(alternatives: AlternativesExpression) = this
+                override fun visit(alternatives: AlternativesExpression): Visitor = this
                 override fun betweenAlternativesItems() = write(" or ")
 
 
@@ -342,11 +355,11 @@ class YamlTokenGenerator(private val spec: Spec) {
                 }
 
 
-                override fun visit(minus: MinusExpression) = this
+                override fun visit(minus: MinusExpression): Visitor = this
                 override fun beforeSubtrahend(expression: Expression) = write(" - ")
 
 
-                override fun visit(range: RangeExpression) = this
+                override fun visit(range: RangeExpression): Visitor = this
                 override fun betweenRange(rangeExpression: RangeExpression) = write("..")
 
 
@@ -381,27 +394,44 @@ class YamlTokenGenerator(private val spec: Spec) {
                 override fun visit(switch: SwitchExpression) = this
 
                 override fun beforeSwitchItem() = write("    $indent")
-                override fun visit(codePoint: CodePointExpression) {
-                    if (hasOutArg && codePoint in switch.cases) write("reader.accept(")
-                    super.visit(codePoint)
-                    if (hasOutArg && codePoint in switch.cases) write(")")
-                }
 
-                override fun visit(reference: ReferenceExpression) {
-                    if (reference == switch.cases.last() && reference.key == "Empty") {
+                override fun visit(codePoint: CodePointExpression) = aroundCase(codePoint) { super.visit(codePoint) }
+
+                override fun visit(reference: ReferenceExpression) = aroundCase(reference) {
+                    if (elseCase(reference)) {
                         hasElse = true
                         write("else")
                     } else super.visit(reference)
                 }
 
+                private fun aroundCase(expression: Expression, block: () -> Unit) {
+                    val surroundWithReaderAccept = hasOutArg && expression in switch.cases && !elseCase(expression)
+                    if (surroundWithReaderAccept) write("reader.accept(")
+                    block()
+                    if (surroundWithReaderAccept) write(")")
+                }
+
+                private fun elseCase(expression: Expression) =
+                    expression == switch.cases.last() && expression is ReferenceExpression && expression.key == "Empty"
+
                 override fun betweenSwitchCaseAndValue() = write(" -> ")
+
+                override fun visit(equals: EqualsExpression) = this
+                override fun visit(variable: VariableExpression) {}
+                override fun visit(minus: MinusExpression) =
+                    if (matchedCaseMinusConstant(minus)) {
+                        val codePoint = (minus.subtrahends[0] as CodePointExpression).codePoint
+                        write("acceptedCodePoint.toInt() - 0x${codePoint.HEX}")
+                        IGNORE_VISITOR
+                    } else super.visit(minus)
+
+                private fun matchedCaseMinusConstant(minus: MinusExpression) =
+                    hasOutArg && minus.minuend is ReferenceExpression && minus.subtrahends.size == 1 && minus.subtrahends[0] is CodePointExpression
+
                 override fun afterSwitchItem(case: Expression, value: Expression) {
                     if (hasOutArg || value is ReferenceExpression && externalRefMap.containsKey(value.name)) write("\n")
                     else write(" named \"${production.name}(\$$variableName)\"\n")
                 }
-
-                override fun visit(equals: EqualsExpression) = this
-                override fun visit(variable: VariableExpression) {}
 
                 override fun leave(switch: SwitchExpression) {
                     if (!hasElse) write("$indent    else -> error(\"unexpected `$variableName` value `$$variableName`\")\n")

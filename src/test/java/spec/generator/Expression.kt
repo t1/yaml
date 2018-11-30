@@ -139,7 +139,7 @@ abstract class Expression {
     }
 
     class MinusExpression(val minuend: Expression) : Expression() {
-        private val subtrahends = ArrayList<Expression>()
+        val subtrahends = ArrayList<Expression>()
 
         operator fun minus(subtrahend: Expression): MinusExpression {
             if (subtrahend is MinusExpression) {

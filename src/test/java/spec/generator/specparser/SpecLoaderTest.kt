@@ -279,6 +279,15 @@ import test.softly
             "->c-flow-json-node(n = <n/a>,c) + (->s-separate-in-line × ?) + ->At most 1024 characters altogether")
     }
 
+    @Test fun `switch with int return type`() {
+        val production = parse(163, "c-indentation-indicator(m)", " " +
+            "<a href=\"#ns-dec-digit\">ns-dec-digit</a> ⇒ m = <a href=\"#ns-dec-digit\">ns-dec-digit</a> - #x30<br> /* Empty */&nbsp; ⇒ m = auto-detect() ")
+
+        assertThat(production.toString()).isEqualTo("`163` : c-indentation-indicator(m):\n" +
+            "->ns-dec-digit ⇒ <m> = (->ns-dec-digit - <[0][DIGIT ZERO][0x30]>)\n" +
+            "->Empty ⇒ <m> = ->auto-detect()")
+    }
+
     @Test fun `switch with comment only case`() {
         val production = parse(164, "c-chomping-indicator(t)", "" +
             " “<span class=\"quote\">-</span>”&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⇒ <code class=\"varname\">t</code> = strip<br>" +
