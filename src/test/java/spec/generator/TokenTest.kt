@@ -1,6 +1,6 @@
 package spec.generator
 
-import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.codepoint.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
 import com.github.t1.yaml.tools.Token

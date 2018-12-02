@@ -1,6 +1,7 @@
 package com.github.t1.yaml.tools
 
-import com.github.t1.yaml.tools.CodePoint.Companion.EOF
+import com.github.t1.codepoint.CodePoint
+import com.github.t1.codepoint.CodePoint.Companion.EOF
 
 open class Scanner(private val reader: CodePointReader) {
     constructor(string: String) : this(CodePointReader(string))

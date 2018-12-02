@@ -1,7 +1,8 @@
 package com.github.t1.yaml.tools
 
-import com.github.t1.yaml.tools.CodePoint.Companion.BOM
-import com.github.t1.yaml.tools.CodePoint.Companion.EOF
+import com.github.t1.codepoint.CodePoint
+import com.github.t1.codepoint.CodePoint.Companion.BOM
+import com.github.t1.codepoint.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.CodePointReader.Mark
 import java.io.Reader
 import java.io.StringReader
@@ -26,7 +27,7 @@ class CodePointReader(private val reader: Reader) {
         operator fun rem(codePoint: CodePoint): Position {
             if (codePoint == EOF) return this
             if (codePoint == BOM && totalPosition == 0) return copy(totalPosition = this.totalPosition + 1) // don't increase linePosition!
-            val nl = codePoint.isNl // TODO only one NL if Windows-style 0D-0A
+            val nl = codePoint.isNewLine // TODO only one NL if Windows-style 0D-0A
             return copy(
                 totalPosition = this.totalPosition + 1,
                 lineNumber = if (nl) lineNumber + 1 else lineNumber,

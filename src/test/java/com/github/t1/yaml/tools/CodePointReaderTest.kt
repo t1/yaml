@@ -1,6 +1,8 @@
 package com.github.t1.yaml.tools
 
-import com.github.t1.yaml.tools.CodePoint.Companion.EOF
+import com.github.t1.codepoint.CodePoint
+import com.github.t1.codepoint.CodePoint.Companion.BOM
+import com.github.t1.codepoint.CodePoint.Companion.EOF
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -117,7 +119,7 @@ class CodePointReaderTest {
         @Test fun `don't count BOM in first line`() {
             val read = reader.read()
 
-            assertThat(read).isEqualTo(CodePoint.BOM)
+            assertThat(read).isEqualTo(BOM)
             assertPosition(total = 1, lineNumber = 1, linePosition = 1, isStartOfFile = true)
             assertThat(reader.isFirstLine).isTrue()
         }

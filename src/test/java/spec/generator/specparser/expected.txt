@@ -61,7 +61,7 @@
 <[\'][APOSTROPHE][0x27]>
 
 `19` : c-double-quote:
-<["][QUOTATION MARK][0x22]>
+<[\"][QUOTATION MARK][0x22]>
 
 `20` : c-directive:
 <[%][PERCENT SIGN][0x25]>

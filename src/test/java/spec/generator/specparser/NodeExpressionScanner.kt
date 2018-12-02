@@ -1,7 +1,7 @@
 package spec.generator.specparser
 
-import com.github.t1.yaml.tools.CodePoint
-import com.github.t1.yaml.tools.CodePoint.Companion.EOF
+import com.github.t1.codepoint.CodePoint
+import com.github.t1.codepoint.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.Scanner
 import com.github.t1.yaml.tools.token
 import org.jsoup.nodes.Element

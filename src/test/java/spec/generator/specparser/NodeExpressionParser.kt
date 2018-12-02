@@ -1,6 +1,6 @@
 package spec.generator.specparser
 
-import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.codepoint.CodePoint
 import org.assertj.core.api.Assertions.assertThat
 import org.jsoup.nodes.Node
 import spec.generator.Expression

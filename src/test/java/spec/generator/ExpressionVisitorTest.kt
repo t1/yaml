@@ -1,6 +1,6 @@
 package spec.generator
 
-import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.codepoint.CodePoint
 import com.nhaarman.mockitokotlin2.given
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock

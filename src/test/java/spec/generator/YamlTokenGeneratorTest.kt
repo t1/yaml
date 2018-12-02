@@ -1,6 +1,6 @@
 package spec.generator
 
-import com.github.t1.yaml.tools.CodePoint
+import com.github.t1.codepoint.CodePoint
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import spec.generator.Expression.AlternativesExpression

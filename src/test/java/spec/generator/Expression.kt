@@ -1,9 +1,7 @@
 package spec.generator
 
-import com.github.t1.yaml.tools.CodePoint
-
+import com.github.t1.codepoint.CodePoint
 import java.util.ArrayList
-
 import java.util.stream.Collectors.joining
 import kotlin.reflect.KClass
 import kotlin.reflect.full.cast

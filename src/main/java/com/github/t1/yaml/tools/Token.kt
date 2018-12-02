@@ -1,6 +1,9 @@
 package com.github.t1.yaml.tools
 
-import com.github.t1.yaml.tools.CodePoint.Companion.EOF
+import com.github.t1.codepoint.CodePoint
+import com.github.t1.codepoint.CodePoint.Companion.EOF
+import com.github.t1.codepoint.CodePointRange
+import com.github.t1.codepoint.toCodePointRange
 import com.github.t1.yaml.tools.CodePointReader.Mark
 import com.github.t1.yaml.tools.Token.RepeatMode.once_or_more
 import com.github.t1.yaml.tools.Token.RepeatMode.zero_or_more

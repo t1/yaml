@@ -1,5 +1,6 @@
 package com.github.t1.yaml.parser
 
+import com.github.t1.codepoint.CodePoint.Companion.EOF
 import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Scalar
 import com.github.t1.yaml.model.Scalar.Line
@@ -10,7 +11,6 @@ import com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED
 import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
 import com.github.t1.yaml.parser.ScalarParser.Mode.NORMAL
 import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
-import com.github.t1.yaml.tools.CodePoint.Companion.EOF
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.spaces
 

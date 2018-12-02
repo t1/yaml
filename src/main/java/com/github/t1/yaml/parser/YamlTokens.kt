@@ -17,6 +17,8 @@ package com.github.t1.yaml.parser
  * X+, X-Y+  A production as above, with the additional property that the matched content indentation level is greater than the specified n parameter.
  */
 
+import com.github.t1.codepoint.CodePoint
+import com.github.t1.codepoint.toCodePointRange
 import com.github.t1.yaml.parser.ChompMode.clip
 import com.github.t1.yaml.parser.ChompMode.keep
 import com.github.t1.yaml.parser.ChompMode.strip
@@ -27,7 +29,6 @@ import com.github.t1.yaml.parser.InOutMode.`flow-in`
 import com.github.t1.yaml.parser.InOutMode.`flow-key`
 import com.github.t1.yaml.parser.InOutMode.`flow-out`
 import com.github.t1.yaml.parser.ScalarParser.Companion.autoDetectIndentation
-import com.github.t1.yaml.tools.CodePoint
 import com.github.t1.yaml.tools.CodePointReader
 import com.github.t1.yaml.tools.Match
 import com.github.t1.yaml.tools.Token
@@ -38,7 +39,6 @@ import com.github.t1.yaml.tools.empty
 import com.github.t1.yaml.tools.endOfFile
 import com.github.t1.yaml.tools.startOfLine
 import com.github.t1.yaml.tools.symbol
-import com.github.t1.yaml.tools.toCodePointRange
 import com.github.t1.yaml.tools.token
 import com.github.t1.yaml.tools.tokenGenerator
 import com.github.t1.yaml.tools.undefined
