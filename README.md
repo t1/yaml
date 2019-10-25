@@ -4,7 +4,7 @@ I _love_ [YAML](http://yaml.org). It's more compact than JSON and more powerful 
 
 I started this project to extend my programming skills by writing a complex parser, and by the way add some missing features to YAML:
 
-1. A **DOM** (document object model) so a document can be manipulated in a generic manner
+1. A **DOM** (document object model) so a document can be manipulated in a generic manner, e.g. for use-cases with dynamic keys, so you can't bind them to fixed keys. 
 
 1. **document-first**: many documents are carefully designed, include comments, structuring empty lines, sorted mappings, etc.
     The load-dump cycle as defined in the YAML spec would loose all that helpful albeit necessary information.
