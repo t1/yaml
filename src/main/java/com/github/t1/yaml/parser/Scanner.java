@@ -1,6 +1,5 @@
 package com.github.t1.yaml.parser;
 
-import com.github.t1.yaml.parser.CodePointReader.Mark;
 import com.github.t1.yaml.tools.CodePoint;
 import lombok.RequiredArgsConstructor;
 
