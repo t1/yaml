@@ -31,7 +31,7 @@ open class AbstractYamlTest {
         val result = AtomicReference<T>()
         val e = catchThrowable { result.set(function(input!!)) }
         if (e != null && e !is YamlParseException)
-            throw RuntimeException("expected YamlParseException but got a " + e.javaClass.name, e)
+            throw RuntimeException("expected YamlParseException but got a ${e::class.simpleName}", e)
         thrown = e as? YamlParseException
         return result.get()
     }
@@ -83,8 +83,8 @@ open class AbstractYamlTest {
     interface ThenIsExpectedDocument {
         @Test fun thenDocumentIsExpected() {
             rethrow()
-            assertThat(document!!.isEmpty).isEqualTo(expected!!.isEmpty)
-            assertThat(document!!.hasDirectives()).isEqualTo(expected!!.hasDirectives())
+            assertThat(document!!.isEmpty).describedAs("isEmpty").isEqualTo(expected!!.isEmpty)
+            assertThat(document!!.hasDirectives()).describedAs("hasDirectives").isEqualTo(expected!!.hasDirectives())
             assertThat(document).isEqualTo(expected)
         }
     }

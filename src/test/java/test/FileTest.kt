@@ -21,7 +21,7 @@ import java.nio.file.Path
         yamlFile = Files.createTempFile("test-", ".yaml")
         Files.write(yamlFile, "dummy-string".toByteArray(UTF_8))
 
-        expectedDocument = Document().node(Scalar().line("dummy-string"))
+        expectedDocument = Document(node = Scalar().line("dummy-string"))
         expectedStream = Stream().document(expectedDocument!!)
     }
 
@@ -93,7 +93,6 @@ import java.nio.file.Path
     }
 
     companion object {
-
         private var expectedDocument: Document? = null
         private var expectedStream: Stream? = null
 

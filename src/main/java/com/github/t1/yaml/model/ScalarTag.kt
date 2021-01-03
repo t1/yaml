@@ -1,3 +1,7 @@
 package com.github.t1.yaml.model
 
-class ScalarTag(val format: String) : Tag()
+data class ScalarTag(
+    override val name: String,
+    override val kind: String,
+    val format: String
+) : Tag

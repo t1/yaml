@@ -7,7 +7,6 @@ import com.github.t1.yaml.model.Scalar.Line
 import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 
 @Suppress("ClassName")
@@ -15,7 +14,7 @@ class SequenceTest : AbstractYamlTest() {
     @Nested inner class givenFlowSequenceOfSimpleScalars : SingleDocument() {
         @BeforeEach fun setup() {
             input = "[one, two]"
-            expected = Document().node(Sequence(style = FLOW)
+            expected = Document(node = Sequence(style = FLOW)
                 .item(Scalar().line("one"))
                 .item(Scalar().line("two"))
             )
@@ -25,14 +24,14 @@ class SequenceTest : AbstractYamlTest() {
     @Nested inner class givenBlockSequenceOfSimpleScalars : SingleDocument() {
         @BeforeEach fun setup() {
             input = "- one\n" + "- two"
-            expected = Document().node(Sequence()
+            expected = Document(node = Sequence()
                 .item(Scalar().line("one"))
                 .item(Scalar().line("two"))
             )
         }
     }
 
-    @Disabled @Nested inner class givenBlockSequenceOfIndentedScalars : SingleDocument() {
+    @Nested inner class givenBlockSequenceOfIndentedScalars : SingleDocument() {
         @BeforeEach fun setup() {
             input = "- 1\n" +
                 "  2\n" +
@@ -40,7 +39,7 @@ class SequenceTest : AbstractYamlTest() {
                 "  4\n" +
                 "    5\n" +
                 "  6"
-            expected = Document().node(Sequence()
+            expected = Document(node = Sequence()
                 .item(Scalar()
                     .line(Line().text("1"))
                     .line(Line().text("2")))
@@ -53,7 +52,7 @@ class SequenceTest : AbstractYamlTest() {
         }
     }
 
-    @Disabled @Nested inner class givenBlockSequenceWithIndentedScalarsInNewLines : SingleDocument() {
+    @Nested inner class givenBlockSequenceWithIndentedScalarsInNewLines : SingleDocument() {
         @BeforeEach fun setup() {
             input = "-\n" +
                 "  1\n" +
@@ -62,7 +61,7 @@ class SequenceTest : AbstractYamlTest() {
                 "  3\n" +
                 "          4\n" +
                 "  5"
-            expected = Document().node(Sequence()
+            expected = Document(node = Sequence()
                 .item(Item(nl = true, node = Scalar()
                     .line(Line().text("1"))
                     .line(Line().text("2"))))
@@ -83,7 +82,7 @@ class SequenceTest : AbstractYamlTest() {
                 "  - 3\n" +
                 "  -     4\n" +
                 "  - 5"
-            expected = Document().node(Sequence()
+            expected = Document(node = Sequence()
                 .item(Item(nl = true, node = Sequence()
                     .item(Scalar().line("1"))
                     .item(Scalar().line("2"))))
@@ -106,7 +105,7 @@ class SequenceTest : AbstractYamlTest() {
                 "    - 3\n" +
                 "    -     4\n" +
                 "    - 5"
-            expected = Document().node(Sequence()
+            expected = Document(node = Sequence()
                 .item(Item(nl = true, node = Sequence()
                     .item(Item(nl = true, node = Sequence()
                         .item(Scalar().line("1"))
@@ -125,7 +124,7 @@ class SequenceTest : AbstractYamlTest() {
     @Nested inner class givenBlockSequenceOfFlowSequences : SingleDocument() {
         @BeforeEach fun setup() {
             input = "- [1, 2]\n" + "- [3, 4, 5]"
-            expected = Document().node(Sequence()
+            expected = Document(node = Sequence()
                 .item(Item(node = Sequence(style = FLOW)
                     .item(Scalar().line("1"))
                     .item(Scalar().line("2"))))

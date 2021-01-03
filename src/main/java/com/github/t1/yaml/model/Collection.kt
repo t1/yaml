@@ -2,8 +2,14 @@ package com.github.t1.yaml.model
 
 import com.github.t1.yaml.model.Collection.Style.BLOCK
 
-abstract class Collection(open var style: Style = BLOCK) : Node() {
+interface Collection : Node {
+    var style: Style
+
     enum class Style {
         FLOW, BLOCK
+    }
+
+    companion object {
+        val DEFAULT_STYLE = BLOCK
     }
 }

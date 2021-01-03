@@ -1,9 +1,9 @@
 package com.github.t1.yaml.model
 
-abstract class Node(
-    var anchor: String? = null,
-    var spacing: String? = null,
-    var lineWrapping: String? = null
-) {
-    abstract fun guide(visitor: Visitor)
+interface Node {
+    var anchor: String?
+    var spacing: String?
+    var lineWrapping: String?
+
+    fun guide(visitor: Visitor)
 }

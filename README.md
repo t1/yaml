@@ -1,33 +1,32 @@
 # About
 
-I _love_ [YAML](http://yaml.org). It's more compact than JSON and more powerful than XML... and that's saying a lot!
+We _love_ [YAML](http://yaml.org). It's more compact than JSON and more powerful than XML... and that's saying a lot for both comparisons!
 
-I started this project to extend my programming skills by writing a complex parser, and by the way add some missing features to YAML:
+This project is not only a fully compliant YAML 1.2 implementation, it also adds some important features:
 
 1. A **DOM** (document object model) so a document can be manipulated in a generic manner, e.g. for use-cases with dynamic keys, so you can't bind them to fixed keys. 
 
 1. **document-first**: many documents are carefully designed, include comments, structuring empty lines, sorted mappings, etc.
-    The load-dump cycle as defined in the YAML spec would loose all that helpful albeit necessary information.
+    The load-dump cycle as defined in the YAML spec looses all this helpful, albeit technically unnecessary information.
 
 1. A **schema**, not for verification (that's actually mostly boring), but for documentation!
    This includes examples, and allows generic YAML editors to support specific document types.
    Documents may want to adhere to more than one schema, so we would also need **namespaces**,
    but that may be something for the future.
 
-# x
+# Status and Plan
 
-We are not perfectly strict:
+* **DOM**: beta - missing mainly documentation and a more formal specification
+* **Load-Dump**: alpha - simple documents may work
+* **Schema**: ideas only
 
-| In this situation | The Spec says | We say |
-| --- | --- | --- |
-| x | y | z |
+# DOM
 
-
-# Comments
+## Comments
 
 Comments are preserved, before documents, in documents, and after the document-end-marker (suffix).
 
-# Canonical
+## Canonical
 
 `canonicalize` does:
 * Adds YAML directive
@@ -36,9 +35,9 @@ Comments are preserved, before documents, in documents, and after the document-e
 * Removes documents without a node
 * Concatenates multi-line literals
 
-# Normalization
+## Normalization
 
-We do as few normalizations as possible, but some are:
+We do as little normalizations as possible, but some are:
 
 * A document always ends with a newline character.
 * New lines of scalars are indented at least as much as the appropriate for the current nesting,

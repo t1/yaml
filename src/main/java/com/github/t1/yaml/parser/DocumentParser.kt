@@ -3,110 +3,71 @@ package com.github.t1.yaml.parser
 import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Directive
 import com.github.t1.yaml.model.Document
-import com.github.t1.yaml.parser.Marker.DIRECTIVES_END_MARKER
-import com.github.t1.yaml.parser.Marker.DOCUMENT_END_MARKER
-import com.github.t1.yaml.parser.Symbol.COMMENT
-import com.github.t1.yaml.parser.Symbol.NL
-import com.github.t1.yaml.parser.Symbol.NL_OR_COMMENT
-import com.github.t1.yaml.parser.Symbol.PERCENT
-import com.github.t1.yaml.parser.Symbol.SPACE
-import com.github.t1.yaml.tools.CodePoint
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
 import java.io.Reader
-import java.io.StringReader
-import java.nio.charset.StandardCharsets.UTF_8
-import java.util.Optional
 
 class DocumentParser(reader: Reader) {
 
-    private val next: YamlScanner
+    private val next: YamlScanner = YamlScanner(reader)
     private var document: Document? = null
 
-    private val isIndentedComment: Boolean
-        get() {
-            val spaces = next.peekUntil(NL_OR_COMMENT)
-            return (spaces != null
-                && CodePoint.stream(spaces).allMatch(SPACE)
-                && next.peekAfter(spaces.length).map { COMMENT.test(it) }.orElse(false))
-        }
-
-    constructor(yaml: String) : this(StringReader(yaml))
-
-    constructor(inputStream: InputStream) : this(BufferedReader(InputStreamReader(inputStream, UTF_8)))
-
-    init {
-        this.next = YamlScanner(MAX_LOOK_AHEAD, reader)
-    }
-
-    fun document(): Optional<Document> {
+    fun document(): Document? {
         this.document = Document()
 
-        next.acceptBom()
+        next.accept(`c-byte-order-mark`)
 
-        if (next.end())
-            return Optional.empty()
+        if (next.end()) return null
 
         directives()
         prefixComments()
         node()
         documentEnd()
 
-        return Optional.of(document!!)
+        return document
     }
 
     private fun directives() {
-        if (next.accept(PERCENT))
+        if (next.accept(`c-directive`))
             document!!.directive(directive())
 
-        if (next.accept(DIRECTIVES_END_MARKER)) {
+        if (next.accept(`c-directives-end`)) {
             document!!.hasDirectivesEndMarker = true
-            next.expect(NL)
+            next.expect(`b-break`)
         }
     }
 
-    private fun directive(): Directive {
-        return Directive(next.readWord(), next.readLine())
-    }
+    private fun directive(): Directive =
+        Directive(next.readWord(), next.readLine())
 
 
     private fun prefixComments() {
-        while (isIndentedComment)
+        while (next.peek(INDENTED_COMMENT))
             document!!.prefixComment(comment())
     }
 
-    private fun comment(): Comment {
-        return Comment(indent = next.count(SPACE), text = next.expect(COMMENT).skip(SPACE).readLine())
-    }
+    private fun comment(): Comment =
+        Comment(indent = next.count(`s-space`), text = next.run {
+            expect(`c-comment`)
+            skip(`s-space`)
+            return@run readLine()
+        })
 
 
     private fun node() {
-        val parser = NodeParser(next)
         if (next.more())
-            document!!.node(parser.node())
+            document!!.node(NodeParser(next).node())
     }
 
     private fun documentEnd() {
-        if (next.accept(DOCUMENT_END_MARKER)) {
+        if (next.accept(`c-document-end`)) {
             document!!.hasDocumentEndMarker = true
-            if (next.`is`(SPACE))
+            if (next.peek(`s-space`))
                 document!!.suffixComment = comment()
             else
-                next.accept(NL)
+                next.accept(`b-break`)
         }
     }
 
-    fun more(): Boolean {
-        return next.anyMore()
-    }
+    fun more(): Boolean = next.anyMore()
 
-    override fun toString(): String {
-        return next.toString()
-    }
-
-    companion object {
-        /** As specified in http://www.yaml.org/spec/1.2/spec.html#id2790832  */
-        private const val MAX_LOOK_AHEAD = 1024
-    }
+    override fun toString() = next.toString()
 }

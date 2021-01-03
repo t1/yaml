@@ -1,8 +1,15 @@
 package com.github.t1.yaml.model
 
+import com.github.t1.yaml.model.Collection.Companion.DEFAULT_STYLE
+import com.github.t1.yaml.model.Collection.Style
+
 data class Mapping(
+    override var anchor: String? = null,
+    override var spacing: String? = null,
+    override var lineWrapping: String? = null,
+    override var style: Style = DEFAULT_STYLE,
     val entries: MutableList<Entry> = mutableListOf()
-) : Collection() {
+) : Collection {
 
     fun entry(key: String, value: String): Mapping = entry(Scalar().line(key), value)
 
@@ -19,7 +26,8 @@ data class Mapping(
         return this
     }
 
-    fun lastEntry(): Entry = entries[entries.size - 1]
+    val firstEntry get() = entries[0]
+    val lastEntry get() = entries[entries.size - 1]
 
     override fun guide(visitor: Visitor) {
         visitor.visit(this)

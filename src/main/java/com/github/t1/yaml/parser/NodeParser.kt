@@ -1,25 +1,16 @@
 package com.github.t1.yaml.parser
 
-import com.github.t1.yaml.model.Collection.Style.BLOCK
 import com.github.t1.yaml.model.Collection.Style.FLOW
-import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Mapping
 import com.github.t1.yaml.model.Mapping.Entry
 import com.github.t1.yaml.model.Node
 import com.github.t1.yaml.model.Scalar
 import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
-import com.github.t1.yaml.parser.Symbol.COLON
-import com.github.t1.yaml.parser.Symbol.COMMENT
-import com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_END
-import com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ENTRY
-import com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_ITEM_END
-import com.github.t1.yaml.parser.Symbol.FLOW_SEQUENCE_START
-import com.github.t1.yaml.parser.Symbol.MINUS
-import com.github.t1.yaml.parser.Symbol.NL
-import com.github.t1.yaml.parser.Symbol.QUESTION_MARK
-import com.github.t1.yaml.parser.Symbol.SPACE
-import com.github.t1.yaml.parser.Symbol.WS
+import com.github.t1.yaml.parser.ScalarParser.Mode.KEY
+import com.github.t1.yaml.parser.ScalarParser.Mode.VALUE
+import com.github.t1.yaml.tools.symbol
+import com.github.t1.yaml.tools.whitespace
 
 internal class NodeParser(private val next: YamlScanner) {
     private val nesting = Nesting(this.next)
@@ -28,35 +19,35 @@ internal class NodeParser(private val next: YamlScanner) {
 
     fun node(): Node {
         nesting.expect()
-        if (next.isFlowSequence)
-            return flowSequence()
-        if (next.isBlockSequence)
-            return blockSequence()
-        if (next.isFlowMapping)
-            return flowMapping()
-        return if (next.isBlockMapping) blockMapping() else scalar()
+        return when {
+            next.peek(`c-sequence-start`) -> flowSequence()
+            next.peek(BLOCK_SEQUENCE_START) -> blockSequence()
+            next.peek(`c-mapping-start`) -> flowMapping()
+            next.peek(BLOCK_MAPPING_START) -> blockMapping()
+            else -> scalar()
+        }
     }
 
     private fun flowSequence(): Node {
-        next.expect(FLOW_SEQUENCE_START)
+        next.expect(`c-sequence-start`)
         val sequence = Sequence(style = FLOW)
-        do
+        do {
             sequence.item(flowSequenceItem())
-        while (next.more() && next.accept(FLOW_SEQUENCE_ENTRY))
-        next.expect(FLOW_SEQUENCE_END)
-        next.skip(WS)
+        } while (next.more() && next.accept(`c-collect-entry`))
+        next.expect(`c-sequence-end`)
+        next.skip(whitespace)
         return sequence
     }
 
     private fun flowSequenceItem(): Item {
-        next.skip(SPACE)
-        val line = next.readUntil(FLOW_SEQUENCE_ITEM_END) // TODO this must be a call to node()!
-        next.skip(SPACE)
+        next.skip(`s-space`)
+        val line = next.readUntil(symbol(',').or(symbol(']'))) // TODO this must be a call to node()!
+        next.skip(`s-space`)
         return Item(node = Scalar().line(line))
     }
 
     private fun blockSequence(): Sequence {
-        val sequence = Sequence(style = BLOCK)
+        val sequence = Sequence()
         do
             sequence.item(blockSequenceItem())
         while (next.more() && nesting.accept())
@@ -64,10 +55,10 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun blockSequenceItem(): Item {
-        next.expect(MINUS)
-        val nlItem = next.accept(NL)
+        next.expect(`c-sequence-entry`)
+        val nlItem = next.accept(`b-break`)
         if (!nlItem) {
-            next.expect(SPACE)
+            next.expect(`s-space`)
             nesting.skipNext(true)
         }
         nesting.up()
@@ -92,39 +83,63 @@ internal class NodeParser(private val next: YamlScanner) {
     }
 
     private fun blockMappingKey(entry: Entry) {
-        entry.hasMarkedKey = next.accept(QUESTION_MARK)
+        entry.hasMarkedKey = next.accept(`c-mapping-key`)
         if (entry.hasMarkedKey)
-            next.expect(SPACE)
+            next.expect(`s-space`)
         entry.key = scalar() // TODO key node()
     }
 
     private fun blockMappingValue(entry: Entry) {
-        next.expect(COLON)
-        entry.hasNlAfterKey = next.accept(NL)
+        next.expect(`c-mapping-value`)
+        entry.hasNlAfterKey = next.accept(`b-break`)
         if (!entry.hasNlAfterKey) {
-            next.expect(SPACE)
+            next.expect(`s-space`)
             nesting.skipNext(true)
         }
 
         nesting.up()
-        val value = node()
+        entry.value = node()
         nesting.down()
-        entry.value = value
-
-        if (value is Scalar && next.accept(COMMENT))
-        // TODO comments for non-scalars
-            comment(value)
     }
 
     private fun flowMapping(): Mapping {
-        TODO("flow mapping not yet implemented")
+        next.expect(`c-mapping-start`)
+        val mapping = Mapping(style = FLOW)
+        do {
+            mapping.entry(flowMappingEntry())
+        } while (next.more() && next.accept(`c-collect-entry`))
+        next.expect(`c-mapping-end`)
+        return mapping
+    }
+
+    private fun flowMappingEntry(): Entry {
+        val entry = Entry()
+        flowMappingKey(entry)
+        flowMappingValue(entry)
+        return entry
+    }
+
+    private fun flowMappingKey(entry: Entry) {
+        entry.hasMarkedKey = next.accept(`c-mapping-key`)
+        if (entry.hasMarkedKey)
+            next.expect(`s-space`)
+        entry.key = ScalarParser.of(next, nesting, mode = KEY).scalar()
+        // TODO key node()
+    }
+
+    private fun flowMappingValue(entry: Entry) {
+        next.expect(`c-mapping-value`)
+        entry.hasNlAfterKey = next.accept(`b-break`)
+        if (!entry.hasNlAfterKey) {
+            next.expect(`s-space`)
+            nesting.skipNext(true)
+        }
+
+        nesting.up()
+        entry.value = ScalarParser.of(next, nesting, mode = VALUE).scalar()
+        // TODO value node()
+        nesting.down()
     }
 
     private fun scalar(): Scalar = ScalarParser.of(next, nesting).scalar()
-
-    private fun comment(scalar: Scalar) {
-        next.accept(SPACE)
-        val line = scalar.lastLine()
-        line.comment(Comment(indent = line.rtrim(), text = next.readLine()))
-    }
 }

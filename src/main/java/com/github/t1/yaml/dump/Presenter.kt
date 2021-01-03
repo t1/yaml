@@ -1,7 +1,8 @@
 package com.github.t1.yaml.dump
 
 import com.github.t1.yaml.model.Alias
-import com.github.t1.yaml.model.Collection
+import com.github.t1.yaml.model.Collection.Style.BLOCK
+import com.github.t1.yaml.model.Collection.Style.FLOW
 import com.github.t1.yaml.model.Comment
 import com.github.t1.yaml.model.Directive
 import com.github.t1.yaml.model.Document
@@ -10,6 +11,9 @@ import com.github.t1.yaml.model.Mapping.Entry
 import com.github.t1.yaml.model.Node
 import com.github.t1.yaml.model.Scalar
 import com.github.t1.yaml.model.Scalar.Line
+import com.github.t1.yaml.model.Scalar.Style.DOUBLE_QUOTED
+import com.github.t1.yaml.model.Scalar.Style.PLAIN
+import com.github.t1.yaml.model.Scalar.Style.SINGLE_QUOTED
 import com.github.t1.yaml.model.Sequence
 import com.github.t1.yaml.model.Sequence.Item
 import com.github.t1.yaml.model.Stream
@@ -67,13 +71,37 @@ class Presenter {
         }
 
 
+        override fun visit(scalar: Scalar) {
+            if (scalar.tag != null)
+                out.append(scalar.tag).append(' ')
+            out.append(scalar.style.quote)
+        }
+
+        override fun enterScalarLine(node: Scalar, line: Line) {
+            out.append(indent()).append(spaces(line.indent))
+            out.append(when (node.style) {
+                PLAIN -> line.text
+                SINGLE_QUOTED -> line.text.replace("'", "''")
+                DOUBLE_QUOTED -> line.text
+            })
+        }
+
+        override fun leaveScalarLine(scalar: Scalar, line: Line) {
+            out.append(scalar.style.quote)
+            if (line.comment != null)
+                append(line.comment!!)
+            if (line != scalar.lastLine)
+                nl()
+        }
+
+
         override fun enterSequenceItem(sequence: Sequence, item: Item) {
             when (sequence.style) {
-                Collection.Style.FLOW -> {
+                FLOW -> {
                     skipIndent = true
-                    out.append(if (item === sequence.firstItem()) "[" else ", ")
+                    out.append(if (item === sequence.firstItem) "[" else ", ")
                 }
-                Collection.Style.BLOCK -> {
+                BLOCK -> {
                     out.append(indent())
                     skipNextIndent = !item.nl
                     indent++
@@ -84,13 +112,13 @@ class Presenter {
 
         override fun leaveSequenceItem(sequence: Sequence, item: Item) {
             when (sequence.style) {
-                Collection.Style.FLOW -> {
-                    if (item === sequence.lastItem())
+                FLOW -> {
+                    if (item === sequence.lastItem)
                         out.append("]")
                     skipIndent = false
                 }
-                Collection.Style.BLOCK -> {
-                    if (item !== sequence.lastItem())
+                BLOCK -> {
+                    if (item !== sequence.lastItem)
                         nl()
                     indent--
                 }
@@ -98,28 +126,13 @@ class Presenter {
         }
 
 
-        override fun visit(scalar: Scalar) {
-            if (scalar.tag != null)
-                out.append(scalar.tag).append(' ')
-            out.append(scalar.style.quote)
+        override fun enterMappingEntry(mapping: Mapping, entry: Entry) {
+            when (mapping.style) {
+                FLOW -> out.append(if (entry === mapping.firstEntry) "{" else ",")
+                BLOCK -> {
+                }
+            }
         }
-
-        override fun enterScalarLine(node: Scalar, line: Line) {
-            out.append(indent()).append(spaces(line.indent))
-            out.append(line.text)
-            if (line.comment != null)
-                append(line.comment!!)
-        }
-
-        override fun leaveScalarLine(node: Scalar, line: Line) {
-            if (line !== node.lastLine())
-                nl()
-        }
-
-        override fun leave(scalar: Scalar) {
-            out.append(scalar.style.quote)
-        }
-
 
         override fun enterMappingKey(entry: Entry, key: Node) {
             out.append(if (entry.hasMarkedKey) "? " else "")
@@ -136,8 +149,10 @@ class Presenter {
         }
 
         override fun leaveMappingEntry(mapping: Mapping, entry: Entry) {
-            if (entry !== mapping.lastEntry())
-                nl()
+            when (mapping.style) {
+                FLOW -> if (entry === mapping.lastEntry) out.append("}")
+                BLOCK -> if (entry !== mapping.lastEntry) nl()
+            }
         }
 
         private fun append(comment: Comment): StringBuilder {

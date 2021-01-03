@@ -6,15 +6,20 @@ data class Document(
     val directives: MutableList<Directive> = mutableListOf(),
     var hasDirectivesEndMarker: Boolean = false,
 
-    val prefixComments :MutableList<Comment> = mutableListOf(),
+    val prefixComments: MutableList<Comment> = mutableListOf(),
 
     var node: Node? = null,
 
     var hasDocumentEndMarker: Boolean = false,
     var suffixComment: Comment? = null
-){
-    val isEmpty: Boolean
-        get() = node == null && !hasDirectivesEndMarker
+) {
+    constructor(node: Node) : this(directives = mutableListOf(), node = node)
+
+    companion object {
+        @JvmStatic fun document(node: Node) = Document(node)
+    }
+
+    val isEmpty: Boolean get() = node == null && !hasDirectivesEndMarker
 
     fun directive(directive: Directive): Document {
         directives.add(Objects.requireNonNull(directive))
@@ -28,8 +33,8 @@ data class Document(
     }
 
     fun node(node: Node): Document {
-        assert(this.node == null) { "Already has node" }
-        this.node = Objects.requireNonNull(node)
+        assert(this.node == null) { "Already has node ${this.node}" }
+        this.node = node
         return this
     }
 

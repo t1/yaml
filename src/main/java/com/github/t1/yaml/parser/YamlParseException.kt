@@ -1,3 +1,5 @@
 package com.github.t1.yaml.parser
 
-class YamlParseException(message: String) : RuntimeException(message)
+import com.github.t1.yaml.tools.ParseException
+
+class YamlParseException(message: String) : ParseException(message)
